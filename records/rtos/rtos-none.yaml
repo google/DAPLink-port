@@ -3,6 +3,7 @@ common:
         - OS_TICK=10000
     includes:
         - source/rtos_none
+        - source/rtos/Include # for cmsis_rtos2.h
     sources:
         rtos:
             - source/rtos_none
