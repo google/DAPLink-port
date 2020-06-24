@@ -122,60 +122,38 @@ Provides definitions about:
 
 __STATIC_INLINE void pin_out_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit)
 {
-    if(pin_bit >= 8)
-    {
-        GPIOx->CRH &= ~(0x0000000F << ((pin_bit-8) << 2));
-        GPIOx->CRH |= ( ((uint32_t)(0x00|0x03) & 0x0F) << ((pin_bit-8) << 2) );
-    }
-    else
-    {
-        GPIOx->CRL &= ~(0x0000000F << ((pin_bit) << 2));
-        GPIOx->CRL |= ( ((uint32_t)(0x00|0x03) & 0x0F) << ((pin_bit) << 2) );
-    }
+    GPIOx->MODER &= ~(0x00000003 << ((pin_bit) << 1));
+    GPIOx->MODER |= ( 0x00000001 << ((pin_bit) << 1) );  // 0b01 = gpio out
+    GPIOx->OTYPER &= ~(0x00000001 << (pin_bit));  //  0b0 = push-pull mode
+	  GPIOx->OSPEEDR &= ~(0x0000003 << ((pin_bit) << 1));  // set "very high speed"
 }
 
 __STATIC_INLINE void pin_out_od_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit)
 {
-    if(pin_bit >= 8)
-    {
-        GPIOx->CRH &= ~(0x0000000F << ((pin_bit-8) << 2));
-        GPIOx->CRH |= ( ((uint32_t)(0x04|0x03) & 0x0F) << ((pin_bit-8) << 2) );
-    }
-    else
-    {
-        GPIOx->CRL &= ~(0x0000000F << ((pin_bit) << 2));
-        GPIOx->CRL |= ( ((uint32_t)(0x04|0x03) & 0x0F) << ((pin_bit) << 2) );
-    }
+    GPIOx->MODER &= ~(0x00000003 << ((pin_bit) << 1));
+    GPIOx->MODER |= ( 0x00000001 << ((pin_bit) << 1) );  // 0b01 = gpio out
+    GPIOx->OTYPER |= (0x00000001 << (pin_bit));  // 0b1 = open drain mode
+	  GPIOx->OSPEEDR &= ~(0x0000003 << ((pin_bit) << 1));  // set "very high speed"
 }
 
 __STATIC_INLINE void pin_in_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit, uint8_t mode)
 {
+	  // mode = 0 -> analog input, 1->pullup, 2->pulldown
+	
     uint8_t config;
     if(mode == 1)
-        config = 0x08; //Up
+        config = 0x01; //pull-up
     else if(mode == 2)
-        config = 0x08; //down
-    else
-        config = 0x00; //GPIO_Mode_AIN
+        config = 0x02; //pull-down
 
-    if(pin_bit >= 8)
-    {
-        GPIOx->CRH &= ~(0x0000000F << ((pin_bit-8) << 2));
-        GPIOx->CRH |= ( ((uint32_t)(config) & 0x0F) << ((pin_bit-8) << 2) );
-        if(mode == 1)
-            GPIOx->BSRR = (((uint32_t)0x01) << pin_bit);
-        else if(mode == 2)
-            GPIOx->BRR = (((uint32_t)0x01) << pin_bit);
-    }
-    else
-    {
-        GPIOx->CRL &= ~(0x0000000F << ((pin_bit) << 2));
-        GPIOx->CRL |= ( ((uint32_t)(config) & 0x0F) << ((pin_bit) << 2) );
-        if(mode == 1)
-            GPIOx->BSRR = (((uint32_t)0x01) << pin_bit);
-        else if(mode == 2)
-            GPIOx->BRR = (((uint32_t)0x01) << pin_bit);
-    }
+		if( mode == 0) //analog input
+				GPIOx->MODER |= ( 0x00000003 << ((pin_bit) << 1) );  // 0b11 = analog mode
+		else // gpio in
+				GPIOx->MODER &= ~(0x00000003 << ((pin_bit) << 1));  // clear (input mode)
+		
+				GPIOx->PUPDR &= ~(0x00000003 << ((pin_bit) << 1));  // clear
+				GPIOx->PUPDR |= ( ((uint32_t)(config) & 0x03) << ((pin_bit) << 1));  // set pullup/down
+		
 }
 //**************************************************************************************************
 /**
@@ -281,7 +259,7 @@ Set the SWCLK/TCK DAP hardware I/O pin to low level.
 */
 __STATIC_FORCEINLINE void PIN_SWCLK_TCK_CLR(void)
 {
-    SWCLK_TCK_PIN_PORT->BRR = SWCLK_TCK_PIN;
+    SWCLK_TCK_PIN_PORT->BSRR = (SWCLK_TCK_PIN + 16);
 }
 
 // SWDIO/TMS Pin I/O --------------------------------------
@@ -307,7 +285,7 @@ Set the SWDIO/TMS DAP hardware I/O pin to low level.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_TMS_CLR(void)
 {
-    SWDIO_OUT_PIN_PORT->BRR = SWDIO_OUT_PIN;
+    SWDIO_OUT_PIN_PORT->BSRR = (SWDIO_OUT_PIN + 16);
 }
 
 /** SWDIO I/O pin: Get Input (used in SWD mode only).
@@ -326,7 +304,7 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT(uint32_t bit)
     if (bit & 1)
         SWDIO_OUT_PIN_PORT->BSRR = SWDIO_OUT_PIN;
     else
-        SWDIO_OUT_PIN_PORT->BRR = SWDIO_OUT_PIN;
+        SWDIO_OUT_PIN_PORT->BSRR = (SWDIO_OUT_PIN + 16);
 }
 
 /** SWDIO I/O pin: Switch to Output mode (used in SWD mode only).
@@ -336,7 +314,7 @@ called prior \ref PIN_SWDIO_OUT function calls.
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT_ENABLE(void)
 {
     pin_out_init(SWDIO_OUT_PIN_PORT, SWDIO_OUT_PIN_Bit);
-    SWDIO_OUT_PIN_PORT->BRR = SWDIO_OUT_PIN;
+    SWDIO_OUT_PIN_PORT->BSRR = (SWDIO_OUT_PIN + 16);
 }
 
 /** SWDIO I/O pin: Switch to Input mode (used in SWD mode only).
@@ -422,7 +400,7 @@ __STATIC_FORCEINLINE void     PIN_nRESET_OUT(uint32_t bit)
     if (bit & 1)
         nRESET_PIN_PORT->BSRR = nRESET_PIN;
     else
-        nRESET_PIN_PORT->BRR = nRESET_PIN;
+        nRESET_PIN_PORT->BSRR = (nRESET_PIN + 16);
 }
 
 //**************************************************************************************************
@@ -446,7 +424,7 @@ It is recommended to provide the following LEDs for status indication:
 __STATIC_INLINE void LED_CONNECTED_OUT(uint32_t bit)
 {
     if (bit & 1)
-        CONNECTED_LED_PORT->BRR = CONNECTED_LED_PIN; // LED on
+        CONNECTED_LED_PORT->BSRR = (CONNECTED_LED_PIN + 16); // LED on
     else
         CONNECTED_LED_PORT->BSRR = CONNECTED_LED_PIN;// LED off
 }
