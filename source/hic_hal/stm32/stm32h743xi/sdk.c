@@ -160,14 +160,18 @@ void HAL_ResumeTick(void)
 
 static uint32_t tim2_clk_div(uint32_t apb1clkdiv)
 {
+	/*   uint32_t APB1CLKDivider;        The APB1 clock (PCLK1) divider. This clock is derived from the AHB clock (HCLK).
+                                       This parameter can be a value of @ref RCC_APB1_Clock_Source 
+	*/
+	
     switch (apb1clkdiv) {
-        case RCC_CFGR_PPRE1_DIV2:
+        case RCC_APB1_DIV2:
             return 1;
-        case RCC_CFGR_PPRE1_DIV4:
+        case RCC_APB1_DIV4:
             return 2;
-        case RCC_CFGR_PPRE1_DIV8:
+        case RCC_APB1_DIV8:
             return 4;
-        case RCC_CFGR_PPRE1_DIV16:
+        case RCC_APB1_DIV16:
             return 8;
         default:
             return 1;

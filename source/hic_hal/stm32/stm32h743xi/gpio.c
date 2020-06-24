@@ -40,11 +40,11 @@ static void busy_wait(uint32_t cycles)
 static uint32_t tim1_clk_div(uint32_t apb2clkdiv)
 {
     switch (apb2clkdiv) {
-        case RCC_CFGR_PPRE2_DIV2:
+        case RCC_APB2_DIV1:
             return 1;
-        case RCC_CFGR_PPRE2_DIV4:
+        case RCC_APB2_DIV4:
             return 2;
-        case RCC_CFGR_PPRE2_DIV8:
+        case RCC_APB2_DIV8:
             return 4;
         default: // RCC_CFGR_PPRE2_DIV1
             return 1;
@@ -128,7 +128,7 @@ void gpio_init(void)
 
     USB_CONNECT_PORT_ENABLE();
     USB_CONNECT_OFF();
-    GPIO_InitStructure.Pin = USB_CONNECT_PIN;
+	  GPIO_InitStructure.Pin = USB_CONNECT_PIN;  //elee: WHAT does this pin do?  PA15?  what board is it from?  stm429?  discovery?  MB1075.pdf doesn't have it.  I guess USB power (to detect if connected?).  Or LED to show USB connected?
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     HAL_GPIO_Init(USB_CONNECT_PORT, &GPIO_InitStructure);
