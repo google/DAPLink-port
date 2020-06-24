@@ -38,6 +38,18 @@
 #define __NO_USB_LIB_C
 #include "usb_config.c"
 
+#include "USBD_STM32H7xx.h"
+
+/* elee: odd compilation error, try to work around it...
+..\..\..\source\hic_hal\stm32\stm32h743xi\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_rcc_ex.h(3703): error:  #20: identifier "HAL_StatusTypeDef" is undefined
+Somehow it can't find the definition, even though the header IS included, and the UI can resolve it.  
+Have seen other reports from searching, but no clear solutions, arm compiler issue?  (limit on number of include depth???)
+*/
+#include "stm32h7xx_hal_def.h"
+#include "stm32h7xx_hal.h"
+#include "stm32h7xx_hal_conf.h"
+
+
 #define USB_ISTR_W0C_MASK   (ISTR_PMAOVR | ISTR_ERR | ISTR_WKUP | ISTR_SUSP | ISTR_RESET | ISTR_SOF | ISTR_ESOF)
 #define VAL_MASK            0xFFFF
 #define VAL_SHIFT           16 
@@ -161,10 +173,16 @@ void          USBD_IntrEna(void)
 
 void USBD_Init(void)
 {
-    RCC->APB1ENR |= (1 << 23);            /* enable clock for USB               */
-    USBD_IntrEna();                       /* Enable USB Interrupts              */
+    //RCC->APB1ENR |= (1 << 23);            /* enable clock for USB               */
+    //USBD_IntrEna();                       /* Enable USB Interrupts              */
     /* Control USB connecting via SW                                            */
-    USB_CONNECT_OFF();
+    //USB_CONNECT_OFF();
+	
+	
+	
+	/* elee: Start porting here... */
+	USBD_Initialize(0U);                  /* USB Device 0 Initialization        */
+  USBD_Connect   (0U);                  /* USB Device 0 Connect               */
 }
 
 

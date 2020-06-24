@@ -26,7 +26,8 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32h7xx_hal_def.h"
+#include "stm32h7xx_hal_def.h"  //elee: many errors like: "error:  #20: identifier "HAL_StatusTypeDef" is undefined" even though the UI can find it...
+//#include "stm32h7xx_hal.h"   // Try this instead.
 
 /** @addtogroup STM32H7xx_HAL_Driver
   * @{
