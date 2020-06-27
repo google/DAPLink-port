@@ -31,7 +31,7 @@
 #include "DAP_config.h"
 #include "DAP.h"
 #include "info.h"
-#include "main.h"
+#include "main_daplink.h"
 #include "uart.h"
 #include "settings.h"
 #include "target_family.h"

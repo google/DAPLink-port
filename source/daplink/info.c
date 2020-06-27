@@ -20,7 +20,7 @@
  */
 
 #include <string.h>
-#include "main.h"
+#include "main_daplink.h"
 #include "info.h"
 #include "target_config.h"
 #include "read_uid.h"
