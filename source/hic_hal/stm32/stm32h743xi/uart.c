@@ -136,7 +136,7 @@ int32_t uart_reset(void)
 int32_t uart_set_configuration(UART_Configuration *config)
 {
     UART_HandleTypeDef uart_handle;
-    HAL_StatusTypeDef status;
+    //HAL_StatusTypeDef status; //elee, try to get around compilation errors, duplicate refs?  
 
     memset(&uart_handle, 0, sizeof(uart_handle));
     uart_handle.Instance = CDC_UART;

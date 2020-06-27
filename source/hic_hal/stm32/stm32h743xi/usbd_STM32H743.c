@@ -38,17 +38,59 @@
 #define __NO_USB_LIB_C
 #include "usb_config.c"
 
-#include "USBD_STM32H7xx.h"
+// #include "USBD_STM32H7xx.h"
 
 /* elee: odd compilation error, try to work around it...
 ..\..\..\source\hic_hal\stm32\stm32h743xi\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_rcc_ex.h(3703): error:  #20: identifier "HAL_StatusTypeDef" is undefined
 Somehow it can't find the definition, even though the header IS included, and the UI can resolve it.  
-Have seen other reports from searching, but no clear solutions, arm compiler issue?  (limit on number of include depth???)
+Have seen other reports from searching, but no clear solutions, arm compiler issue?  (limit on number of include depth?)
 */
-#include "stm32h7xx_hal_def.h"
-#include "stm32h7xx_hal.h"
-#include "stm32h7xx_hal_conf.h"
+// #include "stm32h7xx_hal_def.h"
+//#include "stm32h7xx_hal.h"
+//#include "stm32h7xx_hal_conf.h"
 
+#include "driver_USBD.h"
+// Might need to add some flags (or if MX_Device.h is included it will set  #define MX_USB_OTG_FS 1 and #define MX_USB_OTG_FS_DEVICE 1 ??
+// I guess these will do it (from USBD_STM32H7xx.h)   #include "OTG_STM32H7xx.h"  #include "USBD_STM32H7xx.h"
+#include "stm32h7xx_hal.h"  // elee: To review, which headers are the right ones?  I *think* this is the main entry point here.
+
+
+//Documentation:  https://www.keil.com/pack/doc/CMSIS/Driver/html/group__usbd__interface__gr.html
+
+/* USB Driver */
+extern ARM_DRIVER_USBD Driver_USBD0;  // FS USB port
+// extern _ARM_DRIVER_USBD Driver_SPI0;
+ARM_DRIVER_USBD* USBdrv_FS = &Driver_USBD0;
+
+int32_t *void_ptr = NULL;
+
+
+void myUSB_FS_callback(uint32_t event)
+{
+    switch (event)
+    {
+    case ARM_SPI_EVENT_TRANSFER_COMPLETE:
+        /* Success: Wakeup Thread */
+        osSignalSet(tid_mySPI_Thread, 0x01);
+        break;
+    case ARM_SPI_EVENT_DATA_LOST:
+        /*  Occurs in slave mode when data is requested/sent by master
+            but send/receive/transfer operation has not been started
+            and indicates that data is lost. Occurs also in master mode
+            when driver cannot transfer data fast enough. */
+        __breakpoint(0);  /* Error: Call debugger or replace with custom error handling */
+        break;
+    case ARM_SPI_EVENT_MODE_FAULT:
+        /*  Occurs in master mode when Slave Select is deactivated and
+            indicates Master Mode Fault. */
+        __breakpoint(0);  /* Error: Call debugger or replace with custom error handling */
+        break;
+    }
+}
+
+
+
+// #########################################3
 
 #define USB_ISTR_W0C_MASK   (ISTR_PMAOVR | ISTR_ERR | ISTR_WKUP | ISTR_SUSP | ISTR_RESET | ISTR_SOF | ISTR_ESOF)
 #define VAL_MASK            0xFFFF
@@ -180,9 +222,16 @@ void USBD_Init(void)
 	
 	
 	
-	/* elee: Start porting here... */
+		/* elee: Start porting here... */
+		
+		/* Initialize the driver */
+    USBdrv_FS->Initialize(mySPI_callback);
+    /* Power up the SPI peripheral */
+    SPIdrv->PowerControl(ARM_POWER_FULL);
+	ARM_Driver_USBD_(n)
+	
 	USBD_Initialize(0U);                  /* USB Device 0 Initialization        */
-  USBD_Connect   (0U);                  /* USB Device 0 Connect               */
+  //USBD_Connect   (0U);                  /* USB Device 0 Connect               */
 }
 
 
