@@ -26,6 +26,9 @@
 
 //ToDo: elee, modify for H743
 
+//elee: comment out for now (using usbd_STM32F4xx_HS.c for now)
+#if 0  //elee: comment out
+
 /* Double Buffering is not supported                                         */
 
 #include <rl_usb.h>
@@ -65,28 +68,96 @@ ARM_DRIVER_USBD* USBdrv_FS = &Driver_USBD0;
 int32_t *void_ptr = NULL;
 
 
-void myUSB_FS_callback(uint32_t event)
+//void myUSB_FS_callback(uint32_t event)
+//{
+//    switch (event)
+//    {
+//    case ARM_SPI_EVENT_TRANSFER_COMPLETE:
+//        /* Success: Wakeup Thread */
+//        osSignalSet(tid_mySPI_Thread, 0x01);
+//        break;
+//    case ARM_SPI_EVENT_DATA_LOST:
+//        /*  Occurs in slave mode when data is requested/sent by master
+//            but send/receive/transfer operation has not been started
+//            and indicates that data is lost. Occurs also in master mode
+//            when driver cannot transfer data fast enough. */
+//        __breakpoint(0);  /* Error: Call debugger or replace with custom error handling */
+//        break;
+//    case ARM_SPI_EVENT_MODE_FAULT:
+//        /*  Occurs in master mode when Slave Select is deactivated and
+//            indicates Master Mode Fault. */
+//        __breakpoint(0);  /* Error: Call debugger or replace with custom error handling */
+//        break;
+//    }
+//}
+
+
+void myUSBD_FS_SignalDeviceEvent(uint32_t event)
 {
-    switch (event)
-    {
-    case ARM_SPI_EVENT_TRANSFER_COMPLETE:
-        /* Success: Wakeup Thread */
-        osSignalSet(tid_mySPI_Thread, 0x01);
-        break;
-    case ARM_SPI_EVENT_DATA_LOST:
-        /*  Occurs in slave mode when data is requested/sent by master
-            but send/receive/transfer operation has not been started
-            and indicates that data is lost. Occurs also in master mode
-            when driver cannot transfer data fast enough. */
-        __breakpoint(0);  /* Error: Call debugger or replace with custom error handling */
-        break;
-    case ARM_SPI_EVENT_MODE_FAULT:
-        /*  Occurs in master mode when Slave Select is deactivated and
-            indicates Master Mode Fault. */
-        __breakpoint(0);  /* Error: Call debugger or replace with custom error handling */
-        break;
-    }
+		switch(event)
+		{
+		/* action to be taken when VBUS_ON event occurs */
+			case ARM_USBD_EVENT_VBUS_ON:
+				{
+				/* do nothing */
+				}
+				break;
+		/* action to be taken when VBUS_OFF event occurs */
+			case ARM_USBD_EVENT_VBUS_OFF:
+				{
+				/* do nothing */
+				}
+				break;
+		/* action to be taken when HIGH SPEED event occurs */
+			case ARM_USBD_EVENT_HIGH_SPEED:
+				{
+				/* do nothing */
+				}
+				break;
+		/* action to be taken when RESET event occurs */
+			case ARM_USBD_EVENT_RESET:
+				{
+				/* do nothing */
+				}
+				break;
+		/* action to be taken when SUSPEND event occurs */
+			case ARM_USBD_EVENT_SUSPEND:
+				{
+				/* do nothing */
+				}
+				break;
+		/* action to be taken when RESUME event occurs */
+			case ARM_USBD_EVENT_RESUME:
+				{
+				/* do nothing */
+				}
+				break;
+		}
 }
+
+
+void myUSBD_FS_SignalEndpointEvent	(	uint32_t 	ep_addr, uint32_t event	)	
+{
+	/* 
+	Event	Bit	Description
+		ARM_USBD_EVENT_SETUP	0	Occurs when SETUP packet is received over Control Endpoint.
+		ARM_USBD_EVENT_OUT	1	Occurs when data is received over OUT Endpoint.
+		ARM_USBD_EVENT_IN	2	Occurs when data is sent over IN Endpoint.
+	*/
+	
+	switch(event)
+	{
+		case ARM_USBD_EVENT_SETUP:
+			break;
+		case ARM_USBD_EVENT_OUT:
+			break;
+		case ARM_USBD_EVENT_IN:
+			break;
+	}
+}
+
+
+
 
 
 
@@ -223,14 +294,25 @@ void USBD_Init(void)
 	
 	
 		/* elee: Start porting here... */
-		
+		extern ARM_DRIVER_USBD Driver_USBD0;
+		ARM_DRIVER_USBD *drv_info;
+ 
+
+		ARM_DRIVER_VERSION  version;
+		drv_info = &Driver_USBD0;  
+		version = drv_info->GetVersion ();
+		if (version.api < 0x10A)   {      // requires at minimum API version 1.10 or higher
+			// error handling
+			return;
+		}
+
 		/* Initialize the driver */
-    USBdrv_FS->Initialize(mySPI_callback);
+    USBdrv_FS->Initialize(myUSBD_FS_SignalDeviceEvent, );
     /* Power up the SPI peripheral */
-    SPIdrv->PowerControl(ARM_POWER_FULL);
-	ARM_Driver_USBD_(n)
+    USBdrv_FS->PowerControl(ARM_POWER_FULL);
+	//ARM_Driver_USBD_(n)
 	
-	USBD_Initialize(0U);                  /* USB Device 0 Initialization        */
+	//USBD_Initialize(0U);                  /* USB Device 0 Initialization        */
   //USBD_Connect   (0U);                  /* USB Device 0 Connect               */
 }
 
@@ -837,3 +919,5 @@ void USBD_Handler(void)
         }
     }
 }
+
+#endif  //elee: comment out

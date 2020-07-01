@@ -26,6 +26,8 @@
 #include "util.h"
 #include "cortex_m.h"
 
+extern void SystemClock_Config(void);  //elee, pull in the version from cubemx main.c
+
 TIM_HandleTypeDef timer;
 uint32_t time_count;
 
@@ -50,42 +52,47 @@ static uint32_t tim2_clk_div(uint32_t apb1clkdiv);
   */
 void sdk_init()
 {
-    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+	//todo: elee:  Review this some more.  For now just call the stm32cube startup files.  
+		SystemClock_Config();
+	
+	
+//    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+//    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 
-    SystemCoreClockUpdate();
-    HAL_Init();
+//    SystemCoreClockUpdate();
+//    HAL_Init();
 
-    /* Select HSI as system clock source to allow modification of the PLL configuration */
-    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_SYSCLK;
-    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK) {
-        /* Initialization Error */
-        util_assert(0);
-    }
+//    /* Select HSI as system clock source to allow modification of the PLL configuration */
+//    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_SYSCLK;
+//    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+//    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK) {
+//        /* Initialization Error */
+//        util_assert(0);
+//    }
 
-    /* Enable HSE bypass Oscillator, select it as PLL source and finally activate the PLL */
-    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-    RCC_OscInitStruct.HSEState = RCC_CR_HSEON;
-    RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-    RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
-    RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
-    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-        /* Initialization Error */
-        util_assert(0);
-    }
+//    /* Enable HSE bypass Oscillator, select it as PLL source and finally activate the PLL */
+//    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+//    RCC_OscInitStruct.HSEState = RCC_CR_HSEON;
+//    RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+//    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+//    RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+//    RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+//    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+//        /* Initialization Error */
+//        util_assert(0);
+//    }
 
-    /* Select the PLL as system clock source and configure the HCLK, PCLK1 and PCLK2 clocks dividers */
-    RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
-    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-    RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK) {
-        /* Initialization Error */
-        util_assert(0);
-    }
+//    /* Select the PLL as system clock source and configure the HCLK, PCLK1 and PCLK2 clocks dividers */
+//    RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+//    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+//    RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+//    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+//    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+//    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK) {
+//        /* Initialization Error */
+//        util_assert(0);
+//    }
+
 }
 
 HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)

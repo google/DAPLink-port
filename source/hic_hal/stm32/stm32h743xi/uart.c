@@ -28,6 +28,9 @@
 #include "circ_buf.h"
 #include "IO_Config.h"
 
+#include "stm32h7xx_hal.h"  //elee: porting to h7
+
+
 // For usart
 #define CDC_UART                     USART2
 #define CDC_UART_ENABLE()            __HAL_RCC_USART2_CLK_ENABLE()
@@ -63,7 +66,7 @@ uint8_t read_buffer_data[BUFFER_SIZE];
 static UART_Configuration configuration = {
     .Baudrate = 9600,
     .DataBits = UART_DATA_BITS_8,
-    .Parity = UART_PARITY_NONE,
+    .Parity = UART_PARITY_NONE_DAPLINK,
     .StopBits = UART_STOP_BITS_1,
     .FlowControl = UART_FLOW_CONTROL_NONE,
 };
@@ -136,22 +139,22 @@ int32_t uart_reset(void)
 int32_t uart_set_configuration(UART_Configuration *config)
 {
     UART_HandleTypeDef uart_handle;
-    //HAL_StatusTypeDef status; //elee, try to get around compilation errors, duplicate refs?  
+    HAL_StatusTypeDef status; 
 
     memset(&uart_handle, 0, sizeof(uart_handle));
     uart_handle.Instance = CDC_UART;
 
     // parity
     configuration.Parity = config->Parity;
-    if(config->Parity == UART_PARITY_ODD) {
-        uart_handle.Init.Parity = HAL_UART_PARITY_ODD;
-    } else if(config->Parity == UART_PARITY_EVEN) {
-        uart_handle.Init.Parity = HAL_UART_PARITY_EVEN;
-    } else if(config->Parity == UART_PARITY_NONE) {
-        uart_handle.Init.Parity = HAL_UART_PARITY_NONE;
+    if(config->Parity == UART_PARITY_ODD_DAPLINK) {
+        uart_handle.Init.Parity = UART_PARITY_ODD;
+    } else if(config->Parity == UART_PARITY_EVEN_DAPLINK) {
+        uart_handle.Init.Parity = UART_PARITY_EVEN;
+    } else if(config->Parity == UART_PARITY_NONE_DAPLINK) {
+        uart_handle.Init.Parity = UART_PARITY_NONE;
     } else {   //Other not support
-        uart_handle.Init.Parity = HAL_UART_PARITY_NONE;
-        configuration.Parity = UART_PARITY_NONE;
+        uart_handle.Init.Parity = UART_PARITY_NONE;
+        configuration.Parity = UART_PARITY_NONE_DAPLINK;
     }
 
     // stop bits
@@ -170,7 +173,7 @@ int32_t uart_set_configuration(UART_Configuration *config)
 
     //Only 8 bit support
     configuration.DataBits = UART_DATA_BITS_8;
-    if (uart_handle.Init.Parity == HAL_UART_PARITY_ODD || uart_handle.Init.Parity == HAL_UART_PARITY_EVEN) {
+    if (uart_handle.Init.Parity == UART_PARITY_ODD || uart_handle.Init.Parity == UART_PARITY_EVEN) {
         uart_handle.Init.WordLength = UART_WORDLENGTH_9B;
     } else {
         uart_handle.Init.WordLength = UART_WORDLENGTH_8B;
@@ -234,10 +237,11 @@ int32_t uart_read_data(uint8_t *data, uint16_t size)
 
 void CDC_UART_IRQn_Handler(void)
 {
-    const uint32_t sr = CDC_UART->SR;
+    const uint32_t sr = CDC_UART->ISR;
 
-    if (sr & USART_SR_RXNE) {
-        uint8_t dat = CDC_UART->DR;
+		//Rx not empty (data remaining...)
+    if (sr & USART_ISR_RXNE_RXFNE) {
+        uint8_t dat = CDC_UART->RDR; //RDR = Read Data Register
         uint32_t free = circ_buf_count_free(&read_buffer);
         if (free > RX_OVRF_MSG_SIZE) {
             circ_buf_push(&read_buffer, dat);
@@ -248,9 +252,9 @@ void CDC_UART_IRQn_Handler(void)
         }
     }
 
-    if (sr & USART_SR_TXE) {
+    if (sr & USART_ISR_TXE_TXFNF)  {   //USART_SR_TXE) {
         if (circ_buf_count_used(&write_buffer) > 0) {
-            CDC_UART->DR = circ_buf_pop(&write_buffer);
+            CDC_UART->TDR = circ_buf_pop(&write_buffer);
         } else {
             CDC_UART->CR1 &= ~USART_IT_TXE;
         }

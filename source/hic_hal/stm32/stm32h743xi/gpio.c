@@ -25,6 +25,8 @@
 #include "daplink.h"
 #include "util.h"
 
+#include "stm32h7xx_hal.h"
+
 static TIM_HandleTypeDef timer;
 
 static void busy_wait(uint32_t cycles)
@@ -121,10 +123,12 @@ void gpio_init(void)
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
     // Enable USB connect pin
-    __HAL_RCC_AFIO_CLK_ENABLE();
-    // Disable JTAG to free pins for other uses
+		__HAL_RCC_SYSCFG_CLK_ENABLE();   //elee: this macro maps to the same as __HAL_RCC_AFIO_CLK_ENABLE(); (in the F1) and still exists.  Try it...
+    
+		// Disable JTAG to free pins for other uses
     // Note - SWD is still enabled
-    __HAL_AFIO_REMAP_SWJ_NOJTAG();
+		//ToDo: elee: this doesn't exist in the H7 hal.  Can it be skipped, or need to find a replacement?  Skip it for now...
+		//__HAL_AFIO_REMAP_SWJ_NOJTAG();
 
     USB_CONNECT_PORT_ENABLE();
     USB_CONNECT_OFF();
