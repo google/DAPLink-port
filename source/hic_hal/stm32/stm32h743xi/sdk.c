@@ -26,7 +26,15 @@
 #include "util.h"
 #include "cortex_m.h"
 
-extern void SystemClock_Config(void);  //elee, pull in the version from cubemx main.c
+#include "stm32h7xx_hal.h" //elee, call cube startup files...
+#include "main.h"  //elee, definitions of the functions declared below.  
+
+//elee, pull in the version from cubemx main.c
+extern void SystemClock_Config(void);  
+extern void MX_GPIO_Init(void);
+extern void MX_USB_OTG_FS_PCD_Init(void);
+extern void MX_USB_OTG_HS_PCD_Init(void);
+
 
 TIM_HandleTypeDef timer;
 uint32_t time_count;
@@ -52,8 +60,18 @@ static uint32_t tim2_clk_div(uint32_t apb1clkdiv);
   */
 void sdk_init()
 {
-	//todo: elee:  Review this some more.  For now just call the stm32cube startup files.  
-		SystemClock_Config();
+	//todo: elee:  Review this some more.  For now just call the stm32cube startup files (from the cube generated main).
+	  HAL_Init();
+  /* USER CODE BEGIN Init */
+  /* USER CODE END Init */
+  /* Configure the system clock */
+  SystemClock_Config();
+  /* USER CODE BEGIN SysInit */
+  /* USER CODE END SysInit */
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_USB_OTG_FS_PCD_Init();
+  MX_USB_OTG_HS_PCD_Init();
 	
 	
 //    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
@@ -92,6 +110,15 @@ void sdk_init()
 //        /* Initialization Error */
 //        util_assert(0);
 //    }
+
+
+    pin_out_init(CONNECTED_LED_PORT, CONNECTED_LED_PIN_Bit);
+    CONNECTED_LED_PORT->BSRR = CONNECTED_LED_PIN;
+		
+	//elee: toggle the pin, see the LED do something.  
+		HAL_Delay(1000);
+		CONNECTED_LED_PORT->BSRR = (CONNECTED_LED_PIN << 16);
+
 
 }
 
@@ -184,3 +211,4 @@ static uint32_t tim2_clk_div(uint32_t apb1clkdiv)
             return 1;
     }
 }
+

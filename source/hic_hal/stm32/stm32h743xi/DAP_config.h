@@ -507,6 +507,11 @@ __STATIC_INLINE void DAP_SETUP(void)
 
     pin_out_init(CONNECTED_LED_PORT, CONNECTED_LED_PIN_Bit);
     CONNECTED_LED_PORT->BSRR = CONNECTED_LED_PIN;
+		
+	//elee: toggle the pin, see the LED do something.  
+		HAL_Delay(1000);
+		CONNECTED_LED_PORT->BSRR = (CONNECTED_LED_PIN << 16);
+		
 }
 
 /** Reset Target Device with custom specific I/O pin or command sequence.
