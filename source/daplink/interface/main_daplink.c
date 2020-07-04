@@ -209,7 +209,7 @@ void main_task(void * arg)
     gpio_set_cdc_led(cdc_led_value);
     gpio_set_msc_led(msc_led_value);
     // Initialize the DAP
-    DAP_Setup();
+    DAP_Setup();   //elee: add LED blink here.  
 
     // make sure we have a valid board info structure.
     util_assert(g_board_info.info_version == kBoardInfoVersion);
@@ -247,6 +247,8 @@ void main_task(void * arg)
     usb_state = USB_CONNECTING;
     usb_state_count = USB_CONNECT_DELAY;
 
+		uint32_t count_elee = 0;
+		
     // Start timer tasks
     osTimerId_t tmr_id = osTimerNew(timer_task_30mS, osTimerPeriodic, NULL, NULL);
     osTimerStart(tmr_id, 3);
@@ -455,6 +457,14 @@ void main_task(void * arg)
                 gpio_set_cdc_led(cdc_led_value);
             }
         }
+				
+				//elee, try toggling LED here...
+				count_elee++;
+				if ((count_elee % 10000) == 0) {
+					
+					gpio_toggle_LED();
+				}
+				
     }
 }
 
