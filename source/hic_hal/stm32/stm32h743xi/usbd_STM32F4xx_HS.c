@@ -10,8 +10,7 @@
  *---------------------------------------------------------------------------*/
 
 
-#define STM32F429X //elee: hack for now.  
-
+//#define STM32F429X //elee: hack for now.  
 
 #include <RTL.h>
 #include <rl_usb.h>
@@ -60,7 +59,7 @@
 #define DIEPINT(EPNum)      *(&USBx_INEP(EPNum)->DIEPINT)	//*(&OTG->DIEPINT0  + EPNum * 8)
 #define DOEPINT(EPNum)      *(&USBx_OUTEP(EPNum)->DOEPINT)	//*(&OTG->DOEPINT0  + EPNum * 8)
 
-#define EP_IN_TYPE(num)      ((DIEPCTL(num) >> 18) & 3)
+#define EP_IN_TYPE(num)      ((DIEPCTL(num) >> 18) & 3)	//00: Control, 01: Isochronous, 10: Bulk, 11: Interrupt
 #define EP_OUT_TYPE(num)     ((DOEPCTL(num) >> 18) & 3)
 
 uint32_t OutMaxPacketSize[5] =   {USBD_MAX_PACKET0, 0, 0, 0, 0};
@@ -175,7 +174,7 @@ void __SVC_1               (void) {
 #else
 void          USBD_IntrEna (void) {
 #endif
-  NVIC_EnableIRQ   (OTG_HS_IRQn);       /* Enable OTG interrupt               */
+  NVIC_EnableIRQ   (OTG_HS_IRQn);       /* Enable OTG interrupt               */ /* OTG_HS global interrupt */
 }
 
 
@@ -189,7 +188,7 @@ void USBD_Init (void) {
   int32_t tout;
 
 #ifndef __OTG_HS_EMBEDDED_PHY
-  RCC->AHB1ENR    |=  1 | (1 << 1) | (1 << 2) | (1 << 7) | (1 << 8);
+  RCC->AHB4ENR    |=  1 | (1 << 1) | (1 << 2) | (1 << 7) | (1 << 8);	/* GPIOAEN, GPIOBEN, GPIOCEN, GPIOHEN, GPIOIEN.  For H743 is in AHB4ENR, not AHB1ENR(F4xx) */
 
   /* ULPI data pins                                                           */
   /* PA3 (OTG_HS_ULPI alternate function, DATA0)                              */
@@ -197,7 +196,7 @@ void USBD_Init (void) {
   GPIOA->OTYPER   &= ~(1  <<  3);
   GPIOA->OSPEEDR  |=  (3  <<  6);
   GPIOA->PUPDR    &= ~(3  <<  6);
-  GPIOA->AFR[0]    =  (GPIOA->AFR[0] & ~(15 << 12)) | (10 << 12);
+  GPIOA->AFR[0]    =  (GPIOA->AFR[0] & ~(15 << 12)) | (10 << 12);	/* Alt Func 10 for ULPI */
 
   /* PB0, PB1 (OTG_HS_ULPI alternate function, DATA1, DATA2)                  */
   GPIOB->MODER     =  (GPIOB->MODER  & ~(15 <<  0)) | (10 <<  0);
@@ -246,19 +245,19 @@ void USBD_Init (void) {
   /* Configure PB14 and PB15 as alternate OTG_HS_DM and OTG_HS_DP pins        */
   GPIOB->MODER     =  (GPIOB->MODER  & ~(0x0FUL << 28)) | (0x0AUL << 28);
   GPIOB->OTYPER   &= ~(3 << 14);
-  GPIOB->AFR[1]    =  (GPIOB->AFR[1] & ~(0xFFUL << 24)) | (0xCCUL << 24);
+  GPIOB->AFR[1]    =  (GPIOB->AFR[1] & ~(0xFFUL << 24)) | (0xCCUL << 24);	/* Alt Func 12 for PB14 and PB15 */
   GPIOB->OSPEEDR  |=  (15UL << 28);
   GPIOB->PUPDR    &= ~(15UL << 28);
 #endif
 
-  RCC->AHB1ENR    |=  (1 << 29);        /* Enable clock for OTG HS            */
+  RCC->AHB1ENR    |=  (1 << 25);        /* Enable clock for OTG HS            */  /* H743, USB1OTGHSEN is bit 25 */
   usbd_stm32_delay    (100);            /* Wait ~10 ms                        */
-  RCC->AHB1RSTR   |=  (1 << 29);        /* Reset OTG HS clock                 */
+  RCC->AHB1RSTR   |=  (1 << 25);        /* Reset OTG HS clock                 */  /* H743, USB1OTGRST */
   usbd_stm32_delay    (100);            /* Wait ~10 ms                        */
-  RCC->AHB1RSTR   &= ~(1 << 29);
+  RCC->AHB1RSTR   &= ~(1 << 25);
   usbd_stm32_delay    (400);            /* Wait ~40 ms                        */
 #ifndef __OTG_HS_EMBEDDED_PHY
-  RCC->AHB1ENR    |=  (1 << 30);        /* Enable clock for OTG HS ULPI       */
+  RCC->AHB1ENR    |=  (1 << 26);        /* Enable clock for OTG HS ULPI       */	/* H743, USB1OTGHSULPIEN */
 #endif
 
 #ifdef __OTG_HS_EMBEDDED_PHY
@@ -271,7 +270,7 @@ void USBD_Init (void) {
     tout --;
     usbd_stm32_delay  (10);             /* Wait 1 ms                          */
   }
-  OTG->GRSTCTL    |=  1;                /* reset otg core                     */
+  OTG->GRSTCTL    |=  1;                /* reset otg core                     */	/* H743, is renamed HSRST -> PSRST.  Looks ok to reset though */
   tout = 1000;                          /* Wait max 1 s for CRST = 0          */
   while (OTG->GRSTCTL & (1 << 0)) {
     if (!tout) break;
@@ -280,12 +279,12 @@ void USBD_Init (void) {
   }
   usbd_stm32_delay    (30);             /* Wait 3 ms                          */
 
-  OTG->GAHBCFG    &=  ~1;               /* Disable interrupts                 */
-  OTG->GCCFG      |=  (1 << 21);        /* No VBUS sensing                    */
+  OTG->GAHBCFG    &=  ~1;               /* Disable interrupts                 */	/* GINTMSK */
+  OTG->GCCFG      &=  ~(1 << 21);        /* No VBUS sensing                    */	/* H743, looks like name/polarity changed.  NOVBUSSENS -> VBDEN ToDo(elee): do we want this disabled?*/
   //OTG->DCTL       |=  (1 <<  1);        /* soft disconnect enabled            */
 	USBx_DEVICE->DCTL       |=  (1 <<  1);        /* soft disconnect enabled            */
 	
-  OTG->GUSBCFG    |=  (1 << 30);        /* Force device mode                  */
+  OTG->GUSBCFG    |=  (1 << 30);        /* Force device mode                  */ /* FDMOD */
   usbd_stm32_delay    (1000);           /* Wait min 25 ms, we wait ~100 ms    */
 
 #ifndef __OTG_HS_EMBEDDED_PHY
@@ -303,14 +302,14 @@ void USBD_Init (void) {
                      (1   << 18) |      /* IN EP int unmask                   */
                      (1   << 19) |      /* OUT EP int unmask                  */
                      (1UL << 31) |      /* resume int unmask                  */
-#ifdef __RTX
+#ifdef __RTX				/* elee: isn't RTX used for DAPLink?  Curious why this isn't defined. */
   ((USBD_RTX_DevTask   != 0) ? (1 <<  3) : 0);   /* SOF int unmask            */
 #else
   ((USBD_P_SOF_Event   != 0) ? (1 <<  3) : 0);   /* SOF int unmask            */
 #endif
 
   USBD_IntrEna();                       /* Enable OTG interrupt               */
-  OTG->GAHBCFG    |=  1 | (1 << 7);     /* Enable interrupts                  */
+  OTG->GAHBCFG    |=  1 | (1 << 7);     /* Enable interrupts                  */ /* GINTMSK, TXFELVL */
 }
 
 
@@ -358,7 +357,7 @@ void USBD_Reset (void) {
     if (USBx_INEP(i)->DIEPCTL & (1UL << 31))
       USBx_INEP(i)->DIEPCTL  = (1 << 30) | (1 << 27);   /* IN EP disable, Set NAK        */
     
-    DIEPINT(i)    = 0x1B;                    /* clear IN Ep interrupts        */
+    DIEPINT(i)    = 0x1B;                    /* clear IN Ep interrupts        */   /* Todo(elee): confirm no other interrupts matter */
     DOEPINT(i)    = 0x1B;                    /* clear OUT Ep interrupts       */
   }
   
@@ -377,7 +376,7 @@ void USBD_Reset (void) {
   //OTG->TX0FSIZ   = (RX_FIFO_SIZE/4) | ((TX0_FIFO_SIZE/4) << 16);
 	OTG->DIEPTXF0_HNPTXFSIZ   = (RX_FIFO_SIZE/4) | ((TX0_FIFO_SIZE/4) << 16);
 	
-	//DIEPTXF1 -> DIEPTXF[0] when going from stm32f4xx to stm32h743xx  (to __IO uint32_t DIEPTXF[0x0F];)
+	//elee: I believe DIEPTXF1 -> DIEPTXF[0] when going from stm32f4xx to stm32h743xx  (to __IO uint32_t DIEPTXF[0x0F];)
   OTG->DIEPTXF[0]  = ((RX_FIFO_SIZE + TX0_FIFO_SIZE)/4) |
                    ((TX1_FIFO_SIZE/4) << 16);
 
