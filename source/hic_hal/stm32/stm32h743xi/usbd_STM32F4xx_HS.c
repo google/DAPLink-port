@@ -11,6 +11,8 @@
 
 
 //#define STM32F429X //elee: hack for now.  
+//todo(elee): ideally cleanup USBx_DEVICE vs OTG (they point to the same address).  
+
 
 #include <RTL.h>
 #include <rl_usb.h>
@@ -49,6 +51,9 @@
 
 #define TX_FIFO(n)          *((__packed volatile uint32_t*)(USB1_OTG_HS + 0x1000 + n*0x1000))
 #define RX_FIFO             *((__packed volatile uint32_t*)(USB1_OTG_HS + 0x1000))
+	//elee: modify to this format. h7xx_ll_usb.c
+#define USBx_DFIFO(i)   *(__IO uint32_t *)(USBx_BASE + USB_OTG_FIFO_BASE + ((i) * USB_OTG_FIFO_SIZE))
+
 
 //todo: elee: fix this, instead of replacing below...
 #define DIEPTSIZ(EPNum)     *(&USBx_INEP(EPNum)->DIEPTSIZ)	//*(&OTG->DIEPTSIZ0 + EPNum * 8)
@@ -290,6 +295,10 @@ void USBD_Init (void) {
 #ifndef __OTG_HS_EMBEDDED_PHY
   //OTG->DCFG       &= ~3;                /* High speed phy                     */
 	USBx_DEVICE->DCFG       &= ~3;                /* High speed phy                     */
+
+	//TESTING, elee: set to "01: Full speed using HS" for testing.  The line above clears the 2 lower bits, this sets the lowest bit.
+	USBx_DEVICE->DCFG				|= 1; 
+	
 	
 #else
   OTG->DCFG       |=  3;                /* Full speed phy                     */
@@ -818,8 +827,10 @@ uint32_t USBD_ReadEP (uint32_t EPNum, uint8_t *pData, uint32_t bufsz) {
   /* copy data from fifo
      if Isochronous Ep: data is copied to intermediate buffer                 */
   for (val = 0; val < (uint32_t)((sz+3)/4); val++) {
-    *((__packed uint32_t *)pData) = RX_FIFO;
-    pData += 4;
+    //*((__packed uint32_t *)pData) = *((__packed volatile uint32_t*)0x40041000UL); //RX_FIFO;  //elee, try hard-coding it here.  
+    __UNALIGNED_UINT32_WRITE(pData, USBx_DFIFO(0U));  //ToDo(elee): use stmewh743xx header? instead of USBx_DFIFI() from stm32h7xx_ll_usb.h?  Using a mixture now, no good reason.  
+		
+		pData += 4;
   }
   /* wait RxFIFO non-empty (OUT transfer completed or Setup trans. completed) */
   while ((OTG->GINTSTS & (1 << 4)) == 0);  
@@ -887,7 +898,8 @@ uint32_t USBD_WriteEP (uint32_t EPNum, uint8_t *pData, uint32_t cnt) {
       ptr = (uint32_t *)pData;
       val   = (cnt+3)/4;
       while (val--) {                   /* copy data to endpoint TxFIFO       */
-        TX_FIFO(EPNum) = *(__packed uint32_t *)pData;
+        //TX_FIFO(EPNum) = *(__packed uint32_t *)pData;
+				USBx_DFIFO((uint32_t)EPNum) = __UNALIGNED_UINT32_READ(pData);  //ToDo(elee): use stmewh743xx header? instead of USBx_DFIFI() from stm32h7xx_ll_usb.h?  Using a mixture now, no good reason.  
         pData +=4;
       }
     }
@@ -925,8 +937,8 @@ and make an empty USBD_Handler()
 void USBD_Handler(void)
 */
 
-void USBD_Handler() {
-}
+//void USBD_Handler() {
+//}
 
 
 
@@ -934,6 +946,13 @@ void USBD_Handler() {
  *  USB Device Interrupt Service Routine
  */
 void OTG_HS_IRQHandler(void) {
+	
+    NVIC_DisableIRQ(OTG_HS_IRQn);
+    USBD_SignalHandler();
+}
+
+void USBD_Handler(void)
+{
   uint32_t istr, val, num, i, msk;
   static uint32_t IsoInIncomplete = 0;
 
@@ -1217,4 +1236,6 @@ void OTG_HS_IRQHandler(void) {
       }
     }
   }
+	
+	NVIC_EnableIRQ(OTG_HS_IRQn);
 }

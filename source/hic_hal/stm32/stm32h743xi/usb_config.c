@@ -30,7 +30,7 @@
 
 //   <o0.0> High-speed
 //     <i> Enable high-speed functionality (if device supports it)
-#define USBD_HS_ENABLE              0
+#define USBD_HS_ENABLE              1	//elee: Beagle analyzer shows HS traffic, maybe set this to match? 
 #if (defined(WEBUSB_INTERFACE) || defined(WINUSB_INTERFACE) || defined(BULK_ENDPOINT))
 #define USBD_BOS_ENABLE             1
 #else

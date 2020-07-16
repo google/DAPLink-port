@@ -70,8 +70,8 @@ void sdk_init()
   /* USER CODE END SysInit */
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USB_OTG_FS_PCD_Init();
-  MX_USB_OTG_HS_PCD_Init();
+  //MX_USB_OTG_FS_PCD_Init();
+  //MX_USB_OTG_HS_PCD_Init();
 	
 	
 //    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
@@ -116,7 +116,7 @@ void sdk_init()
     CONNECTED_LED_PORT->BSRR = CONNECTED_LED_PIN;
 		
 	//elee: toggle the pin, see the LED do something.  
-		HAL_Delay(1000);
+		HAL_Delay(100);
 		CONNECTED_LED_PORT->BSRR = (CONNECTED_LED_PIN << 16);
 
 
