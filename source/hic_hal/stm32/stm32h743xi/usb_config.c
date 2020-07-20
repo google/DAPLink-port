@@ -154,7 +154,7 @@
 #define USBD_HID_EP_INTIN_STACK     0
 #define USBD_HID_WMAXPACKETSIZE     64
 #define USBD_HID_BINTERVAL          1
-#define USBD_HID_HS_ENABLE          0
+#define USBD_HID_HS_ENABLE          1	//elee: enable
 #define USBD_HID_HS_WMAXPACKETSIZE  64
 #define USBD_HID_HS_BINTERVAL       6
 #define USBD_HID_STRDESC            L"CMSIS-DAP v1"
@@ -205,7 +205,7 @@
 #define USBD_MSC_EP_BULKOUT         2
 #define USBD_MSC_EP_BULKIN_STACK    0
 #define USBD_MSC_WMAXPACKETSIZE     64
-#define USBD_MSC_HS_ENABLE          0
+#define USBD_MSC_HS_ENABLE          1	//elee: enable
 #define USBD_MSC_HS_WMAXPACKETSIZE  512
 #define USBD_MSC_HS_BINTERVAL       0
 #define USBD_MSC_STRDESC            L"USB_MSC"
@@ -325,14 +325,14 @@
 #define USBD_CDC_ACM_EP_INTIN_STACK     0
 #define USBD_CDC_ACM_WMAXPACKETSIZE     16
 #define USBD_CDC_ACM_BINTERVAL          32
-#define USBD_CDC_ACM_HS_ENABLE          0
+#define USBD_CDC_ACM_HS_ENABLE          1	//elee: enable
 #define USBD_CDC_ACM_HS_WMAXPACKETSIZE  16
 #define USBD_CDC_ACM_HS_BINTERVAL       2
 #define USBD_CDC_ACM_EP_BULKIN          4
 #define USBD_CDC_ACM_EP_BULKOUT         4
 #define USBD_CDC_ACM_EP_BULKIN_STACK    0
 #define USBD_CDC_ACM_WMAXPACKETSIZE1    16
-#define USBD_CDC_ACM_HS_ENABLE1         0
+#define USBD_CDC_ACM_HS_ENABLE1         1	//elee: enable
 #define USBD_CDC_ACM_HS_WMAXPACKETSIZE1 16
 #define USBD_CDC_ACM_HS_BINTERVAL1      0
 #define USBD_CDC_ACM_CIF_STRDESC        L"mbed Serial Port"
@@ -386,7 +386,7 @@
 #define USBD_BULK_EP_BULKOUT         1
 #define USBD_BULK_EP_BULKIN_SWO      6
 #define USBD_BULK_WMAXPACKETSIZE     64
-#define USBD_BULK_HS_ENABLE          0
+#define USBD_BULK_HS_ENABLE          1	//elee: enable
 #define USBD_BULK_HS_WMAXPACKETSIZE  512
 #define USBD_BULK_STRDESC            L"CMSIS-DAP v2"
 

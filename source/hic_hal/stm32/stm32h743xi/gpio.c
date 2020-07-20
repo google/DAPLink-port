@@ -122,6 +122,8 @@ void gpio_init(void)
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
+    __HAL_RCC_GPIOG_CLK_ENABLE();  //elee: udb led's
+    __HAL_RCC_GPIOH_CLK_ENABLE();  //elee: usb hub signals
     // Enable USB connect pin
 		__HAL_RCC_SYSCFG_CLK_ENABLE();   //elee: this macro maps to the same as __HAL_RCC_AFIO_CLK_ENABLE(); (in the F1) and still exists.  Try it...
     
@@ -182,6 +184,14 @@ void gpio_init(void)
     GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
     output_clock_enable();
+
+    // Setup the USB Hub to be "self powered" (very common setting, even if not strictly compliant).
+    GPIO_InitStructure.Pin = PIN_USBHUB_SELFPWR;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    HAL_GPIO_Init(USBHUB_SELFPWR_PORT, &GPIO_InitStructure);
+    HAL_GPIO_WritePin(USBHUB_SELFPWR_PORT, PIN_USBHUB_SELFPWR, GPIO_PIN_RESET);
+
 
     // Let the voltage rails stabilize.  This is especailly important
     // during software resets, since the target's 3.3v rail can take

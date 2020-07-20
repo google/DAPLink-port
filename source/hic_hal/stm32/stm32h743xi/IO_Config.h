@@ -37,9 +37,15 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32F103XB);
 #define USB_CONNECT_OFF()            (USB_CONNECT_PORT->BSRR  = ((uint32_t)USB_CONNECT_PIN << 16))
 
 //Connected LED
-#define CONNECTED_LED_PORT           GPIOA		//elee: LED1 on eval board
-#define CONNECTED_LED_PIN            GPIO_PIN_4  //elee: LED1 on eval board
-#define CONNECTED_LED_PIN_Bit        4
+
+//#define CONNECTED_LED_PORT           GPIOA		//elee: LED1 on eval board
+//#define CONNECTED_LED_PIN            GPIO_PIN_4  //elee: LED1 on eval board
+//#define CONNECTED_LED_PIN_Bit        4
+
+#define CONNECTED_LED_PORT           GPIOG		//elee: LED0 on UDB board
+#define CONNECTED_LED_PIN            GPIO_PIN_0  //elee: LED0 on UDB board
+#define CONNECTED_LED_PIN_Bit        0
+
 
 //When bootloader, disable the target port(not used)
 #define POWER_EN_PIN_PORT            GPIOB
@@ -81,6 +87,12 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32F103XB);
 #define PIN_MSC_LED_PORT             GPIOA
 #define PIN_MSC_LED                  GPIO_PIN_9
 #define PIN_MSC_LED_Bit              9
+
+
+//UDB specific signals
+#define USBHUB_SELFPWR_PORT             GPIOH
+#define PIN_USBHUB_SELFPWR                  GPIO_PIN_14
+#define PIN_USBHUB_SELFPWR_Bit              14
 
 
 #endif
