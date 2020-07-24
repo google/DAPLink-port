@@ -63,6 +63,9 @@ module:
     hic_stm32f103xb: &module_hic_stm32f103xb
         - records/rtos/rtos-cm3.yaml
         - records/hic_hal/stm32f103xb.yaml
+    hic_stm32h743ii: &module_hic_stm32h743ii
+        - records/rtos/rtos-cm4.yaml
+        - records/hic_hal/stm32h743ii.yaml
     hic_max32620: &module_hic_max32620
         - records/rtos/rtos-cm4.yaml
         - records/hic_hal/max32620.yaml
@@ -146,6 +149,15 @@ projects:
         - *module_hic_stm32f103xb
         - records/family/all_family.yaml
         - records/usb/usb-bulk.yaml
+    stm32h743ii_bl:
+        - *module_bl
+        - records/hic_hal/stm32h743ii.yaml
+        - records/board/stm32h743ii_bl.yaml
+    stm32h743ii_if:
+        - *module_if
+        - *module_hic_stm32h743ii
+        - records/family/all_family.yaml
+        # - records/usb/usb-bulk.yaml  # 200723 try removing during bringup, working project doesn't have this...
     sam3u2c_mkit_dk_dongle_nrf5x_if:
         - *module_if
         - *module_hic_sam3u2c

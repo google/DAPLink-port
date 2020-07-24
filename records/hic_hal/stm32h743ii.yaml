@@ -1,0 +1,47 @@
+common:
+    target:
+        - stm32h743iikx
+    core:
+        - Cortex-M3
+    macros:
+        - INTERFACE_STM32H743
+        # - USE_HAL_DRIVER  # An issue with ''HAL_StatusTypeDef'' is most likely due to defines (USE_HAL_DRIVER,
+        - STM32H743xx
+        - DAPLINK_HIC_ID=0x97969922  # DAPLINK_HIC_ID_STM32H743II
+        - __packed=__packed          # Prevent redefinition of __packed with ARMCC
+        - DAPLINK_NO_ASSERT_FILENAMES
+        - OS_CLOCK=64000000
+    includes:
+        - source/hic_hal/stm32/stm32h743ii
+        - source/hic_hal/stm32/stm32h743ii/cmsis
+        - source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver
+        - source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Inc
+        - source/hic_hal/stm32/stm32h743ii/STCubeGenerated/Inc
+    sources:
+        hic_hal:
+            - source/hic_hal/stm32/stm32h743ii
+            - source/hic_hal/stm32/stm32h743ii/cmsis
+            - source/hic_hal/stm32/stm32h743ii/armcc
+            - source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src
+            - source/hic_hal/stm32/stm32h743ii/STCubeGenerated/Src
+tool_specific:
+    uvision:
+        misc:
+            ld_flags:
+                - --predefine="-I..\..\..\source\hic_hal\stm32\stm32h743ii"
+            c_flags:
+                - --no_unaligned_access
+            cxx_flags:
+                - --no_unaligned_access
+            asm_flags:
+                - --no_unaligned_access
+    make_armcc:
+        misc:
+            ld_flags:
+                - --predefine="-Isource\hic_hal\stm32\stm32h743ii"
+            c_flags:
+                - --no_unaligned_access
+            cxx_flags:
+                - --no_unaligned_access
+            asm_flags:
+                - --no_unaligned_access
