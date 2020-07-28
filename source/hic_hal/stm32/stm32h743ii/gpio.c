@@ -123,7 +123,7 @@ void gpio_init(void)
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
     __HAL_RCC_GPIOG_CLK_ENABLE();  //elee: udb led's
-    __HAL_RCC_GPIOH_CLK_ENABLE();  //elee: usb hub signals
+    __HAL_RCC_GPIOH_CLK_ENABLE();  //elee: usb hub signals, SPI, I2C
     // Enable USB connect pin
 		__HAL_RCC_SYSCFG_CLK_ENABLE();   //elee: this macro maps to the same as __HAL_RCC_AFIO_CLK_ENABLE(); (in the F1) and still exists.  Try it...
     
@@ -186,11 +186,18 @@ void gpio_init(void)
     output_clock_enable();
 
     // Setup the USB Hub to be "self powered" (very common setting, even if not strictly compliant).
-    GPIO_InitStructure.Pin = PIN_USBHUB_SELFPWR;
+    GPIO_InitStructure.Pin = USBHUB_SELFPWR_PIN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     HAL_GPIO_Init(USBHUB_SELFPWR_PORT, &GPIO_InitStructure);
-    HAL_GPIO_WritePin(USBHUB_SELFPWR_PORT, PIN_USBHUB_SELFPWR, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(USBHUB_SELFPWR_PORT, USBHUB_SELFPWR_PIN, GPIO_PIN_RESET);
+
+    // Enable power to DUT USB port.
+    GPIO_InitStructure.Pin = VBUS_DUT_EN_L_PIN;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    HAL_GPIO_Init(VBUS_DUT_EN_L_PORT, &GPIO_InitStructure);
+    HAL_GPIO_WritePin(VBUS_DUT_EN_L_PORT, VBUS_DUT_EN_L_PIN, GPIO_PIN_RESET);  //enable DUT USB power
 
 
     // Let the voltage rails stabilize.  This is especailly important

@@ -90,9 +90,13 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 
 
 //UDB specific signals
-#define USBHUB_SELFPWR_PORT             GPIOH
-#define PIN_USBHUB_SELFPWR                  GPIO_PIN_14
-#define PIN_USBHUB_SELFPWR_Bit              14
+#define USBHUB_SELFPWR_PORT          GPIOH
+#define USBHUB_SELFPWR_PIN           GPIO_PIN_14
+#define USBHUB_SELFPWR_PIN_Bit       14
 
+//Power switch signal to device USB port
+#define VBUS_DUT_EN_L_PORT           GPIOH
+#define VBUS_DUT_EN_L_PIN            GPIO_PIN_10
+#define VBUS_DUT_EN_L_PIN_Bit        10
 
 #endif
