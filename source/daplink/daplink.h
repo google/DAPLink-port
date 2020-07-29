@@ -65,10 +65,10 @@ COMPILER_ASSERT(DAPLINK_RAM_SHARED_START + DAPLINK_RAM_SHARED_SIZE == DAPLINK_RA
 #define DAPLINK_HIC_ID_K22F         0x9796990A
 #define DAPLINK_HIC_ID_KL27Z        0x9796990B // reserving for future use
 #define DAPLINK_HIC_ID_LPC54606     0x9796990C // reserving for future use
-#define DAPLINK_HIC_ID_STM32F723IE  0x9796990D // reserving for future use
 #define DAPLINK_HIC_ID_LPC55S69     0x97969920 // reserving for future use
 #define DAPLINK_HIC_ID_M48SSIDAE    0x97969921
-#define DAPLINK_HIC_ID_STM32H743II  0x97969922
+#define DAPLINK_HIC_ID_STM32H743II  0x97969940 // Newer STM HICs 
+#define DAPLINK_HIC_ID_STM32F723IE  0x97969941 // reserving for future use
 #define DAPLINK_HIC_ID_PSOC5        0x2E127069
 //@}
 
