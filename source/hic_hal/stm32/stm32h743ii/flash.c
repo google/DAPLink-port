@@ -26,7 +26,7 @@
 #include "string.h"
 #include "target_board.h"
 
-#include "stm32h7xx_hal.h"  // elee: To review, which headers are the right ones?  I *think* this is the main entry point here.
+//#include "stm32h7xx_hal.h"  // elee: To review, which headers are the right ones?  I *think* this is the main entry point here.
 
 
 /*********************************************************************

@@ -25,7 +25,7 @@
 #include "daplink.h"
 #include "util.h"
 
-#include "stm32h7xx_hal.h"
+//#include "stm32h7xx_hal.h"
 
 static TIM_HandleTypeDef timer;
 
@@ -124,6 +124,7 @@ void gpio_init(void)
     __HAL_RCC_GPIOD_CLK_ENABLE();
     __HAL_RCC_GPIOG_CLK_ENABLE();  //elee: udb led's
     __HAL_RCC_GPIOH_CLK_ENABLE();  //elee: usb hub signals, SPI, I2C
+	  __HAL_RCC_GPIOI_CLK_ENABLE();  //udb usb ulpi dir, spi, jtag
     // Enable USB connect pin
 		__HAL_RCC_SYSCFG_CLK_ENABLE();   //elee: this macro maps to the same as __HAL_RCC_AFIO_CLK_ENABLE(); (in the F1) and still exists.  Try it...
     

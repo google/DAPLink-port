@@ -28,7 +28,7 @@
 #include "circ_buf.h"
 #include "IO_Config.h"
 
-#include "stm32h7xx_hal.h"  //elee: porting to h7
+//#include "stm32h7xx_hal.h"  //elee: porting to h7
 
 
 // For usart

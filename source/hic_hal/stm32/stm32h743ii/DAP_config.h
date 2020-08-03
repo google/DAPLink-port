@@ -30,8 +30,8 @@
 //#include "debug_cm.h"
 //#include "swd_host.h"
 
-//#include "stm32h7xx_hal_gpio.h"  //elee, hack gpio defines.  
-#include "stm32h7xx_hal.h"  //elee, hack gpio defines. 
+//#include "stm32h7xx_hal_gpio.h"  //elee, hack gpio defines.
+//#include "stm32h7xx_hal.h"  //elee, hack gpio defines.
 
 
 //**************************************************************************************************

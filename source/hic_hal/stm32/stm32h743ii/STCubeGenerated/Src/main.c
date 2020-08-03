@@ -248,22 +248,22 @@ void MX_USB_OTG_HS_PCD_Init(void)
 //static void MX_GPIO_Init(void)
 void MX_GPIO_Init(void)
 {
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
+//  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-	//ToDo(elee): gpio_init is handling this already?  Can probably remove this code.
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOI_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
+//	//ToDo(elee): gpio_init is handling this already?  Can probably remove this code.
+//  /* GPIO Ports Clock Enable */
+//  __HAL_RCC_GPIOB_CLK_ENABLE();
+//  __HAL_RCC_GPIOA_CLK_ENABLE();
+//  __HAL_RCC_GPIOI_CLK_ENABLE();
+//  __HAL_RCC_GPIOC_CLK_ENABLE();
 
-  /*Configure GPIO pin : PA8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF0_MCO;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+//  /*Configure GPIO pin : PA8, to see MCO clock...  Same pin as I2C1_MCU_UCD_SCL */
+//  GPIO_InitStruct.Pin = GPIO_PIN_8;
+//  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+//  GPIO_InitStruct.Pull = GPIO_NOPULL;
+//  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+//  GPIO_InitStruct.Alternate = GPIO_AF0_MCO;
+//  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 

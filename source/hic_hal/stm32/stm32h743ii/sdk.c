@@ -26,8 +26,8 @@
 #include "util.h"
 #include "cortex_m.h"
 
-#include "stm32h7xx_hal.h" //elee, call cube startup files...
-#include "main.h"  //elee, definitions of the functions declared below.  
+//#include "stm32h7xx_hal.h" //elee, call cube startup files...
+#include "main.h"  //elee, definitions of the functions declared below.
 
 //elee, pull in the version from cubemx main.c
 extern void SystemClock_Config(void);  
