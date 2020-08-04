@@ -30,28 +30,54 @@
 
 //#include "stm32h7xx_hal.h"  //elee: porting to h7
 
+/*
+// UDB: UART4, on the AUX connector (for bringup).
+// pd1=UART4_TX pd0=UART4_RX
+#define CDC_UART                     UART4
+#define CDC_UART_ENABLE()            __HAL_RCC_UART4_CLK_ENABLE()
+#define CDC_UART_DISABLE()           __HAL_RCC_UART4_CLK_DISABLE()
+#define CDC_UART_IRQn                UART4_IRQn
+#define CDC_UART_IRQn_Handler        UART4_IRQHandler
 
-// For usart
-#define CDC_UART                     USART2
-#define CDC_UART_ENABLE()            __HAL_RCC_USART2_CLK_ENABLE()
-#define CDC_UART_DISABLE()           __HAL_RCC_USART2_CLK_DISABLE()
-#define CDC_UART_IRQn                USART2_IRQn
-#define CDC_UART_IRQn_Handler        USART2_IRQHandler
+#define UART_PINS_PORT_ENABLE()      __HAL_RCC_GPIOD_CLK_ENABLE()
+#define UART_PINS_PORT_DISABLE()     __HAL_RCC_GPIOD_CLK_DISABLE()
 
-#define UART_PINS_PORT_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
-#define UART_PINS_PORT_DISABLE()     __HAL_RCC_GPIOA_CLK_DISABLE()
+#define UART_ALTFUNC                 GPIO_AF8_UART4  //Select the correct alt func
 
-#define UART_TX_PORT                 GPIOA
-#define UART_TX_PIN                  GPIO_PIN_2
+#define UART_TX_PORT                 GPIOD
+#define UART_TX_PIN                  GPIO_PIN_1
 
-#define UART_RX_PORT                 GPIOA
-#define UART_RX_PIN                  GPIO_PIN_3
+#define UART_RX_PORT                 GPIOD
+#define UART_RX_PIN                  GPIO_PIN_0
+*/
 
-#define UART_CTS_PORT                GPIOA
-#define UART_CTS_PIN                 GPIO_PIN_0
 
-#define UART_RTS_PORT                GPIOA
-#define UART_RTS_PIN                 GPIO_PIN_1
+// UDB: USART3, UART0_MCU_UDC_TXD or UART0_UDC_TXD
+// pd8=USART3_TX pd9=USART3_RX
+#define CDC_UART                     USART3
+#define CDC_UART_ENABLE()            __HAL_RCC_USART3_CLK_ENABLE()
+#define CDC_UART_DISABLE()           __HAL_RCC_USART3_CLK_DISABLE()
+#define CDC_UART_IRQn                USART3_IRQn
+#define CDC_UART_IRQn_Handler        USART3_IRQHandler
+
+#define UART_PINS_PORT_ENABLE()      __HAL_RCC_GPIOD_CLK_ENABLE()
+#define UART_PINS_PORT_DISABLE()     __HAL_RCC_GPIOD_CLK_DISABLE()
+
+#define UART_ALTFUNC                 GPIO_AF7_USART3  //Select the correct alt func
+
+#define UART_TX_PORT                 GPIOD
+#define UART_TX_PIN                  GPIO_PIN_8
+
+#define UART_RX_PORT                 GPIOD
+#define UART_RX_PIN                  GPIO_PIN_9
+
+//ToDo(elee): CTS/RTS not used on main UDC uarts.  How to ensure they are not used?  Just don't set the Alternate function?
+// Just choose one of the possible pins for CTS/RTS for usart3 for now.
+#define UART_CTS_PORT                GPIOD
+#define UART_CTS_PIN                 GPIO_PIN_11
+
+#define UART_RTS_PORT                GPIOD
+#define UART_RTS_PIN                 GPIO_PIN_12
 
 
 #define RX_OVRF_MSG         "<DAPLink:Overflow>\n"
@@ -85,7 +111,7 @@ int32_t uart_initialize(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    CDC_UART->CR1 &= ~(USART_IT_TXE | USART_IT_RXNE);
+    CDC_UART->CR1 &= ~(USART_ISR_TXE_TXFNF | USART_ISR_RXNE_RXFNE);
     clear_buffers();
 
     CDC_UART_ENABLE();
@@ -95,24 +121,30 @@ int32_t uart_initialize(void)
     GPIO_InitStructure.Pin = UART_TX_PIN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
+	  GPIO_InitStructure.Pull = GPIO_NOPULL;
+	  GPIO_InitStructure.Alternate = UART_ALTFUNC;
     HAL_GPIO_Init(UART_TX_PORT, &GPIO_InitStructure);
     //RX pin
     GPIO_InitStructure.Pin = UART_RX_PIN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
-    GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStructure.Pull = GPIO_PULLUP;
+	  GPIO_InitStructure.Alternate = UART_ALTFUNC;
     HAL_GPIO_Init(UART_RX_PORT, &GPIO_InitStructure);
     //CTS pin, input
     GPIO_InitStructure.Pin = UART_CTS_PIN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
     GPIO_InitStructure.Pull = GPIO_PULLUP;
+    //GPIO_InitStructure.Alternate = UART_ALTFUNC;  //cts is not used?
     HAL_GPIO_Init(UART_CTS_PORT, &GPIO_InitStructure);
     //RTS pin, output low
     HAL_GPIO_WritePin(UART_RTS_PORT, UART_RTS_PIN, GPIO_PIN_RESET);
     GPIO_InitStructure.Pin = UART_RTS_PIN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStructure.Pull = GPIO_NOPULL;
+    //GPIO_InitStructure.Alternate = UART_ALTFUNC;  //rts is not used?
     HAL_GPIO_Init(UART_RTS_PORT, &GPIO_InitStructure);
 
     NVIC_EnableIRQ(CDC_UART_IRQn);
@@ -122,7 +154,7 @@ int32_t uart_initialize(void)
 
 int32_t uart_uninitialize(void)
 {
-    CDC_UART->CR1 &= ~(USART_IT_TXE | USART_IT_RXNE);
+    CDC_UART->CR1 &= ~(USART_ISR_TXE_TXFNF | USART_ISR_RXNE_RXFNE);
     clear_buffers();
     return 1;
 }
@@ -130,16 +162,16 @@ int32_t uart_uninitialize(void)
 int32_t uart_reset(void)
 {
     const uint32_t cr1 = CDC_UART->CR1;
-    CDC_UART->CR1 = cr1 & ~(USART_IT_TXE | USART_IT_RXNE);
+    CDC_UART->CR1 = cr1 & ~(USART_ISR_TXE_TXFNF | USART_ISR_RXNE_RXFNE);
     clear_buffers();
-    CDC_UART->CR1 = cr1 & ~USART_IT_TXE;
+    CDC_UART->CR1 = cr1 & ~USART_ISR_TXE_TXFNF;
     return 1;
 }
 
 int32_t uart_set_configuration(UART_Configuration *config)
 {
     UART_HandleTypeDef uart_handle;
-    HAL_StatusTypeDef status; 
+    HAL_StatusTypeDef status;
 
     memset(&uart_handle, 0, sizeof(uart_handle));
     uart_handle.Instance = CDC_UART;
@@ -182,16 +214,16 @@ int32_t uart_set_configuration(UART_Configuration *config)
     // No flow control
     configuration.FlowControl = UART_FLOW_CONTROL_NONE;
     uart_handle.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
-    
+
     // Specified baudrate
     configuration.Baudrate = config->Baudrate;
     uart_handle.Init.BaudRate = config->Baudrate;
 
     // TX and RX
     uart_handle.Init.Mode = UART_MODE_TX_RX;
-    
+
     // Disable uart and tx/rx interrupt
-    CDC_UART->CR1 &= ~(USART_IT_TXE | USART_IT_RXNE);
+    CDC_UART->CR1 &= ~(USART_ISR_TXE_TXFNF | USART_ISR_RXNE_RXFNE);
 
     clear_buffers();
 
@@ -201,7 +233,7 @@ int32_t uart_set_configuration(UART_Configuration *config)
     util_assert(HAL_OK == status);
     (void)status;
 
-    CDC_UART->CR1 |= USART_IT_RXNE;
+    CDC_UART->CR1 |= USART_ISR_RXNE_RXFNE;
 
     return 1;
 }
@@ -225,8 +257,8 @@ int32_t uart_write_free(void)
 int32_t uart_write_data(uint8_t *data, uint16_t size)
 {
     uint32_t cnt = circ_buf_write(&write_buffer, data, size);
-    CDC_UART->CR1 |= USART_IT_TXE;
-
+	//USART_IT_TXE; elee: USART_IT_TXE doesn't work!  Some bit packed format to use with __HAL_USART_ENABLE_IT
+    CDC_UART->CR1 |= USART_ISR_TXE_TXFNF;
     return cnt;
 }
 
@@ -256,7 +288,7 @@ void CDC_UART_IRQn_Handler(void)
         if (circ_buf_count_used(&write_buffer) > 0) {
             CDC_UART->TDR = circ_buf_pop(&write_buffer);
         } else {
-            CDC_UART->CR1 &= ~USART_IT_TXE;
+            CDC_UART->CR1 &= ~USART_ISR_TXE_TXFNF;
         }
     }
 }
