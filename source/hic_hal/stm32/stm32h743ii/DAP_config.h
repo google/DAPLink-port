@@ -50,6 +50,10 @@ Provides definitions about:
 /// This value is used to calculate the SWD/JTAG clock speed.
 #define CPU_CLOCK               SystemCoreClock        ///< Specifies the CPU Clock in Hz
 
+
+// ToDo(elee): Review, is this 6 for H743?
+// https://stackoverflow.com/questions/51736591/stm32h7xx-toggle-io-as-fast-as-possible
+
 /// Number of processor cycles for I/O Port write operations.
 /// This value is used to calculate the SWD/JTAG clock speed that is generated with I/O
 /// Port write operations in the Debug Unit by a Cortex-M MCU. Most Cortex-M processors
@@ -57,6 +61,7 @@ Provides definitions about:
 /// a Cortex-M0+ processor with high-speed peripheral I/O only 1 processor cycle might be
 /// requrired.
 #define IO_PORT_WRITE_CYCLES    2               ///< I/O Cycles: 2=default, 1=Cortex-M0+ fast I/0
+
 
 /// Indicate that Serial Wire Debug (SWD) communication mode is available at the Debug Access Port.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
@@ -79,16 +84,21 @@ Provides definitions about:
 /// The command \ref DAP_SWJ_Clock can be used to overwrite this default setting.
 #define DAP_DEFAULT_SWJ_CLOCK   5000000         ///< Default SWD/JTAG clock frequency in Hz.
 
+//ToDo(elee): 512 for WinUSB?  https://arm-software.github.io/CMSIS_5/DAP/html/group__DAP__Config__Debug__gr.html#gaa28bb1da2661291634c4a8fb3e227404
+
 /// Maximum Package Size for Command and Response data.
 /// This configuration settings is used to optimized the communication performance with the
 /// debugger and depends on the USB peripheral. Change setting to 1024 for High-Speed USB.
-#define DAP_PACKET_SIZE        64              ///< USB: 64 = Full-Speed, 1024 = High-Speed.
+#define DAP_PACKET_SIZE        1024              ///< USB: 64 = Full-Speed, 1024 = High-Speed.
 
 /// Maximum Package Buffers for Command and Response data.
 /// This configuration settings is used to optimized the communication performance with the
 /// debugger and depends on the USB peripheral. For devices with limited RAM or USB buffer the
 /// setting can be reduced (valid range is 1 .. 255). Change setting to 4 for High-Speed USB.
 #define DAP_PACKET_COUNT       4              ///< Buffers: 64 = Full-Speed, 4 = High-Speed.
+
+
+// ToDo(elee): enable SWO_UART
 
 /// Indicate that UART Serial Wire Output (SWO) trace is available.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
@@ -97,12 +107,18 @@ Provides definitions about:
 /// Maximum SWO UART Baudrate
 #define SWO_UART_MAX_BAUDRATE   10000000U       ///< SWO UART Maximum Baudrate in Hz
 
+
+// ToDo(elee): Supported?  How common?
+
 /// Indicate that Manchester Serial Wire Output (SWO) trace is available.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
 #define SWO_MANCHESTER          0               ///< SWO Manchester:  1 = available, 0 = not available
 
 /// SWO Trace Buffer Size.
 #define SWO_BUFFER_SIZE         4096U           ///< SWO Trace Buffer Size in bytes (must be 2^n)
+
+
+// Todo(elee): Looks like is 0 for all DAPLink probes.
 
 /// SWO Streaming Trace.
 #define SWO_STREAM              0               ///< SWO Streaming Trace: 1 = available, 0 = not available.
@@ -144,7 +160,7 @@ __STATIC_INLINE void pin_out_od_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit)
 __STATIC_INLINE void pin_in_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit, uint8_t mode)
 {
 	  // mode = 0 -> analog input, 1->pullup, 2->pulldown
-	
+
     uint8_t config;
     if(mode == 1)
         config = 0x01; //pull-up
@@ -155,10 +171,10 @@ __STATIC_INLINE void pin_in_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit, uint8_t m
 				GPIOx->MODER |= ( 0x00000003 << ((pin_bit) << 1) );  // 0b11 = analog mode
 		else // gpio in
 				GPIOx->MODER &= ~(0x00000003 << ((pin_bit) << 1));  // clear (input mode)
-		
+
 				GPIOx->PUPDR &= ~(0x00000003 << ((pin_bit) << 1));  // clear
 				GPIOx->PUPDR |= ( ((uint32_t)(config) & 0x03) << ((pin_bit) << 1));  // set pullup/down
-		
+
 }
 //**************************************************************************************************
 /**
@@ -441,7 +457,10 @@ __STATIC_INLINE void LED_CONNECTED_OUT(uint32_t bit)
 */
 __STATIC_INLINE void LED_RUNNING_OUT(uint32_t bit)
 {
-    ;             // Not available
+    if (bit & 1)
+        RUNNING_LED_PORT->BSRR = (RUNNING_LED_PIN + 16); // LED on
+    else
+        RUNNING_LED_PORT->BSRR = RUNNING_LED_PIN;// LED off
 }
 
 ///@}
@@ -489,10 +508,11 @@ Status LEDs. In detail the operation of Hardware I/O and LED pins are enabled an
 __STATIC_INLINE void DAP_SETUP(void)
 {
     /* Enable port clock */
-    __HAL_RCC_GPIOA_CLK_ENABLE();
+    //__HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE(); //buffer signals
     __HAL_RCC_GPIOD_CLK_ENABLE();
+    __HAL_RCC_GPIOF_CLK_ENABLE(); //dir signals
     /* Configure I/O pin SWCLK */
     pin_out_init(SWCLK_TCK_PIN_PORT, SWCLK_TCK_PIN_Bit);
     SWCLK_TCK_PIN_PORT->BSRR = SWCLK_TCK_PIN;
@@ -507,11 +527,6 @@ __STATIC_INLINE void DAP_SETUP(void)
 
     pin_out_init(CONNECTED_LED_PORT, CONNECTED_LED_PIN_Bit);
     CONNECTED_LED_PORT->BSRR = CONNECTED_LED_PIN;
-		
-	//elee: toggle the pin, see the LED do something.  
-		HAL_Delay(1000);
-		CONNECTED_LED_PORT->BSRR = (CONNECTED_LED_PIN << 16);
-		
 }
 
 /** Reset Target Device with custom specific I/O pin or command sequence.

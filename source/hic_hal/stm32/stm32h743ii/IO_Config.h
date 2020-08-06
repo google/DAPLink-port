@@ -46,29 +46,44 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 #define CONNECTED_LED_PIN            GPIO_PIN_0  //elee: LED0 on UDB board
 #define CONNECTED_LED_PIN_Bit        0
 
-
+// ToDo(elee):
 //When bootloader, disable the target port(not used)
-#define POWER_EN_PIN_PORT            GPIOB
-#define POWER_EN_PIN                 GPIO_PIN_15
-#define POWER_EN_Bit                 15
+#define POWER_EN_PIN_PORT            VBUS_DUT_EN_L_PORT
+#define POWER_EN_PIN                 VBUS_DUT_EN_L_PIN
+#define POWER_EN_Bit                 VBUS_DUT_EN_L_PIN_Bit
 
 // nRESET OUT Pin
-#define nRESET_PIN_PORT              GPIOB
-#define nRESET_PIN                   GPIO_PIN_0
-#define nRESET_PIN_Bit               0
+// JTAG0_MCU_UDC_RESET_L
+#define nRESET_PIN_PORT              GPIOI
+#define nRESET_PIN                   GPIO_PIN_4
+#define nRESET_PIN_Bit               4
 
 //SWD
-#define SWCLK_TCK_PIN_PORT           GPIOB
-#define SWCLK_TCK_PIN                GPIO_PIN_13
-#define SWCLK_TCK_PIN_Bit            13
+// JTAG0_MCU_UDC_TCK_SWDCLK
+#define SWCLK_TCK_PIN_PORT           GPIOD
+#define SWCLK_TCK_PIN                GPIO_PIN_7
+#define SWCLK_TCK_PIN_Bit            7
 
-#define SWDIO_OUT_PIN_PORT           GPIOB
-#define SWDIO_OUT_PIN                GPIO_PIN_14
-#define SWDIO_OUT_PIN_Bit            14
+// JTAG0_MCU_UDC_TMS_SWDIO
+#define SWDIO_OUT_PIN_PORT           GPIOD
+#define SWDIO_OUT_PIN                GPIO_PIN_2
+#define SWDIO_OUT_PIN_Bit            2
 
-#define SWDIO_IN_PIN_PORT            GPIOB
-#define SWDIO_IN_PIN                 GPIO_PIN_12
-#define SWDIO_IN_PIN_Bit             12
+#define SWDIO_IN_PIN_PORT            GPIOD
+#define SWDIO_IN_PIN                 GPIO_PIN_2
+#define SWDIO_IN_PIN_Bit             2
+
+
+// ToDo(elee):  Enable TDO / SWO?
+// JTAG0_MCU_UDC_TDO_SWO = PB7 (is a USART)
+
+// ToDo(elee):  Enable TDI?  See source/hic_hal/nxp/lpc11u35/DAP_config.h:
+// Need separate _IN_ and _OUT_ defines?
+// JTAG0_MCU_UDC_TDI
+#define TDI_IN_PIN_PORT            GPIOD
+#define TDI_IN_PIN                 GPIO_PIN_10
+#define TDI_IN_PIN_Bit             10
+
 
 //LEDs
 //USB status LED
