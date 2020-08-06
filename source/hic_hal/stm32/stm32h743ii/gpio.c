@@ -179,11 +179,11 @@ void gpio_init(void)
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     HAL_GPIO_Init(POWER_EN_PIN_PORT, &GPIO_InitStructure);
 
-    // Setup the 8MHz MCO
-    GPIO_InitStructure.Pin = GPIO_PIN_8;
+    // Setup the MCO.  MCO2 for UDB
+    GPIO_InitStructure.Pin = GPIO_PIN_9;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
     output_clock_enable();
 
     // Setup the USB Hub to be "self powered" (very common setting, even if not strictly compliant).
@@ -200,6 +200,8 @@ void gpio_init(void)
     HAL_GPIO_Init(VBUS_DUT_EN_L_PORT, &GPIO_InitStructure);
     HAL_GPIO_WritePin(VBUS_DUT_EN_L_PORT, VBUS_DUT_EN_L_PIN, GPIO_PIN_RESET);  //enable DUT USB power
 
+
+    //ToDo(elee): Update delay as needed for core clk speed.  This is the value from the stm32f1.
 
     // Let the voltage rails stabilize.  This is especailly important
     // during software resets, since the target's 3.3v rail can take
