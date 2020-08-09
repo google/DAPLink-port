@@ -164,11 +164,19 @@ void gpio_init(void)
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     HAL_GPIO_Init(PIN_MSC_LED_PORT, &GPIO_InitStructure);
 
-    // reset button configured as gpio open drain output with a pullup
-    HAL_GPIO_WritePin(nRESET_PIN_PORT, nRESET_PIN, GPIO_PIN_SET);
+    // Reset (to DUT):
+    // UDC has MCU -> buffer -> nRST line.  
+    // By keeping the MCU pin as an input (with pulldown)
+    // then when changing the buffer dir pin to an output (from MCU) it will pull nRST low,
+    // and when the buffer is changed to an input the MCU can read the level.    
+    HAL_GPIO_WritePin(nRESET_DIR_PIN_PORT, nRESET_DIR_PIN, GPIO_PIN_RESET);  //input to MCU, nRST inactive
+    GPIO_InitStructure.Pin = nRESET_DIR_PIN;
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    HAL_GPIO_Init(nRESET_DIR_PIN_PORT, &GPIO_InitStructure);
+    
     GPIO_InitStructure.Pin = nRESET_PIN;
-    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_OD;
-    GPIO_InitStructure.Pull = GPIO_PULLUP;
+    GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStructure.Pull = GPIO_PULLDOWN;
     HAL_GPIO_Init(nRESET_PIN_PORT, &GPIO_InitStructure);
 
     // Turn on power to the board. When the target is unpowered

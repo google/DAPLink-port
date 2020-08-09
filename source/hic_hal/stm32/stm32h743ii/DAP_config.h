@@ -60,7 +60,7 @@ Provides definitions about:
 /// requrie 2 processor cycles for a I/O Port Write operation.  If the Debug Unit uses
 /// a Cortex-M0+ processor with high-speed peripheral I/O only 1 processor cycle might be
 /// requrired.
-#define IO_PORT_WRITE_CYCLES    2               ///< I/O Cycles: 2=default, 1=Cortex-M0+ fast I/0
+#define IO_PORT_WRITE_CYCLES    10               ///< I/O Cycles: 2=default, 1=Cortex-M0+ fast I/0
 
 
 /// Indicate that Serial Wire Debug (SWD) communication mode is available at the Debug Access Port.
@@ -82,20 +82,20 @@ Provides definitions about:
 /// Default communication speed on the Debug Access Port for SWD and JTAG mode.
 /// Used to initialize the default SWD/JTAG clock frequency.
 /// The command \ref DAP_SWJ_Clock can be used to overwrite this default setting.
-#define DAP_DEFAULT_SWJ_CLOCK   5000000         ///< Default SWD/JTAG clock frequency in Hz.
+#define DAP_DEFAULT_SWJ_CLOCK   100000         ///< Default SWD/JTAG clock frequency in Hz.
 
 //ToDo(elee): 512 for WinUSB?  https://arm-software.github.io/CMSIS_5/DAP/html/group__DAP__Config__Debug__gr.html#gaa28bb1da2661291634c4a8fb3e227404
 
 /// Maximum Package Size for Command and Response data.
 /// This configuration settings is used to optimized the communication performance with the
 /// debugger and depends on the USB peripheral. Change setting to 1024 for High-Speed USB.
-#define DAP_PACKET_SIZE        1024              ///< USB: 64 = Full-Speed, 1024 = High-Speed.
+#define DAP_PACKET_SIZE        64              ///< USB: 64 = Full-Speed, 1024 = High-Speed.
 
 /// Maximum Package Buffers for Command and Response data.
 /// This configuration settings is used to optimized the communication performance with the
 /// debugger and depends on the USB peripheral. For devices with limited RAM or USB buffer the
 /// setting can be reduced (valid range is 1 .. 255). Change setting to 4 for High-Speed USB.
-#define DAP_PACKET_COUNT       4              ///< Buffers: 64 = Full-Speed, 4 = High-Speed.
+#define DAP_PACKET_COUNT       64              ///< Buffers: 64 = Full-Speed, 4 = High-Speed.
 
 
 // ToDo(elee): enable SWO_UART
@@ -143,10 +143,10 @@ Provides definitions about:
 
 __STATIC_INLINE void pin_out_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit)
 {
-    GPIOx->MODER &= ~(0x00000003 << ((pin_bit) << 1));
+    GPIOx->MODER &= ~(0x00000003 << ((pin_bit) << 1)); //shift in 2 bit increments.
     GPIOx->MODER |= ( 0x00000001 << ((pin_bit) << 1) );  // 0b01 = gpio out
     GPIOx->OTYPER &= ~(0x00000001 << (pin_bit));  //  0b0 = push-pull mode
-	  GPIOx->OSPEEDR &= ~(0x0000003 << ((pin_bit) << 1));  // set "very high speed"
+	  GPIOx->OSPEEDR |= (0x0000003 << ((pin_bit) << 1));  // set "very high speed"
 }
 
 __STATIC_INLINE void pin_out_od_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit)
@@ -154,14 +154,14 @@ __STATIC_INLINE void pin_out_od_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit)
     GPIOx->MODER &= ~(0x00000003 << ((pin_bit) << 1));
     GPIOx->MODER |= ( 0x00000001 << ((pin_bit) << 1) );  // 0b01 = gpio out
     GPIOx->OTYPER |= (0x00000001 << (pin_bit));  // 0b1 = open drain mode
-	  GPIOx->OSPEEDR &= ~(0x0000003 << ((pin_bit) << 1));  // set "very high speed"
+	  GPIOx->OSPEEDR |= (0x0000003 << ((pin_bit) << 1));  // set "very high speed"
 }
 
 __STATIC_INLINE void pin_in_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit, uint8_t mode)
 {
-	  // mode = 0 -> analog input, 1->pullup, 2->pulldown
+	  // mode = 0 -> analog input, 1->pullup, 2->pulldown, 3->input-no-pullups
 
-    uint8_t config;
+    uint8_t config = 0;
     if(mode == 1)
         config = 0x01; //pull-up
     else if(mode == 2)
@@ -169,7 +169,7 @@ __STATIC_INLINE void pin_in_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit, uint8_t m
 
 		if( mode == 0) //analog input
 				GPIOx->MODER |= ( 0x00000003 << ((pin_bit) << 1) );  // 0b11 = analog mode
-		else // gpio in
+		else // gpio in (mode >0)
 				GPIOx->MODER &= ~(0x00000003 << ((pin_bit) << 1));  // clear (input mode)
 
 				GPIOx->PUPDR &= ~(0x00000003 << ((pin_bit) << 1));  // clear
@@ -237,13 +237,14 @@ __STATIC_INLINE void PORT_SWD_SETUP(void)
     pin_out_init(SWCLK_TCK_PIN_PORT, SWCLK_TCK_PIN_Bit);
     SWCLK_TCK_PIN_PORT->BSRR = SWCLK_TCK_PIN;
     // Set SWDIO HIGH
-    pin_out_init(SWDIO_OUT_PIN_PORT, SWDIO_OUT_PIN_Bit);
-    SWDIO_OUT_PIN_PORT->BSRR = SWDIO_OUT_PIN;
+    pin_out_init(SWDIO_PIN_PORT, SWDIO_PIN_Bit);
+    SWDIO_PIN_PORT->BSRR = SWDIO_PIN;
 
-    pin_in_init(SWDIO_IN_PIN_PORT, SWDIO_IN_PIN_Bit, 1);
+    //pin_in_init(SWDIO_IN_PIN_PORT, SWDIO_IN_PIN_Bit, 1);  //Only a single SWDIO pin is used
+
     // Set RESET HIGH
-    pin_out_od_init(nRESET_PIN_PORT, nRESET_PIN_Bit);//TODO - fix reset logic
-    nRESET_PIN_PORT->BSRR = nRESET_PIN;
+    pin_in_init(nRESET_PIN_PORT, nRESET_PIN_Bit, 2); // input, with pulldown
+    nRESET_DIR_PIN_PORT->BSRR = (nRESET_DIR_PIN << 16); // DIR low -> nRST high
 }
 
 /** Disable JTAG/SWD I/O Pins.
@@ -253,8 +254,7 @@ Disables the DAP Hardware I/O pins which configures:
 __STATIC_INLINE void PORT_OFF(void)
 {
     pin_in_init(SWCLK_TCK_PIN_PORT, SWCLK_TCK_PIN_Bit, 0);
-    pin_in_init(SWDIO_OUT_PIN_PORT, SWDIO_OUT_PIN_Bit, 0);
-    pin_in_init(SWDIO_IN_PIN_PORT, SWDIO_IN_PIN_Bit, 0);
+    pin_in_init(SWDIO_PIN_PORT, SWDIO_PIN_Bit, 0);
 }
 
 // SWCLK/TCK I/O pin -------------------------------------
@@ -280,7 +280,7 @@ Set the SWCLK/TCK DAP hardware I/O pin to low level.
 */
 __STATIC_FORCEINLINE void PIN_SWCLK_TCK_CLR(void)
 {
-    SWCLK_TCK_PIN_PORT->BSRR = (SWCLK_TCK_PIN + 16);
+    SWCLK_TCK_PIN_PORT->BSRR = (SWCLK_TCK_PIN << 16);
 }
 
 // SWDIO/TMS Pin I/O --------------------------------------
@@ -290,7 +290,7 @@ __STATIC_FORCEINLINE void PIN_SWCLK_TCK_CLR(void)
 */
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_TMS_IN(void)
 {
-    return ((SWDIO_IN_PIN_PORT->IDR & SWDIO_IN_PIN) ? 1 : 0);
+    return ((SWDIO_PIN_PORT->IDR & SWDIO_PIN) ? 1 : 0);
 }
 
 /** SWDIO/TMS I/O pin: Set Output to High.
@@ -298,7 +298,7 @@ Set the SWDIO/TMS DAP hardware I/O pin to high level.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_TMS_SET(void)
 {
-    SWDIO_OUT_PIN_PORT->BSRR = SWDIO_OUT_PIN;
+    SWDIO_PIN_PORT->BSRR = SWDIO_PIN;
 }
 
 /** SWDIO/TMS I/O pin: Set Output to Low.
@@ -306,7 +306,7 @@ Set the SWDIO/TMS DAP hardware I/O pin to low level.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_TMS_CLR(void)
 {
-    SWDIO_OUT_PIN_PORT->BSRR = (SWDIO_OUT_PIN + 16);
+    SWDIO_PIN_PORT->BSRR = (SWDIO_PIN << 16);
 }
 
 /** SWDIO I/O pin: Get Input (used in SWD mode only).
@@ -314,7 +314,7 @@ __STATIC_FORCEINLINE void PIN_SWDIO_TMS_CLR(void)
 */
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_IN(void)
 {
-    return ((SWDIO_IN_PIN_PORT->IDR & SWDIO_IN_PIN) ? 1 : 0);
+    return ((SWDIO_PIN_PORT->IDR & SWDIO_PIN) ? 1 : 0);
 }
 
 /** SWDIO I/O pin: Set Output (used in SWD mode only).
@@ -323,9 +323,9 @@ __STATIC_FORCEINLINE uint32_t PIN_SWDIO_IN(void)
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT(uint32_t bit)
 {
     if (bit & 1)
-        SWDIO_OUT_PIN_PORT->BSRR = SWDIO_OUT_PIN;
+        SWDIO_PIN_PORT->BSRR = SWDIO_PIN;
     else
-        SWDIO_OUT_PIN_PORT->BSRR = (SWDIO_OUT_PIN + 16);
+        SWDIO_PIN_PORT->BSRR = (SWDIO_PIN << 16);
 }
 
 /** SWDIO I/O pin: Switch to Output mode (used in SWD mode only).
@@ -334,8 +334,8 @@ called prior \ref PIN_SWDIO_OUT function calls.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT_ENABLE(void)
 {
-    pin_out_init(SWDIO_OUT_PIN_PORT, SWDIO_OUT_PIN_Bit);
-    SWDIO_OUT_PIN_PORT->BSRR = (SWDIO_OUT_PIN + 16);
+    pin_out_init(SWDIO_PIN_PORT, SWDIO_PIN_Bit);
+    SWDIO_PIN_PORT->BSRR = (SWDIO_PIN << 16);
 }
 
 /** SWDIO I/O pin: Switch to Input mode (used in SWD mode only).
@@ -344,8 +344,8 @@ called prior \ref PIN_SWDIO_IN function calls.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
 {
-    pin_in_init(SWDIO_OUT_PIN_PORT, SWDIO_OUT_PIN_Bit, 0);
-    SWDIO_OUT_PIN_PORT->BSRR = SWDIO_OUT_PIN;
+    pin_in_init(SWDIO_PIN_PORT, SWDIO_PIN_Bit, 1);  //mode=1, so is an input (w pullup)
+    SWDIO_PIN_PORT->BSRR = SWDIO_PIN;
 }
 
 
@@ -419,9 +419,9 @@ __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN(void)
 __STATIC_FORCEINLINE void     PIN_nRESET_OUT(uint32_t bit)
 {
     if (bit & 1)
-        nRESET_PIN_PORT->BSRR = nRESET_PIN;
+        nRESET_DIR_PIN_PORT->BSRR = (nRESET_DIR_PIN << 16); // DIR pin low -> nRST goes high
     else
-        nRESET_PIN_PORT->BSRR = (nRESET_PIN + 16);
+        nRESET_DIR_PIN_PORT->BSRR = nRESET_DIR_PIN; // DIR pin high -> nRST goes low
 }
 
 //**************************************************************************************************
@@ -445,7 +445,7 @@ It is recommended to provide the following LEDs for status indication:
 __STATIC_INLINE void LED_CONNECTED_OUT(uint32_t bit)
 {
     if (bit & 1)
-        CONNECTED_LED_PORT->BSRR = (CONNECTED_LED_PIN + 16); // LED on
+        CONNECTED_LED_PORT->BSRR = (CONNECTED_LED_PIN << 16); // LED on
     else
         CONNECTED_LED_PORT->BSRR = CONNECTED_LED_PIN;// LED off
 }
@@ -458,7 +458,7 @@ __STATIC_INLINE void LED_CONNECTED_OUT(uint32_t bit)
 __STATIC_INLINE void LED_RUNNING_OUT(uint32_t bit)
 {
     if (bit & 1)
-        RUNNING_LED_PORT->BSRR = (RUNNING_LED_PIN + 16); // LED on
+        RUNNING_LED_PORT->BSRR = (RUNNING_LED_PIN << 16); // LED on
     else
         RUNNING_LED_PORT->BSRR = RUNNING_LED_PIN;// LED off
 }
@@ -513,17 +513,18 @@ __STATIC_INLINE void DAP_SETUP(void)
     __HAL_RCC_GPIOC_CLK_ENABLE(); //buffer signals
     __HAL_RCC_GPIOD_CLK_ENABLE();
     __HAL_RCC_GPIOF_CLK_ENABLE(); //dir signals
+    __HAL_RCC_GPIOI_CLK_ENABLE(); //nRST signal
     /* Configure I/O pin SWCLK */
     pin_out_init(SWCLK_TCK_PIN_PORT, SWCLK_TCK_PIN_Bit);
     SWCLK_TCK_PIN_PORT->BSRR = SWCLK_TCK_PIN;
 
-    pin_out_init(SWDIO_OUT_PIN_PORT, SWDIO_OUT_PIN_Bit);
-    SWDIO_OUT_PIN_PORT->BSRR = SWDIO_OUT_PIN;
+    pin_out_init(SWDIO_PIN_PORT, SWDIO_PIN_Bit);
+    SWDIO_PIN_PORT->BSRR = SWDIO_PIN;
 
-    pin_in_init(SWDIO_IN_PIN_PORT, SWDIO_IN_PIN_Bit, 1);
+    //pin_in_init(SWDIO_IN_PIN_PORT, SWDIO_IN_PIN_Bit, 1);  //Only a single SWDIO pin is used
 
-    pin_out_od_init(nRESET_PIN_PORT, nRESET_PIN_Bit);
-    nRESET_PIN_PORT->BSRR = nRESET_PIN;
+    pin_in_init(nRESET_PIN_PORT, nRESET_PIN_Bit, 2); // input, with pulldown
+    nRESET_DIR_PIN_PORT->BSRR = (nRESET_DIR_PIN << 16); // nRST high (not pulled low)
 
     pin_out_init(CONNECTED_LED_PORT, CONNECTED_LED_PIN_Bit);
     CONNECTED_LED_PORT->BSRR = CONNECTED_LED_PIN;

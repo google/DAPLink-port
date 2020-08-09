@@ -58,6 +58,12 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 #define nRESET_PIN                   GPIO_PIN_4
 #define nRESET_PIN_Bit               4
 
+// nRESET DIR Pin
+// JTAG0_NRESET_DIR
+#define nRESET_DIR_PIN_PORT          GPIOF
+#define nRESET_DIR_PIN               GPIO_PIN_8
+#define nRESET_DIR_PIN_Bit           8
+
 //SWD
 // JTAG0_MCU_UDC_TCK_SWDCLK
 #define SWCLK_TCK_PIN_PORT           GPIOD
@@ -65,13 +71,18 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 #define SWCLK_TCK_PIN_Bit            7
 
 // JTAG0_MCU_UDC_TMS_SWDIO
-#define SWDIO_OUT_PIN_PORT           GPIOD
-#define SWDIO_OUT_PIN                GPIO_PIN_2
-#define SWDIO_OUT_PIN_Bit            2
+#define SWDIO_PIN_PORT            GPIOD
+#define SWDIO_PIN                 GPIO_PIN_2
+#define SWDIO_PIN_Bit             2
 
-#define SWDIO_IN_PIN_PORT            GPIOD
-#define SWDIO_IN_PIN                 GPIO_PIN_2
-#define SWDIO_IN_PIN_Bit             2
+//#define SWDIO_OUT_PIN_PORT           GPIOD
+//#define SWDIO_OUT_PIN                GPIO_PIN_2
+//#define SWDIO_OUT_PIN_Bit            2
+
+//#define SWDIO_IN_PIN_PORT            GPIOD
+//#define SWDIO_IN_PIN                 GPIO_PIN_2
+//#define SWDIO_IN_PIN_Bit             2
+
 
 
 // ToDo(elee):  Enable TDO / SWO?
