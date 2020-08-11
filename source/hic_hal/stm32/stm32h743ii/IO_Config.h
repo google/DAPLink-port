@@ -130,4 +130,79 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 #define VBUS_DUT_EN_L_PIN            GPIO_PIN_10
 #define VBUS_DUT_EN_L_PIN_Bit        10
 
+// ehassman
+// From MX_Device.h
+/*-------------------------------- I2C1       --------------------------------*/
+// I2C1
+// #define MX_I2C1                                 1
+/* Pin PB6 */
+#define MX_I2C1_SCL_GPIO_Speed                  GPIO_SPEED_FREQ_LOW
+#define MX_I2C1_SCL_GPIO_FM6                    __NULL
+#define MX_I2C1_SCL_Pin                         PB6
+#define MX_I2C1_SCL_GPIOx                       GPIOB
+#define MX_I2C1_SCL_GPIO_PuPd                   GPIO_NOPULL
+#define MX_I2C1_SCL_GPIO_Pin                    GPIO_PIN_6
+#define MX_I2C1_SCL_GPIO_AF                     GPIO_AF4_I2C1
+#define MX_I2C1_SCL_GPIO_Mode                   GPIO_MODE_AF_OD
+
+/* Pin PB7 */
+#define MX_I2C1_SDA_GPIO_Speed                  GPIO_SPEED_FREQ_LOW
+#define MX_I2C1_SDA_Pin                         PB7
+#define MX_I2C1_SDA_GPIOx                       GPIOB
+#define MX_I2C1_SDA_GPIO_PuPd                   GPIO_NOPULL
+#define MX_I2C1_SDA_GPIO_Pin                    GPIO_PIN_7
+#define MX_I2C1_SDA_GPIO_AF                     GPIO_AF4_I2C1
+#define MX_I2C1_SDA_GPIO_FM7                    __NULL
+#define MX_I2C1_SDA_GPIO_Mode                   GPIO_MODE_AF_OD
+
+
+// I2C2
+#define MX_I2C2                                 1
+
+/* Pin PF1 */
+#define MX_I2C2_SCL_GPIO_Speed                  GPIO_SPEED_FREQ_LOW
+#define MX_I2C2_SCL_GPIO_FM6                    __NULL
+#define MX_I2C2_SCL_Pin                         PF1
+#define MX_I2C2_SCL_GPIOx                       GPIOF
+#define MX_I2C2_SCL_GPIO_PuPd                   GPIO_NOPULL
+#define MX_I2C2_SCL_GPIO_Pin                    GPIO_PIN_1
+#define MX_I2C2_SCL_GPIO_AF                     GPIO_AF4_I2C2
+#define MX_I2C2_SCL_GPIO_Mode                   GPIO_MODE_AF_OD
+
+/* Pin PF0 */
+#define MX_I2C2_SDA_GPIO_Speed                  GPIO_SPEED_FREQ_LOW
+#define MX_I2C2_SDA_Pin                         PF0
+#define MX_I2C2_SDA_GPIOx                       GPIOF
+#define MX_I2C2_SDA_GPIO_PuPd                   GPIO_NOPULL
+#define MX_I2C2_SDA_GPIO_Pin                    GPIO_PIN_0
+#define MX_I2C2_SDA_GPIO_AF                     GPIO_AF4_I2C2
+#define MX_I2C2_SDA_GPIO_FM7                    __NULL
+#define MX_I2C2_SDA_GPIO_Mode                   GPIO_MODE_AF_OD
+
+
+/*---------------------------- Clock Configuration ---------------------------*/
+
+#define MX_LSI_VALUE                            32000
+#define MX_LSE_VALUE                            32768
+#define MX_HSI_VALUE                            64000000
+#define MX_HSE_VALUE                            25000000
+#define MX_EXTERNAL_CLOCK_VALUE                 12288000
+#define MX_PLLDSIFreq_Value                     500000000
+#define MX_SYSCLKFreq_VALUE                     400000000
+#define MX_HCLKFreq_Value                       100000000
+#define MX_CortexFreq_Value                     400000000
+#define MX_APB1Freq_Value                       25000000
+#define MX_APB2Freq_Value                       25000000
+#define MX_CECFreq_Value                        32000
+#define MX_RTCFreq_Value                        32000
+#define MX_USBFreq_Value                        400000000
+#define MX_WatchDogFreq_Value                   32000
+#define MX_DSIFreq_Value                        96000000
+#define MX_DSIPHYCLKFreq_Value                  96000000
+#define MX_DSITXEscFreq_Value                   20000000
+#define MX_SPDIFRXFreq_Value                    400000000
+#define MX_MCO1PinFreq_Value                    64000000
+#define MX_MCO2PinFreq_Value                    400000000
+
+
 #endif
