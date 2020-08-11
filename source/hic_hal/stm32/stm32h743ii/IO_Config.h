@@ -83,6 +83,11 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 //#define SWDIO_IN_PIN                 GPIO_PIN_2
 //#define SWDIO_IN_PIN_Bit             2
 
+// SWD bidir buffer enable, OE_L_CTRL0
+#define SWD_BUFFER_EN_PORT             GPIOC
+#define SWD_BUFFER_EN_PIN              GPIO_PIN_8
+#define SWD_BUFFER_EN_PIN_Bit          8
+
 
 
 // ToDo(elee):  Enable TDO / SWO?
