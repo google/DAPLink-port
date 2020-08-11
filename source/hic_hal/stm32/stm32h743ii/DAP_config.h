@@ -245,6 +245,9 @@ __STATIC_INLINE void PORT_SWD_SETUP(void)
     // Set RESET HIGH
     pin_in_init(nRESET_PIN_PORT, nRESET_PIN_Bit, 2); // input, with pulldown
     nRESET_DIR_PIN_PORT->BSRR = (nRESET_DIR_PIN << 16); // DIR low -> nRST high
+  
+    // Enable bidir buffer chip (OE_L_CTRL0)
+    SWD_BUFFER_EN_PORT->BSRR = SWD_BUFFER_EN_PIN;
 }
 
 /** Disable JTAG/SWD I/O Pins.
@@ -255,6 +258,7 @@ __STATIC_INLINE void PORT_OFF(void)
 {
     pin_in_init(SWCLK_TCK_PIN_PORT, SWCLK_TCK_PIN_Bit, 0);
     pin_in_init(SWDIO_PIN_PORT, SWDIO_PIN_Bit, 0);
+    SWD_BUFFER_EN_PORT->BSRR = (SWD_BUFFER_EN_PIN << 16);
 }
 
 // SWCLK/TCK I/O pin -------------------------------------
@@ -514,6 +518,9 @@ __STATIC_INLINE void DAP_SETUP(void)
     __HAL_RCC_GPIOD_CLK_ENABLE();
     __HAL_RCC_GPIOF_CLK_ENABLE(); //dir signals
     __HAL_RCC_GPIOI_CLK_ENABLE(); //nRST signal
+  
+  
+    //ToDo(elee): Can it just call PORT_SWD_SETUP() instead?
     /* Configure I/O pin SWCLK */
     pin_out_init(SWCLK_TCK_PIN_PORT, SWCLK_TCK_PIN_Bit);
     SWCLK_TCK_PIN_PORT->BSRR = SWCLK_TCK_PIN;
@@ -525,6 +532,9 @@ __STATIC_INLINE void DAP_SETUP(void)
 
     pin_in_init(nRESET_PIN_PORT, nRESET_PIN_Bit, 2); // input, with pulldown
     nRESET_DIR_PIN_PORT->BSRR = (nRESET_DIR_PIN << 16); // nRST high (not pulled low)
+
+    // Enable bidir buffer chip (OE_L_CTRL0)
+    SWD_BUFFER_EN_PORT->BSRR = SWD_BUFFER_EN_PIN;
 
     pin_out_init(CONNECTED_LED_PORT, CONNECTED_LED_PIN_Bit);
     CONNECTED_LED_PORT->BSRR = CONNECTED_LED_PIN;

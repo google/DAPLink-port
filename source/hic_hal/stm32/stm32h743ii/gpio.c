@@ -208,6 +208,13 @@ void gpio_init(void)
     HAL_GPIO_Init(VBUS_DUT_EN_L_PORT, &GPIO_InitStructure);
     HAL_GPIO_WritePin(VBUS_DUT_EN_L_PORT, VBUS_DUT_EN_L_PIN, GPIO_PIN_RESET);  //enable DUT USB power
 
+    //Initialize bidir buffer control signals
+    GPIO_InitStructure.Pin = SWD_BUFFER_EN_PIN;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    HAL_GPIO_WritePin(SWD_BUFFER_EN_PORT, SWD_BUFFER_EN_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_Init(SWD_BUFFER_EN_PORT, &GPIO_InitStructure);
+
 
     //ToDo(elee): Update delay as needed for core clk speed.  This is the value from the stm32f1.
 
