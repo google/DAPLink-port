@@ -190,18 +190,16 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
         uint8_t target_addr = *request++;
         const uint8_t* internal_addr = request++;
         uint8_t len = *request;
-        uint8_t data_buf[63];
+        uint8_t data_buf[63] = { 0 };
 
         // can add additional responses from I2C_DAP_MasterRead to provide better status
         if (I2C_DAP_MasterRead(target_addr, internal_addr, data_buf, len)) {
-            // transfer done
             *response++ = 0x00U;
         } else {
             // transfer incomplete
             *response++ = 0xFFU;
         }
-
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < 62; i++) {
             *response++ = data_buf[i];
         }
         break;
@@ -211,7 +209,7 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
         uint8_t target_addr = *request++;
         const uint8_t* internal_addr = request++;
         uint8_t len = *request;
-        uint8_t data_buf[100];
+        uint8_t data_buf[100] = { 0 };
 
         for (int i = 0; i < len; i++) {
             data_buf[i] = *request++;
