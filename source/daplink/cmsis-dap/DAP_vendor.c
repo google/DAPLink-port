@@ -37,6 +37,7 @@
 #include "target_family.h"
 #include "flash_manager.h"
 #include <string.h>
+#include "i2c.h"
 
 
 #ifdef DRAG_N_DROP_SUPPORT
@@ -180,9 +181,31 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
         num += (1U << 16) | 1U; // increment request and response count each by 1
         break;
     }
-    case ID_DAP_Vendor14: break;
-    case ID_DAP_Vendor15: break;
-    case ID_DAP_Vendor16: break;
+    case ID_DAP_Vendor14: {
+        // i2c configure
+        
+        break;
+    }
+    case ID_DAP_Vendor15: {
+        // i2c read
+        uint8_t target_addr = *request++;
+        const uint8_t* internal_addr = request++;
+        uint8_t len = *request;
+        uint8_t buf[100];
+        
+        if (I2C_DAP_MasterRead(target_addr, internal_addr, buf, len)) {
+            *response++ = 0x00U;
+        } else {
+            *response++ = 0xFFU;
+        }
+        response = buf;
+        break;
+    }
+    case ID_DAP_Vendor16: {
+        // i2c write
+        
+        break;
+    }
     case ID_DAP_Vendor17: break;
     case ID_DAP_Vendor18: break;
     case ID_DAP_Vendor19: break;
