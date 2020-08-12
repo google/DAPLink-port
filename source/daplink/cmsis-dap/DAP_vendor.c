@@ -190,14 +190,14 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
         uint8_t target_addr = *request++;
         const uint8_t* internal_addr = request++;
         uint8_t len = *request;
-        uint8_t buf[63];
+        uint8_t buf[63] = { 0 };
         
         if (I2C_DAP_MasterRead(target_addr, internal_addr, buf, len)) {
             *response++ = 0x00U;
         } else {
             *response++ = 0xFFU;
         }
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < 64; i++) {
             *response++ = buf[i];
         }
         break;
