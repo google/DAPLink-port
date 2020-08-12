@@ -249,11 +249,7 @@ void main_task(void * arg)
     usb_state = USB_CONNECTING;
     usb_state_count = USB_CONNECT_DELAY;
 
-    // ehassman
-    // uint32_t count = 0;
-    // uint8_t data = 0xFE;
-    // uint8_t* reg_addr = &data;
-    // uint8_t buf;
+    uint32_t count = 0;
 
     // Start timer tasks
     osTimerId_t tmr_id = osTimerNew(timer_task_30mS, osTimerPeriodic, NULL, NULL);
@@ -469,13 +465,6 @@ void main_task(void * arg)
         {
             gpio_toggle_LED();
         }
-        // ehassman, test I2C in DAPLink
-        /*
-        if ((count % 100000) == 0)
-        {
-            I2C_DAP_MasterRead(0x17, reg_addr, &buf, 1);
-        }
-        */
     }
 }
 
