@@ -183,7 +183,6 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
     }
     case ID_DAP_Vendor14: {
         // i2c configure
-        
         break;
     }
     case ID_DAP_Vendor15: {
@@ -191,14 +190,16 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
         uint8_t target_addr = *request++;
         const uint8_t* internal_addr = request++;
         uint8_t len = *request;
-        uint8_t buf[100];
+        uint8_t buf[63];
         
         if (I2C_DAP_MasterRead(target_addr, internal_addr, buf, len)) {
             *response++ = 0x00U;
         } else {
             *response++ = 0xFFU;
         }
-        response = buf;
+        for (int i = 0; i < len; i++) {
+            *response++ = buf[i];
+        }
         break;
     }
     case ID_DAP_Vendor16: {
