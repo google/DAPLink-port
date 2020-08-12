@@ -8,6 +8,8 @@
  * eleenest@google.com
  * August 14, 2020
  *
+ * Note that the code within I2C1_DAP_PinInit and I2C2_DAP_PinInit come from STM
+ * Need to double check licensing and usesage of that code
  */
 
 #include "i2c.h"
