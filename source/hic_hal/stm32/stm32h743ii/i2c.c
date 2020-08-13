@@ -210,18 +210,16 @@ void I2C_DAP_Initialize(void)
 
 bool I2C_DAP_MasterTransfer(uint16_t device_addr, const uint8_t* reg_addr, const uint8_t* data, uint32_t len)
 {
-    /* Send slave address and device address without stop command at end */
-    I2Cdrv->MasterTransmit(device_addr, reg_addr, 1, true);
+    uint8_t transfer_data[len+1];
+    transfer_data[0] = *reg_addr;
     
-    /* Wait until transfer completed */
-    while (I2Cdrv->GetStatus().busy);
+    for (int i = 1; i < len+1; i++) {
+        transfer_data[i] = *data;
+    }
+    len++;
     
-    /* Check if all data transferred */
-    if ((I2C_Event & ARM_I2C_EVENT_TRANSFER_INCOMPLETE) != 0U)
-        return false;
-    
-    /* Send slave address and write data to register address with stop command at end */
-    I2Cdrv->MasterTransmit(device_addr, data, len, false);
+    /* Single write transfer of slave address, register address and data to be written */
+    I2Cdrv->MasterTransmit(device_addr, transfer_data, len, false);
     
     /* Wait until transfer completed */
     while (I2Cdrv->GetStatus().busy);
