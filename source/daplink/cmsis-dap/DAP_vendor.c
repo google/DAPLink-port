@@ -199,6 +199,9 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
             // transfer incomplete
             *response++ = 0xFFU;
         }
+
+        // optional to loop past len, up to 62
+        // clear out additional data in response to make pyOCD response cleaner
         for (int i = 0; i < 62; i++) {
             *response++ = data_buf[i];
         }
@@ -208,8 +211,8 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
         // i2c write
         uint8_t target_addr = *request++;
         const uint8_t* internal_addr = request++;
-        uint8_t len = *request;
-        uint8_t data_buf[100] = { 0 };
+        uint8_t len = *request++;
+        uint8_t data_buf[60] = {0};
 
         for (int i = 0; i < len; i++) {
             data_buf[i] = *request++;
@@ -222,6 +225,12 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
         } else {
             // transfer incomplete
             *response++ = 0xFFU;
+        }
+
+        // optional
+        // clear out additional data in response to make pyOCD response cleaner
+        for (int i = 0; i < 62; i++) {
+            *response++ = 0x00U;
         }
         break;
     }
