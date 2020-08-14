@@ -198,14 +198,6 @@ void gpio_init(void)
     // Reset (to DUT):
     gpio_init_buffered_dut_pin(nRESET_DIR_PIN_PORT, nRESET_DIR_PIN, nRESET_PIN_PORT, nRESET_PIN, false);
 
-    // Turn on power to the board. When the target is unpowered
-    // it holds the reset line low.
-    HAL_GPIO_WritePin(POWER_EN_PIN_PORT, POWER_EN_PIN, GPIO_PIN_RESET);
-    GPIO_InitStructure.Pin = POWER_EN_PIN;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
-    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-    HAL_GPIO_Init(POWER_EN_PIN_PORT, &GPIO_InitStructure);
-
     // Setup the MCO.  MCO2 for UDB
     GPIO_InitStructure.Pin = GPIO_PIN_9;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
@@ -220,13 +212,6 @@ void gpio_init(void)
     HAL_GPIO_Init(USBHUB_SELFPWR_PORT, &GPIO_InitStructure);
     HAL_GPIO_WritePin(USBHUB_SELFPWR_PORT, USBHUB_SELFPWR_PIN, GPIO_PIN_RESET);
 
-    // Enable power to DUT USB port.
-    GPIO_InitStructure.Pin = VBUS_DUT_EN_L_PIN;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-    HAL_GPIO_Init(VBUS_DUT_EN_L_PORT, &GPIO_InitStructure);
-    HAL_GPIO_WritePin(VBUS_DUT_EN_L_PORT, VBUS_DUT_EN_L_PIN, GPIO_PIN_RESET);  //enable DUT USB power
-
     //Initialize bidir buffer control signals
     GPIO_InitStructure.Pin = SWD_BUFFER_EN_PIN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
@@ -234,24 +219,42 @@ void gpio_init(void)
     HAL_GPIO_WritePin(SWD_BUFFER_EN_PORT, SWD_BUFFER_EN_PIN, GPIO_PIN_RESET);
     HAL_GPIO_Init(SWD_BUFFER_EN_PORT, &GPIO_InitStructure);
 
-
     //These are "open drain/open collector" style, with an external buffer.
     //UDC0_RST_L is configured by the nRESET section above...
-
     //UDC0_BOOT_L
     gpio_init_buffered_dut_pin(UDC0_BOOT_L_DIR_PORT, UDC0_BOOT_L_DIR_PIN, UDC0_BOOT_L_PORT, UDC0_BOOT_L_PIN, false);
-
     //UDC0_BUTTON_L
     gpio_init_buffered_dut_pin(UDC0_BUTTON_L_DIR_PORT, UDC0_BUTTON_L_DIR_PIN, UDC0_BUTTON_L_PORT, UDC0_BUTTON_L_PIN, false);
-
     //UDC1_RST
     gpio_init_buffered_dut_pin(UDC1_RST_DIR_PORT, UDC1_RST_DIR_PIN, UDC1_RST_PORT, UDC1_RST_PIN, true);
-
     //UDC1_BOOT
     gpio_init_buffered_dut_pin(UDC1_BOOT_DIR_PORT, UDC1_BOOT_DIR_PIN, UDC1_BOOT_PORT, UDC1_BOOT_PIN, true);
-
     //UDC1_BUTTON
     gpio_init_buffered_dut_pin(UDC1_BUTTON_DIR_PORT, UDC1_BUTTON_DIR_PIN, UDC1_BUTTON_PORT, UDC1_BUTTON_PIN, true);
+
+    // Turn on power to the board. When the target is unpowered
+    // it holds the reset line low.
+    // This switched the DUT USB port, using UDC_DUT_USB_EN_L_PIN
+    HAL_GPIO_WritePin(POWER_EN_PIN_PORT, POWER_EN_PIN, GPIO_PIN_RESET);
+    GPIO_InitStructure.Pin = POWER_EN_PIN;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    HAL_GPIO_Init(POWER_EN_PIN_PORT, &GPIO_InitStructure);
+    
+      // Enable power to DUT USB port.
+    // skip, same as POWER_EN_PIN_PORT
+//    GPIO_InitStructure.Pin = UDC_DUT_USB_EN_L_PIN;
+//    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+//    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+//    HAL_GPIO_Init(UDC_DUT_USB_EN_L_PORT, &GPIO_InitStructure);
+//    HAL_GPIO_WritePin(UDC_DUT_USB_EN_L_PORT, UDC_DUT_USB_EN_L_PIN, GPIO_PIN_RESET);  //enable DUT USB power
+
+    //Initialize external relay (turned on)
+    HAL_GPIO_WritePin(UDC_EXT_RELAY_PORT, UDC_EXT_RELAY_PIN, GPIO_PIN_SET);
+    GPIO_InitStructure.Pin = UDC_EXT_RELAY_PIN;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    HAL_GPIO_Init(UDC_EXT_RELAY_PORT, &GPIO_InitStructure);
 
 
     //ToDo(elee): Update delay as needed for core clk speed.  This is the value from the stm32f1.

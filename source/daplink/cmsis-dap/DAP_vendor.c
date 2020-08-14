@@ -268,7 +268,47 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
 #endif /* INTERFACE_STM32H743 */
         break;
     }
-    case ID_DAP_Vendor18: break;
+    case ID_DAP_Vendor18: {
+        //  DUT Power control
+        //
+        //  This command controls several DUT power signals.  The command has the following bytes: 
+        //    VALUE, MASK (optional), DURATION(future):
+        //
+        //  VALUE byte:
+        //    UDC_DUT_USB_EN (1 = enabled)
+        //    UDC_EXT_RELAY (1 = enabled)
+        //    bits 2-7 RSVD
+        //
+        //  MASK byte:
+        //    UDC_DUT_USB_EN
+        //    UDC_EXT_RELAY
+        //    bits 2-7 RSVD
+        //
+#ifdef INTERFACE_STM32H743
+        uint8_t pins = *request++;
+        uint8_t mask = *request;
+        
+        *response = DAP_OK;
+        
+        if(mask & 0x1) {
+            if(pins & 0x1)
+              //Set low to enable USB power
+              UDC_DUT_USB_EN_L_PORT->BSRR = (uint32_t)UDC_DUT_USB_EN_L_PIN << 16;
+            else 
+              UDC_DUT_USB_EN_L_PORT->BSRR = UDC_DUT_USB_EN_L_PIN;    
+          }
+        if(mask & 0x2) {
+            if(pins & 0x2) 
+              UDC_EXT_RELAY_PORT->BSRR = UDC_EXT_RELAY_PIN;
+            else 
+              UDC_EXT_RELAY_PORT->BSRR = UDC_EXT_RELAY_PIN << 16;   
+          }
+
+        //ToDo(elee): zero out the rest of the response buffer?  Can see stale data (from request) in pyOCD.
+        num += (2U << 16) | 1U; // 2 bytes read, 1 byte written
+#endif /* INTERFACE_STM32H743 */
+        break;
+    }
     case ID_DAP_Vendor19: break;
     case ID_DAP_Vendor20: break;
     case ID_DAP_Vendor21: break;

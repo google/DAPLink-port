@@ -48,9 +48,9 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 
 // ToDo(elee):
 //When bootloader, disable the target port(not used)
-#define POWER_EN_PIN_PORT            VBUS_DUT_EN_L_PORT
-#define POWER_EN_PIN                 VBUS_DUT_EN_L_PIN
-#define POWER_EN_Bit                 VBUS_DUT_EN_L_PIN_Bit
+#define POWER_EN_PIN_PORT            UDC_DUT_USB_EN_L_PORT
+#define POWER_EN_PIN                 UDC_DUT_USB_EN_L_PIN
+#define POWER_EN_Bit                 UDC_DUT_USB_EN_L_PIN_Bit
 
 // nRESET OUT Pin
 // JTAG0_MCU_UDC_RESET_L, UDC0_RST_L
@@ -125,10 +125,18 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 #define USBHUB_SELFPWR_PIN           GPIO_PIN_14
 #define USBHUB_SELFPWR_PIN_Bit       14
 
-//Power switch signal to device USB port
-#define VBUS_DUT_EN_L_PORT           GPIOH
-#define VBUS_DUT_EN_L_PIN            GPIO_PIN_10
-#define VBUS_DUT_EN_L_PIN_Bit        10
+
+//DUT USB port power switch
+//VBUS_DUT_EN_L
+#define UDC_DUT_USB_EN_L_PORT        GPIOH
+#define UDC_DUT_USB_EN_L_PIN         GPIO_PIN_10
+#define UDC_DUT_USB_EN_L_PIN_Bit     10
+
+//External power relay control
+//EXT_RELAY_EN
+#define UDC_EXT_RELAY_PORT           GPIOE
+#define UDC_EXT_RELAY_PIN            GPIO_PIN_11
+#define UDC_EXT_RELAY_PIN_Bit        11
 
 
 //GPIO LINES
