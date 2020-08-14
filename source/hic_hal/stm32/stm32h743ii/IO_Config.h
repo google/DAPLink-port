@@ -53,7 +53,7 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 #define POWER_EN_Bit                 VBUS_DUT_EN_L_PIN_Bit
 
 // nRESET OUT Pin
-// JTAG0_MCU_UDC_RESET_L
+// JTAG0_MCU_UDC_RESET_L, UDC0_RST_L
 #define nRESET_PIN_PORT              GPIOI
 #define nRESET_PIN                   GPIO_PIN_4
 #define nRESET_PIN_Bit               4
@@ -129,5 +129,57 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 #define VBUS_DUT_EN_L_PORT           GPIOH
 #define VBUS_DUT_EN_L_PIN            GPIO_PIN_10
 #define VBUS_DUT_EN_L_PIN_Bit        10
+
+
+//GPIO LINES
+//Open Drain/Collector usage: MCU IO has pulldown/up enabled.  
+//External buffer set to OUT to pull low/high, and IN to be high-z
+//JTAG0_MCU_UDC_RESET_L, JTAG0_NRESET_DIR
+#define UDC0_RST_L_PORT               nRESET_PIN_PORT
+#define UDC0_RST_L_PIN                nRESET_PIN
+#define UDC0_RST_L_PIN_Bit            nRESET_PIN_Bit
+#define UDC0_RST_L_DIR_PORT           nRESET_DIR_PIN_PORT
+#define UDC0_RST_L_DIR_PIN            nRESET_DIR_PIN
+#define UDC0_RST_L_DIR_PIN_Bit        nRESET_DIR_PIN_Bit
+
+//MCU_BOOT0_UDC_L, BOOT0_DIR
+#define UDC0_BOOT_L_PORT               GPIOE
+#define UDC0_BOOT_L_PIN                GPIO_PIN_7
+#define UDC0_BOOT_L_PIN_Bit            7
+#define UDC0_BOOT_L_DIR_PORT           GPIOE
+#define UDC0_BOOT_L_DIR_PIN            GPIO_PIN_15
+#define UDC0_BOOT_L_DIR_PIN_Bit        15
+
+//MCU_BUT_USR0_UDC_L, BUT_USR0_DIR
+#define UDC0_BUTTON_L_PORT             GPIOE
+#define UDC0_BUTTON_L_PIN              GPIO_PIN_8
+#define UDC0_BUTTON_L_PIN_Bit          8
+#define UDC0_BUTTON_L_DIR_PORT         GPIOF
+#define UDC0_BUTTON_L_DIR_PIN          GPIO_PIN_2
+#define UDC0_BUTTON_L_DIR_PIN_Bit      2
+
+//JTAG1_MCU_UDC_RESET, JTAG1_RESET_DIR
+#define UDC1_RST_PORT               GPIOI
+#define UDC1_RST_PIN                GPIO_PIN_9
+#define UDC1_RST_PIN_Bit            9
+#define UDC1_RST_DIR_PORT           GPIOB
+#define UDC1_RST_DIR_PIN            GPIO_PIN_4
+#define UDC1_RST_DIR_PIN_Bit        4
+
+//MCU_BOOT1_UDC, BOOT1_DIR
+#define UDC1_BOOT_PORT               GPIOE
+#define UDC1_BOOT_PIN                GPIO_PIN_1
+#define UDC1_BOOT_PIN_Bit            1
+#define UDC1_BOOT_DIR_PORT           GPIOE
+#define UDC1_BOOT_DIR_PIN            GPIO_PIN_13
+#define UDC1_BOOT_DIR_PIN_Bit        13
+
+//MCU_BUT_USR1_UDC, BUT_USR1_DIR
+#define UDC1_BUTTON_PORT             GPIOE
+#define UDC1_BUTTON_PIN              GPIO_PIN_3
+#define UDC1_BUTTON_PIN_Bit          3
+#define UDC1_BUTTON_DIR_PORT         GPIOE
+#define UDC1_BUTTON_DIR_PIN          GPIO_PIN_14
+#define UDC1_BUTTON_DIR_PIN_Bit      14
 
 #endif

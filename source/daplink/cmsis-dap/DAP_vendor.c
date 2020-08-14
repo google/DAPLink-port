@@ -38,6 +38,7 @@
 #include "flash_manager.h"
 #include <string.h>
 
+#include "stm32h7xx.h"
 
 #ifdef DRAG_N_DROP_SUPPORT
 #include "file_stream.h"
@@ -183,7 +184,90 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
     case ID_DAP_Vendor14: break;
     case ID_DAP_Vendor15: break;
     case ID_DAP_Vendor16: break;
-    case ID_DAP_Vendor17: break;
+    case ID_DAP_Vendor17: {
+        //  Write GPIO pins (Open Drain / Open collector)
+        //
+        //  There are several gpio pins used as open-drain (pull-low) or open-collector (pull-high) signals.
+        //  This command writes to those pins.  The command has the following bytes: 
+        //    VALUE, MASK (optional), DURATION(future):
+        //
+        //  VALUE byte:
+        //    0_RST_L
+        //    0_BOOT_L
+        //    0_BTN_L
+        //    RSVD
+        //    1_RST_H
+        //    1_BOOT_H
+        //    1_BTN_H
+        //    RSVD
+
+        //  MASK byte:
+        //    0_RST_L
+        //    0_BOOT_L
+        //    0_BTN_L
+        //    RSVD
+        //    1_RST_H
+        //    1_BOOT_H
+        //    1_BTN_H
+        //    RSVD
+
+        //  DURATION (future)
+        //    0.1 sec increments, 0 = no pulse (stay at that level).  1-255 = 0.1 to 25.5 sec pulse duration. 
+        //    TBD: blocking or non-blocking?  Blocking is simplest, might need to increase timeout on host, though.  
+        //    For a 0.1 sec pulse it is probably fine.  
+        //
+#ifdef INTERFACE_STM32H743
+        uint8_t pins = *request++;
+        uint8_t mask = *request;
+        
+        *response = DAP_OK;
+        
+        //Port0
+        if(mask & 0x1) {
+            if(pins & 0x1) 
+              UDC0_RST_L_DIR_PORT->BSRR = UDC0_RST_L_DIR_PIN;
+            else 
+              UDC0_RST_L_DIR_PORT->BSRR = (uint32_t)UDC0_RST_L_DIR_PIN << 16;    
+          }
+        if(mask & 0x2) {
+            if(pins & 0x2) 
+              UDC0_BOOT_L_DIR_PORT->BSRR = UDC0_BOOT_L_DIR_PIN;
+            else 
+              UDC0_BOOT_L_DIR_PORT->BSRR = (uint32_t)UDC0_BOOT_L_DIR_PIN << 16;   
+          }
+        if(mask & 0x4) {
+            if(pins & 0x4) 
+              UDC0_BUTTON_L_DIR_PORT->BSRR = UDC0_BUTTON_L_DIR_PIN;
+            else 
+              UDC0_BUTTON_L_DIR_PORT->BSRR = UDC0_BUTTON_L_DIR_PIN << 16;        
+          }
+        
+        //Port1
+        if(mask & 0x10) {
+            if(pins & 0x10) 
+              UDC1_RST_DIR_PORT->BSRR = UDC1_RST_DIR_PIN;
+            else 
+              UDC1_RST_DIR_PORT->BSRR = (uint32_t)UDC1_RST_DIR_PIN << 16;    
+          }
+        if(mask & 0x20) {
+            if(pins & 0x20) 
+              //Can use port1 boot pin to get an active high signal
+              UDC1_BOOT_DIR_PORT->BSRR = UDC1_BOOT_DIR_PIN;
+            else 
+              UDC1_BOOT_DIR_PORT->BSRR = (uint32_t)UDC1_BOOT_DIR_PIN << 16;   
+          }
+        if(mask & 0x40) {
+            if(pins & 0x40) 
+              UDC1_BUTTON_DIR_PORT->BSRR = UDC1_BUTTON_DIR_PIN;
+            else 
+              UDC1_BUTTON_DIR_PORT->BSRR = UDC1_BUTTON_DIR_PIN << 16;        
+          }
+
+        //ToDo(elee): zero out the rest of the response buffer?  Can see stale data (from request) in pyOCD.
+        num += (2U << 16) | 1U; // 2 bytes read, 1 byte written
+#endif /* INTERFACE_STM32H743 */
+        break;
+    }
     case ID_DAP_Vendor18: break;
     case ID_DAP_Vendor19: break;
     case ID_DAP_Vendor20: break;

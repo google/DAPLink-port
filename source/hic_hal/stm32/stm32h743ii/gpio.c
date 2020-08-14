@@ -114,6 +114,35 @@ static void output_clock_enable(void)
     return;
 }
 
+void gpio_init_buffered_dut_pin(GPIO_TypeDef *dir_port, uint16_t dir_pin, GPIO_TypeDef *input_port, uint16_t input_pin, bool activeHigh)
+{
+    // Initialize GPIO signals to DUT
+    //
+    // These are "open drain/open collector" signals, with an external buffer (with a direction pin for each line).
+    // The buffer direction is normally an input (to the MCU) so the DUT can pull high/low as needed and a butten can
+    // also pull hi/low manually.
+    // To "activate" the signal the MCU pin has a weak IO pullup/down so when the buffer becomes an output (from the MCU)
+    // the DUT line is driven high/low as needed.
+
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    HAL_GPIO_WritePin(dir_port, dir_pin, GPIO_PIN_RESET);  //input to MCU
+
+    GPIO_InitStructure.Pin = dir_pin;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    HAL_GPIO_Init(dir_port, &GPIO_InitStructure);
+
+    //MCU pin is initialized as an input with pulldown (active low) or pullup (active high)
+    GPIO_InitStructure.Pin = input_pin;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStructure.Pull = activeHigh ? GPIO_PULLUP : GPIO_PULLDOWN;
+    HAL_GPIO_Init(input_port, &GPIO_InitStructure);
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+}
+
+
 void gpio_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -122,12 +151,14 @@ void gpio_init(void)
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
+    __HAL_RCC_GPIOE_CLK_ENABLE();  //gpio, spi, etc
+    __HAL_RCC_GPIOF_CLK_ENABLE();  //gpio direction, etc.
     __HAL_RCC_GPIOG_CLK_ENABLE();  //elee: udb led's
     __HAL_RCC_GPIOH_CLK_ENABLE();  //elee: usb hub signals, SPI, I2C
 	  __HAL_RCC_GPIOI_CLK_ENABLE();  //udb usb ulpi dir, spi, jtag
     // Enable USB connect pin
 		__HAL_RCC_SYSCFG_CLK_ENABLE();   //elee: this macro maps to the same as __HAL_RCC_AFIO_CLK_ENABLE(); (in the F1) and still exists.  Try it...
-    
+
 		// Disable JTAG to free pins for other uses
     // Note - SWD is still enabled
 		//ToDo: elee: this doesn't exist in the H7 hal.  Can it be skipped, or need to find a replacement?  Skip it for now...
@@ -165,19 +196,7 @@ void gpio_init(void)
     HAL_GPIO_Init(PIN_MSC_LED_PORT, &GPIO_InitStructure);
 
     // Reset (to DUT):
-    // UDC has MCU -> buffer -> nRST line.  
-    // By keeping the MCU pin as an input (with pulldown)
-    // then when changing the buffer dir pin to an output (from MCU) it will pull nRST low,
-    // and when the buffer is changed to an input the MCU can read the level.    
-    HAL_GPIO_WritePin(nRESET_DIR_PIN_PORT, nRESET_DIR_PIN, GPIO_PIN_RESET);  //input to MCU, nRST inactive
-    GPIO_InitStructure.Pin = nRESET_DIR_PIN;
-    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-    HAL_GPIO_Init(nRESET_DIR_PIN_PORT, &GPIO_InitStructure);
-    
-    GPIO_InitStructure.Pin = nRESET_PIN;
-    GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStructure.Pull = GPIO_PULLDOWN;
-    HAL_GPIO_Init(nRESET_PIN_PORT, &GPIO_InitStructure);
+    gpio_init_buffered_dut_pin(nRESET_DIR_PIN_PORT, nRESET_DIR_PIN, nRESET_PIN_PORT, nRESET_PIN, false);
 
     // Turn on power to the board. When the target is unpowered
     // it holds the reset line low.
@@ -189,7 +208,7 @@ void gpio_init(void)
 
     // Setup the MCO.  MCO2 for UDB
     GPIO_InitStructure.Pin = GPIO_PIN_9;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
     output_clock_enable();
@@ -214,6 +233,25 @@ void gpio_init(void)
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     HAL_GPIO_WritePin(SWD_BUFFER_EN_PORT, SWD_BUFFER_EN_PIN, GPIO_PIN_RESET);
     HAL_GPIO_Init(SWD_BUFFER_EN_PORT, &GPIO_InitStructure);
+
+
+    //These are "open drain/open collector" style, with an external buffer.
+    //UDC0_RST_L is configured by the nRESET section above...
+
+    //UDC0_BOOT_L
+    gpio_init_buffered_dut_pin(UDC0_BOOT_L_DIR_PORT, UDC0_BOOT_L_DIR_PIN, UDC0_BOOT_L_PORT, UDC0_BOOT_L_PIN, false);
+
+    //UDC0_BUTTON_L
+    gpio_init_buffered_dut_pin(UDC0_BUTTON_L_DIR_PORT, UDC0_BUTTON_L_DIR_PIN, UDC0_BUTTON_L_PORT, UDC0_BUTTON_L_PIN, false);
+
+    //UDC1_RST
+    gpio_init_buffered_dut_pin(UDC1_RST_DIR_PORT, UDC1_RST_DIR_PIN, UDC1_RST_PORT, UDC1_RST_PIN, true);
+
+    //UDC1_BOOT
+    gpio_init_buffered_dut_pin(UDC1_BOOT_DIR_PORT, UDC1_BOOT_DIR_PIN, UDC1_BOOT_PORT, UDC1_BOOT_PIN, true);
+
+    //UDC1_BUTTON
+    gpio_init_buffered_dut_pin(UDC1_BUTTON_DIR_PORT, UDC1_BUTTON_DIR_PIN, UDC1_BUTTON_PORT, UDC1_BUTTON_PIN, true);
 
 
     //ToDo(elee): Update delay as needed for core clk speed.  This is the value from the stm32f1.
