@@ -244,7 +244,7 @@ bool I2C_DAP_MasterRead(uint16_t device_addr, const uint8_t* reg_addr, uint8_t* 
         return false;
     
     /* Send slave address and read from register address with stop command at end */
-    I2Cdrv->MasterReceive (device_addr, buf, len, false);
+    I2Cdrv->MasterReceive(device_addr, buf, len, false);
  
     /* Wait until transfer completed */
     while (I2Cdrv->GetStatus().busy);
