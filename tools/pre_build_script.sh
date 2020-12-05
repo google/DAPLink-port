@@ -20,7 +20,7 @@
 TOOLS=../../../tools
 DIR=../../../source/daplink
 
-python --version
+# python --version
 
 #  Run python script to delete default version_git.h and create the real one
 python ${TOOLS}/pre_build_script.py --version_git_dir=${DIR}
