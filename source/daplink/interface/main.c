@@ -25,7 +25,7 @@
 #include "cmsis_os2.h"
 #include "rtx_os.h"
 #include "rl_usb.h"
-#include "main_daplink.h"
+#include "main.h"
 #include "gpio.h"
 #include "uart.h"
 #include "tasks.h"
@@ -475,12 +475,13 @@ void main_task(void * arg)
         }
 
 				//elee, try toggling LED here...
+#ifdef STM32H7XX
 				count_elee++;
 				if ((count_elee % 10000) == 0) {
 
 					gpio_toggle_LED();
 				}
-
+#endif
     }
 }
 

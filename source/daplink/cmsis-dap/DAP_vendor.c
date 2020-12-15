@@ -31,14 +31,16 @@
 #include "DAP_config.h"
 #include "DAP.h"
 #include "info.h"
-#include "main_daplink.h"
+#include "main.h"
 #include "uart.h"
 #include "settings.h"
 #include "target_family.h"
 #include "flash_manager.h"
 #include <string.h>
 
+#ifdef STM32H7XX
 #include "stm32h7xx.h"
+#endif
 
 #ifdef DRAG_N_DROP_SUPPORT
 #include "file_stream.h"

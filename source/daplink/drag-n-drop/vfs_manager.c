@@ -21,7 +21,7 @@
 
 #include <ctype.h>
 
-#include "main_daplink.h"
+#include "main.h"
 #include "cmsis_os2.h"
 #include "rl_usb.h"
 #include "virtual_fs.h"
