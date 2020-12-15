@@ -66,6 +66,7 @@ enum _vendor_ids {
     kRenesas_VendorID = 117,
     kWiznet_VendorID = 122,
     kRealtek_VendorID = 124,
+    kAmbiq_VendorID = 120,
 };
 
 //! @brief Unique IDs for device families supported by DAPLink.
@@ -95,6 +96,7 @@ typedef enum _family_id {
     kNXP_Mimxrt_FamilyID = VENDOR_TO_FAMILY(kNXP_VendorID, 3),
     kNXP_RapidIot_FamilyID = VENDOR_TO_FAMILY(kNXP_VendorID, 4),
     kNXP_KinetisK32W_FamilyID = VENDOR_TO_FAMILY(kNXP_VendorID, 5),
+    kNXP_LPC55xx_FamilyID = VENDOR_TO_FAMILY(kNXP_VendorID, 6),
     kNordic_Nrf51_FamilyID = VENDOR_TO_FAMILY(kNordic_VendorID, 1),
     kNordic_Nrf52_FamilyID = VENDOR_TO_FAMILY(kNordic_VendorID, 2),
     kRealtek_Rtl8195am_FamilyID = VENDOR_TO_FAMILY(kRealtek_VendorID, 1),
@@ -102,6 +104,7 @@ typedef enum _family_id {
     kToshiba_Tz_FamilyID = VENDOR_TO_FAMILY(kToshiba_VendorID, 1),
     kWiznet_W7500_FamilyID = VENDOR_TO_FAMILY(kWiznet_VendorID, 1),
     kRenesas_FamilyID = VENDOR_TO_FAMILY(kRenesas_VendorID, 1),
+    kAmbiq_ama3b1kk_FamilyID = VENDOR_TO_FAMILY(kAmbiq_VendorID, 1),
 } family_id_t;
 
 //! @brief Defines all characteristics of a device family.
