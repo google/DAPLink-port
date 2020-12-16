@@ -2,7 +2,7 @@
 /**
   ******************************************************************************
   * File Name          : stm32h7xx_hal_msp.c
-  * Description        : This file provides code for the MSP Initialization 
+  * Description        : This file provides code for the MSP Initialization
   *                      and de-Initialization codes.
   ******************************************************************************
   * @attention
@@ -20,7 +20,7 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "main_743ii.h"
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
@@ -32,7 +32,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN Define */
- 
+
 /* USER CODE END Define */
 
 /* Private macro -------------------------------------------------------------*/
@@ -90,11 +90,11 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* hpcd)
   /* USER CODE BEGIN USB_OTG_FS_MspInit 0 */
 
   /* USER CODE END USB_OTG_FS_MspInit 0 */
-  
+
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**USB_OTG_FS GPIO Configuration    
+    /**USB_OTG_FS GPIO Configuration
     PA12     ------> USB_OTG_FS_DP
-    PA11     ------> USB_OTG_FS_DM 
+    PA11     ------> USB_OTG_FS_DM
     */
     GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_11;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -114,12 +114,12 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* hpcd)
   /* USER CODE BEGIN USB_OTG_HS_MspInit 0 */
 
   /* USER CODE END USB_OTG_HS_MspInit 0 */
-  
+
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOI_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**USB_OTG_HS GPIO Configuration    
+    /**USB_OTG_HS GPIO Configuration
     PB5     ------> USB_OTG_HS_ULPI_D7
     PI11     ------> USB_OTG_HS_ULPI_DIR
     PC0     ------> USB_OTG_HS_ULPI_STP
@@ -131,9 +131,9 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* hpcd)
     PB12     ------> USB_OTG_HS_ULPI_D5
     PA3     ------> USB_OTG_HS_ULPI_D0
     PB0     ------> USB_OTG_HS_ULPI_D1
-    PB13     ------> USB_OTG_HS_ULPI_D6 
+    PB13     ------> USB_OTG_HS_ULPI_D6
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_1 
+    GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_1
                           |GPIO_PIN_12|GPIO_PIN_0|GPIO_PIN_13;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -187,10 +187,10 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef* hpcd)
   /* USER CODE END USB_OTG_FS_MspDeInit 0 */
     /* Peripheral clock disable */
     __HAL_RCC_USB_OTG_FS_CLK_DISABLE();
-  
-    /**USB_OTG_FS GPIO Configuration    
+
+    /**USB_OTG_FS GPIO Configuration
     PA12     ------> USB_OTG_FS_DP
-    PA11     ------> USB_OTG_FS_DM 
+    PA11     ------> USB_OTG_FS_DM
     */
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_12|GPIO_PIN_11);
 
@@ -206,8 +206,8 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef* hpcd)
     /* Peripheral clock disable */
     __HAL_RCC_USB_OTG_HS_CLK_DISABLE();
     __HAL_RCC_USB_OTG_HS_ULPI_CLK_DISABLE();
-  
-    /**USB_OTG_HS GPIO Configuration    
+
+    /**USB_OTG_HS GPIO Configuration
     PB5     ------> USB_OTG_HS_ULPI_D7
     PI11     ------> USB_OTG_HS_ULPI_DIR
     PC0     ------> USB_OTG_HS_ULPI_STP
@@ -219,9 +219,9 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef* hpcd)
     PB12     ------> USB_OTG_HS_ULPI_D5
     PA3     ------> USB_OTG_HS_ULPI_D0
     PB0     ------> USB_OTG_HS_ULPI_D1
-    PB13     ------> USB_OTG_HS_ULPI_D6 
+    PB13     ------> USB_OTG_HS_ULPI_D6
     */
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_5|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_1 
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_5|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_1
                           |GPIO_PIN_12|GPIO_PIN_0|GPIO_PIN_13);
 
     HAL_GPIO_DeInit(GPIOI, GPIO_PIN_11);

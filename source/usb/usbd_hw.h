@@ -22,6 +22,7 @@
 #ifndef __USBD_HW_H__
 #define __USBD_HW_H__
 
+#include "usb_def.h"
 
 /* USB Hardware Functions */
 extern void USBD_Init(void);

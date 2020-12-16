@@ -117,7 +117,7 @@ uint32_t IsoOutTokenRead         =   0  ;
 void usbd_stm32_delay (uint32_t delay) {
   delay *= SystemCoreClock / 100000;
   while (delay--) {
-    __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop(); __nop();
+    __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP(); __NOP();
   }
 }
 
