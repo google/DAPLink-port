@@ -39,6 +39,7 @@
 #include "sdk.h"
 #include "target_family.h"
 #include "target_board.h"
+#include "i2c.h"
 
 #ifdef DRAG_N_DROP_SUPPORT
 #include "vfs_manager.h"
@@ -210,7 +211,8 @@ void main_task(void * arg)
     gpio_set_msc_led(msc_led_value);
     // Initialize the DAP
     DAP_Setup();   //elee: add LED blink here.
-
+    // Initialize I2C
+    I2C_DAP_Initialize();  // ehassman
     // make sure we have a valid board info structure.
     util_assert(g_board_info.info_version == kBoardInfoVersion);
 
@@ -247,7 +249,7 @@ void main_task(void * arg)
     usb_state = USB_CONNECTING;
     usb_state_count = USB_CONNECT_DELAY;
 
-		uint32_t count_elee = 0;
+    uint32_t count = 0;
 
     // Start timer tasks
     osTimerId_t tmr_id = osTimerNew(timer_task_30mS, osTimerPeriodic, NULL, NULL);
@@ -457,14 +459,12 @@ void main_task(void * arg)
                 gpio_set_cdc_led(cdc_led_value);
             }
         }
-
-				//elee, try toggling LED here...
-				count_elee++;
-				if ((count_elee % 10000) == 0) {
-
-					gpio_toggle_LED();
-				}
-
+        //elee, try toggling LED here...
+        count++;
+        if ((count % 10000) == 0)
+        {
+            gpio_toggle_LED();
+        }
     }
 }
 
