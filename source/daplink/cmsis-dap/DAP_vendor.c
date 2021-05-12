@@ -38,7 +38,7 @@
 #include "flash_manager.h"
 #include <string.h>
 
-#ifdef STM32H7XX
+#ifdef INTERFACE_STM32H743
 #include "stm32h7xx.h"
 #endif
 
