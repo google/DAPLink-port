@@ -57,7 +57,7 @@ ASM_SYMBOLS = $(CC_SYMBOLS)
 LIBS =  -lm  -lgcc  -lc  -lnosys
 
 
-LIB_PATHS =
+LIB_PATHS = -L/usr/lib/arm-none-eabi/newlib/thumb/
 
 
 # directories

@@ -475,7 +475,7 @@ void main_task(void * arg)
         }
 
 				//elee, try toggling LED here...
-#ifdef STM32H7XX
+#ifdef INTERFACE_STM32H743
 				count_elee++;
 				if ((count_elee % 10000) == 0) {
 
