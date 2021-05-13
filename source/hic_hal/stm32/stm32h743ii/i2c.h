@@ -27,7 +27,7 @@
  * Initialize the GPIO port and pins for I2C communication
  * needs to be implemented or linked for each chip, hardware specific
  */
-void I2C_DAP_PinInit(void);
+static void I2C_DAP_PinInit(void);
 
 /*
  * I2C_DAP_SignalEvent
