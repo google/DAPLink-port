@@ -1,6 +1,6 @@
 /**
- * @file    max32630fthr.c
- * @brief   board ID for the Maxim Integrated's MAX32630FTHR
+ * @file    read_uid.c
+ * @brief   
  *
  * DAPLink Interface Firmware
  * Copyright (c) 2009-2016, ARM Limited, All Rights Reserved
@@ -19,13 +19,13 @@
  * limitations under the License.
  */
 
-#include "target_family.h"
-#include "target_board.h"
+#include "DAP_config.h"
+#include "read_uid.h"
 
-const board_info_t g_board_info = {
-    .info_version = kBoardInfoVersion,
-    .board_id = "0409",
-    .family_id = kStub_HWReset_FamilyID,
-    .flags = kEnablePageErase,
-    .target_cfg = &target_device,
-};
+void read_unique_id(uint32_t *id)
+{
+    id[0] = SIM->UIDL;
+    id[1] = SIM->UIDML;
+    id[2] = SIM->UIDMH;
+    id[3] = 0;
+}

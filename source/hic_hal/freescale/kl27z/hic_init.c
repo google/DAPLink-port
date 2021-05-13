@@ -1,9 +1,10 @@
 /**
- * @file    max32630fthr.c
- * @brief   board ID for the Maxim Integrated's MAX32630FTHR
+ * @file    hic_init.c
+ * @brief
  *
  * DAPLink Interface Firmware
  * Copyright (c) 2009-2016, ARM Limited, All Rights Reserved
+ * Copyright (c) 2016-2017 NXP
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -19,13 +20,16 @@
  * limitations under the License.
  */
 
-#include "target_family.h"
-#include "target_board.h"
+#include "fsl_device_registers.h"
 
-const board_info_t g_board_info = {
-    .info_version = kBoardInfoVersion,
-    .board_id = "0409",
-    .family_id = kStub_HWReset_FamilyID,
-    .flags = kEnablePageErase,
-    .target_cfg = &target_device,
-};
+/* Enable all clocks needed for USB to function */
+void hic_enable_usb_clocks(void)
+{
+    /* Set USB clock to 48 MHz                                                  */
+    MCG->MC      |=   MCG_MC_HIRCEN_MASK;         /* Enable the HIRC clock in the MCG */
+    SIM->SCGC4   |=   SIM_SCGC4_USBFS_MASK;       /* Enable the USB clock       */
+    USB0->CLK_RECOVER_INT_EN |= USB_CLK_RECOVER_IRC_EN_IRC_EN_MASK;
+    USB0->CLK_RECOVER_CTRL |= USB_CLK_RECOVER_CTRL_CLOCK_RECOVER_EN_MASK;
+    SIM->SOPT2   |=   SIM_SOPT2_USBSRC_MASK;      /* MCGPLLCLK used as src      */
+}
+
