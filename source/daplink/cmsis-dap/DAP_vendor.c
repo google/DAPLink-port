@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2013-2016 ARM Limited. All rights reserved.
- * Copyright 2019, Cypress Semiconductor Corporation 
+ * Copyright 2019, Cypress Semiconductor Corporation
  * or a subsidiary of Cypress Semiconductor Corporation.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -37,6 +37,7 @@
 #include "target_family.h"
 #include "flash_manager.h"
 #include <string.h>
+#include "i2c.h"
 
 #ifdef INTERFACE_STM32H743
 #include "stm32h7xx.h"
@@ -172,7 +173,7 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
         //                                              0x00 - Chip Erase
         //                                              nonzero - Page Erase
         //              RESPONSE(IN Packet)
-        //              BYTE 0 
+        //              BYTE 0
         //                                              0x00 - OK
         *response = DAP_OK;
         if (0x00U == *request) {
@@ -184,13 +185,60 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
         break;
     }
     case ID_DAP_Vendor14: break;
-    case ID_DAP_Vendor15: break;
-    case ID_DAP_Vendor16: break;
+    case ID_DAP_Vendor15: {
+        // i2c read
+        uint8_t target_addr = *request++;
+        const uint8_t* internal_addr = request++;
+        uint8_t len = *request;
+        uint8_t data_buf[63] = { 0 };
+
+        // can add additional responses from I2C_DAP_MasterRead to provide better status
+        if (I2C_DAP_MasterRead(target_addr, internal_addr, data_buf, len)) {
+            *response++ = 0x00U;
+        } else {
+            // transfer incomplete
+            *response++ = 0xFFU;
+        }
+
+        // optional to loop past len, up to 62
+        // clear out additional data in response to make pyOCD response cleaner
+        for (int i = 0; i < 62; i++) {
+            *response++ = data_buf[i];
+        }
+        break;
+    }
+    case ID_DAP_Vendor16: {
+        // i2c write
+        uint8_t target_addr = *request++;
+        const uint8_t* internal_addr = request++;
+        uint8_t len = *request++;
+        uint8_t data_buf[60] = {0};
+
+        for (int i = 0; i < len; i++) {
+            data_buf[i] = *request++;
+        }
+
+        // can add additional responses from I2C_DAP_MasterRead to provide better status
+        if (I2C_DAP_MasterTransfer(target_addr, internal_addr, data_buf, len)) {
+            // transfer done
+            *response++ = 0x00U;
+        } else {
+            // transfer incomplete
+            *response++ = 0xFFU;
+        }
+
+        // optional
+        // clear out additional data in response to make pyOCD response cleaner
+        for (int i = 0; i < 62; i++) {
+            *response++ = 0x00U;
+        }
+        break;
+    }
     case ID_DAP_Vendor17: {
         //  Write GPIO pins (Open Drain / Open collector)
         //
         //  There are several gpio pins used as open-drain (pull-low) or open-collector (pull-high) signals.
-        //  This command writes to those pins.  The command has the following bytes: 
+        //  This command writes to those pins.  The command has the following bytes:
         //    VALUE, MASK (optional), DURATION(future):
         //
         //  VALUE byte:
@@ -214,55 +262,55 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
         //    RSVD
 
         //  DURATION (future)
-        //    0.1 sec increments, 0 = no pulse (stay at that level).  1-255 = 0.1 to 25.5 sec pulse duration. 
-        //    TBD: blocking or non-blocking?  Blocking is simplest, might need to increase timeout on host, though.  
-        //    For a 0.1 sec pulse it is probably fine.  
+        //    0.1 sec increments, 0 = no pulse (stay at that level).  1-255 = 0.1 to 25.5 sec pulse duration.
+        //    TBD: blocking or non-blocking?  Blocking is simplest, might need to increase timeout on host, though.
+        //    For a 0.1 sec pulse it is probably fine.
         //
 #ifdef INTERFACE_STM32H743
         uint8_t pins = *request++;
         uint8_t mask = *request;
-        
+
         *response = DAP_OK;
-        
+
         //Port0
         if(mask & 0x1) {
-            if(pins & 0x1) 
+            if(pins & 0x1)
               UDC0_RST_L_DIR_PORT->BSRR = UDC0_RST_L_DIR_PIN;
-            else 
-              UDC0_RST_L_DIR_PORT->BSRR = (uint32_t)UDC0_RST_L_DIR_PIN << 16;    
+            else
+              UDC0_RST_L_DIR_PORT->BSRR = (uint32_t)UDC0_RST_L_DIR_PIN << 16;
           }
         if(mask & 0x2) {
-            if(pins & 0x2) 
+            if(pins & 0x2)
               UDC0_BOOT_L_DIR_PORT->BSRR = UDC0_BOOT_L_DIR_PIN;
-            else 
-              UDC0_BOOT_L_DIR_PORT->BSRR = (uint32_t)UDC0_BOOT_L_DIR_PIN << 16;   
+            else
+              UDC0_BOOT_L_DIR_PORT->BSRR = (uint32_t)UDC0_BOOT_L_DIR_PIN << 16;
           }
         if(mask & 0x4) {
-            if(pins & 0x4) 
+            if(pins & 0x4)
               UDC0_BUTTON_L_DIR_PORT->BSRR = UDC0_BUTTON_L_DIR_PIN;
-            else 
-              UDC0_BUTTON_L_DIR_PORT->BSRR = UDC0_BUTTON_L_DIR_PIN << 16;        
+            else
+              UDC0_BUTTON_L_DIR_PORT->BSRR = UDC0_BUTTON_L_DIR_PIN << 16;
           }
-        
+
         //Port1
         if(mask & 0x10) {
-            if(pins & 0x10) 
+            if(pins & 0x10)
               UDC1_RST_DIR_PORT->BSRR = UDC1_RST_DIR_PIN;
-            else 
-              UDC1_RST_DIR_PORT->BSRR = (uint32_t)UDC1_RST_DIR_PIN << 16;    
+            else
+              UDC1_RST_DIR_PORT->BSRR = (uint32_t)UDC1_RST_DIR_PIN << 16;
           }
         if(mask & 0x20) {
-            if(pins & 0x20) 
+            if(pins & 0x20)
               //Can use port1 boot pin to get an active high signal
               UDC1_BOOT_DIR_PORT->BSRR = UDC1_BOOT_DIR_PIN;
-            else 
-              UDC1_BOOT_DIR_PORT->BSRR = (uint32_t)UDC1_BOOT_DIR_PIN << 16;   
+            else
+              UDC1_BOOT_DIR_PORT->BSRR = (uint32_t)UDC1_BOOT_DIR_PIN << 16;
           }
         if(mask & 0x40) {
-            if(pins & 0x40) 
+            if(pins & 0x40)
               UDC1_BUTTON_DIR_PORT->BSRR = UDC1_BUTTON_DIR_PIN;
-            else 
-              UDC1_BUTTON_DIR_PORT->BSRR = UDC1_BUTTON_DIR_PIN << 16;        
+            else
+              UDC1_BUTTON_DIR_PORT->BSRR = UDC1_BUTTON_DIR_PIN << 16;
           }
 
         //ToDo(elee): zero out the rest of the response buffer?  Can see stale data (from request) in pyOCD.
@@ -273,7 +321,7 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
     case ID_DAP_Vendor18: {
         //  DUT Power control
         //
-        //  This command controls several DUT power signals.  The command has the following bytes: 
+        //  This command controls several DUT power signals.  The command has the following bytes:
         //    VALUE, MASK (optional), DURATION(future):
         //
         //  VALUE byte:
@@ -289,21 +337,21 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
 #ifdef INTERFACE_STM32H743
         uint8_t pins = *request++;
         uint8_t mask = *request;
-        
+
         *response = DAP_OK;
-        
+
         if(mask & 0x1) {
             if(pins & 0x1)
               //Set low to enable USB power
               UDC_DUT_USB_EN_L_PORT->BSRR = (uint32_t)UDC_DUT_USB_EN_L_PIN << 16;
-            else 
-              UDC_DUT_USB_EN_L_PORT->BSRR = UDC_DUT_USB_EN_L_PIN;    
+            else
+              UDC_DUT_USB_EN_L_PORT->BSRR = UDC_DUT_USB_EN_L_PIN;
           }
         if(mask & 0x2) {
-            if(pins & 0x2) 
+            if(pins & 0x2)
               UDC_EXT_RELAY_PORT->BSRR = UDC_EXT_RELAY_PIN;
-            else 
-              UDC_EXT_RELAY_PORT->BSRR = UDC_EXT_RELAY_PIN << 16;   
+            else
+              UDC_EXT_RELAY_PORT->BSRR = UDC_EXT_RELAY_PIN << 16;
           }
 
         //ToDo(elee): zero out the rest of the response buffer?  Can see stale data (from request) in pyOCD.
