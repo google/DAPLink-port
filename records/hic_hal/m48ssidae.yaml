@@ -27,16 +27,15 @@ tool_specific:
         sources:
             hic_hal:
                 - source/hic_hal/nuvoton/m48ssidae/armcc
-    make_armcc:
-        misc:
-            ld_flags:
-                - --predefine="-Isource\hic_hal\nuvoton\m48ssidae"
+    armcc:
         sources:
             hic_hal:
                 - source/hic_hal/nuvoton/m48ssidae/armcc
-    make_gcc_arm:
-        includes:
-            - source/hic_hal/nuvoton/m48ssidae/gcc
+    armclang:
+        sources:
+            hic_hal:
+                - source/hic_hal/nuvoton/m48ssidae/armcc
+    gcc_arm:
         sources:
             hic_hal:
                 - source/hic_hal/nuvoton/m48ssidae/gcc

@@ -3,7 +3,7 @@
  * @brief   Macros for configuring the run time tasks
  *
  * DAPLink Interface Firmware
- * Copyright (c) 2009-2019, ARM Limited, All Rights Reserved
+ * Copyright (c) 2009-2020, ARM Limited, All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -25,8 +25,7 @@
 // trouble here is that reset for different targets is implemented differently so all targets
 //  have to use the largest stack or these have to be defined in multiple places... Not ideal
 //  may want to move away from threads for some of these behaviours to optimize mempory usage (RAM)
-
 #define MAIN_TASK_STACK     (800)
-#define MAIN_TASK_PRIORITY          (osPriorityNormal)
+#define MAIN_TASK_PRIORITY  (osPriorityNormal)
 
 #endif

@@ -21,18 +21,17 @@ tool_specific:
         sources:
             hic_hal:
                 - source/hic_hal/nxp/lpc11u35/armcc
-    make_armcc:
-        misc:
-            ld_flags:
-                - --predefine="-Isource\hic_hal\nxp\lpc11u35"
+    armcc:
         sources:
             hic_hal:
                 - source/hic_hal/nxp/lpc11u35/armcc
-    make_gcc_arm:
+    armclang:
+        sources:
+            hic_hal:
+                - source/hic_hal/nxp/lpc11u35/armcc
+    gcc_arm:
         linker_file:
             - source/hic_hal/nxp/lpc11u35/gcc/lpc11u35.ld
-        includes:
-            - source/hic_hal/nxp/lpc11u35/gcc
         sources:
             hic_hal:
                 - source/hic_hal/nxp/lpc11u35/gcc

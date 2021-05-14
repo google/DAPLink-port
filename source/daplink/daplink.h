@@ -65,14 +65,24 @@ COMPILER_ASSERT(DAPLINK_RAM_SHARED_START + DAPLINK_RAM_SHARED_SIZE == DAPLINK_RA
 #define DAPLINK_HIC_ID_K22F         0x9796990A
 #define DAPLINK_HIC_ID_KL27Z        0x9796990B
 #define DAPLINK_HIC_ID_LPC54606     0x9796990C // reserving for future use
-#define DAPLINK_HIC_ID_LPC55S69     0x97969920 // reserving for future use
+#define DAPLINK_HIC_ID_STM32F723IE  0x9796990D // reserving for future use
+#define DAPLINK_HIC_ID_LPC55XX      0x4C504355 // 'LPC\x55'
 #define DAPLINK_HIC_ID_M48SSIDAE    0x97969921
-#define DAPLINK_HIC_ID_STM32H743II  0x97969940 // Newer STM HICs 
+#define DAPLINK_HIC_ID_STM32H743II  0x97969940 // Newer STM HICs
 #define DAPLINK_HIC_ID_STM32F723IE  0x97969941 // reserving for future use
 #define DAPLINK_HIC_ID_PSOC5        0x2E127069
 //@}
 
 #define DAPLINK_INFO_OFFSET         0x20
+
+// Macro with the name of the main application header file.
+#if defined(DAPLINK_BL)
+#define DAPLINK_MAIN_HEADER "main_bootloader.h"
+#elif defined(DAPLINK_IF)
+#define DAPLINK_MAIN_HEADER "main_interface.h"
+#else
+#error "Neither DAPLINK_BL nor DAPLINK_IF are defined!"
+#endif
 
 typedef struct {
     uint32_t build_key;

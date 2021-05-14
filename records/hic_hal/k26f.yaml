@@ -14,7 +14,6 @@ common:
         - source/hic_hal/freescale/k26f
         - source/hic_hal/freescale/k26f/MK26F18
         - source/hic_hal/freescale/iap
-        - projectfiles/uvision/k26f_bl/build
     sources:
         hic_hal:
             - source/hic_hal/freescale/k26f
@@ -34,28 +33,25 @@ tool_specific:
                 - --no_unaligned_access
             asm_flags:
                 - --no_unaligned_access
+        includes:
+            - projectfiles/uvision/k26f_bl/build
         sources:
             hic_hal:
                 - source/hic_hal/freescale/k26f/armcc
-    make_armcc:
+    armcc:
         misc:
-            ld_flags:
-                - --predefine="-Isource\hic_hal\freescale\k26f"
             c_flags:
-                - --no_unaligned_access
                 - --diag_suppress=66 # disable warning about enums not fitting in signed 32-bit
-            cxx_flags:
-                - --no_unaligned_access
-            asm_flags:
-                - --no_unaligned_access
         sources:
             hic_hal:
                 - source/hic_hal/freescale/k26f/armcc
-    make_gcc_arm:
+    armclang:
+        sources:
+            hic_hal:
+                - source/hic_hal/freescale/k26f/armcc
+    gcc_arm:
         linker_file:
             - source/hic_hal/freescale/kinetis.ld
-        includes:
-            - source/hic_hal/freescale/k26f/gcc
         sources:
             hic_hal:
                 - source/hic_hal/freescale/k26f/gcc

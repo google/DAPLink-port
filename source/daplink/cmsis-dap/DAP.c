@@ -388,6 +388,8 @@ static uint32_t DAP_SWJ_Clock(const uint8_t *request, uint8_t *response) {
     return ((4U << 16) | 1U);
   }
 
+  DAP_Data.nominal_clock = clock;
+
   if (clock >= MAX_SWJ_CLOCK(DELAY_FAST_CYCLES)) {
     DAP_Data.fast_clock  = 1U;
     DAP_Data.clock_delay = 1U;
@@ -1622,7 +1624,7 @@ __WEAK uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *respon
 //   response: pointer to response data
 //   return:   number of bytes in response (lower 16 bits)
 //             number of bytes in request (upper 16 bits)
-__weak uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
+__WEAK uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
   *response = ID_DAP_Invalid;
   return ((1U << 16) | 1U);
 }
@@ -1777,6 +1779,7 @@ void DAP_Setup(void) {
   DAP_Data.debug_port  = 0U;
   DAP_Data.fast_clock  = 0U;
   DAP_Data.clock_delay = CLOCK_DELAY(DAP_DEFAULT_SWJ_CLOCK);
+  DAP_Data.nominal_clock = DAP_DEFAULT_SWJ_CLOCK;
   DAP_Data.transfer.idle_cycles = 0U;
   DAP_Data.transfer.retry_count = 100U;
   DAP_Data.transfer.match_retry = 0U;

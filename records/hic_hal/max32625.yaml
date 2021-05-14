@@ -21,16 +21,15 @@ tool_specific:
         sources:
             hic_hal:
                 - source/hic_hal/maxim/max32625/armcc
-    make_armcc:
-        misc:
-            ld_flags:
-                - --predefine="-Isource\hic_hal\maxim\max32625"
+    armcc:
         sources:
             hic_hal:
                 - source/hic_hal/maxim/max32625/armcc
-    make_gcc_arm:
-        includes:
-            - source/hic_hal/maxim/max32625/gcc
+    armclang:
+        sources:
+            hic_hal:
+                - source/hic_hal/maxim/max32625/armcc
+    gcc_arm:
         sources:
             hic_hal:
                 - source/hic_hal/maxim/max32625/gcc

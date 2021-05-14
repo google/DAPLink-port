@@ -1,9 +1,9 @@
 /**
- * @file    main.c
+ * @file    main_interface.c
  * @brief   Entry point for interface program logic
  *
  * DAPLink Interface Firmware
- * Copyright (c) 2009-2019, ARM Limited, All Rights Reserved
+ * Copyright (c) 2009-2020 Arm Limited, All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -23,9 +23,8 @@
 #include <stdio.h>
 
 #include "cmsis_os2.h"
-#include "rtx_os.h"
 #include "rl_usb.h"
-#include "main.h"
+#include "main_interface.h"
 #include "gpio.h"
 #include "uart.h"
 #include "tasks.h"
@@ -46,6 +45,26 @@
 #include "vfs_manager.h"
 #include "flash_intf.h"
 #include "flash_manager.h"
+#endif
+
+#ifndef USE_LEGACY_CMSIS_RTOS
+#include "rtx_os.h"
+#endif
+
+#if defined(__CC_ARM) || (defined(__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050))
+#ifndef __MICROLIB
+/* Avoids early implicit call to osKernelInitialize() */
+void _platform_post_stackheap_init (void) {}
+#endif
+#if (defined(__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050))
+/* Avoids the semihosting issue */
+__asm("  .global __ARM_use_no_argv\n");
+#endif
+#elif defined(__GNUC__)
+/* Avoids early implicit call to osKernelInitialize() */
+void software_init_hook (void) {}
+/* Disables part of C/C++ runtime startup/teardown */
+void __libc_init_array (void) {}
 #endif
 
 // Event flags for main task
@@ -93,6 +112,7 @@
 
 // Reference to our main task
 osThreadId_t main_task_id;
+#ifndef USE_LEGACY_CMSIS_RTOS
 static uint32_t s_main_thread_cb[WORDS(sizeof(osRtxThread_t))];
 static uint64_t s_main_task_stack[MAIN_TASK_STACK / sizeof(uint64_t)];
 static const osThreadAttr_t k_main_thread_attr = {
@@ -110,6 +130,7 @@ static const osTimerAttr_t k_timer_30ms_attr = {
         .cb_mem = s_timer_30ms_cb,
         .cb_size = sizeof(s_timer_30ms_cb),
     };
+#endif
 
 // USB busy LED state; when TRUE the LED will flash once using 30mS clock tick
 static uint8_t hid_led_usb_activity = 0;
@@ -217,10 +238,11 @@ void main_task(void * arg)
 
     // Initialize settings - required for asserts to work
     config_init();
-    // Update bootloader if it is out of date
-    bootloader_check_and_update();
+
+#ifdef USE_LEGACY_CMSIS_RTOS
     // Get a reference to this task
-    //main_task_id = osThreadGetId();  //210513 elee, remove? (is removed in upstream)
+    main_task_id = osThreadGetId();
+#endif
     // leds
     gpio_init();
     // Turn to LED default settings
@@ -228,9 +250,8 @@ void main_task(void * arg)
     gpio_set_cdc_led(cdc_led_value);
     gpio_set_msc_led(msc_led_value);
     // Initialize the DAP
-    DAP_Setup();   //elee: add LED blink here.
-    // Initialize I2C
-    I2C_DAP_Initialize();  // ehassman
+    DAP_Setup();
+
     // make sure we have a valid board info structure.
     util_assert(g_board_info.info_version == kBoardInfoVersion);
 
@@ -258,6 +279,8 @@ void main_task(void * arg)
 
     // Update versions and IDs
     info_init();
+    // Update bootloader if it is out of date
+    bootloader_check_and_update();
     // USB
     usbd_init();
 #ifdef DRAG_N_DROP_SUPPORT
@@ -270,7 +293,11 @@ void main_task(void * arg)
     uint32_t count_blink = 0;
 
     // Start timer tasks
+#ifndef USE_LEGACY_CMSIS_RTOS
     osTimerId_t tmr_id = osTimerNew(timer_task_30mS, osTimerPeriodic, NULL, &k_timer_30ms_attr);
+#else
+    osTimerId_t tmr_id = osTimerNew(timer_task_30mS, osTimerPeriodic, NULL, NULL);
+#endif
     osTimerStart(tmr_id, 3);
     while (1) {
         flags = osThreadFlagsWait(FLAGS_MAIN_RESET             // Put target in reset state
@@ -502,7 +529,11 @@ int main(void)
     osKernelInitialize();
 
     // Create application main thread
+#ifndef USE_LEGACY_CMSIS_RTOS
     main_task_id = osThreadNew(main_task, NULL, &k_main_thread_attr);
+#else
+    osThreadNew(main_task, NULL, NULL);
+#endif
 
     // Start thread execution
     osKernelStart();

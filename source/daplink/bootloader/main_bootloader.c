@@ -1,9 +1,9 @@
 /**
- * @file    main.c
+ * @file    main_bootloader.c
  * @brief   DAPLink Bootloader application entry point
  *
  * DAPLink Interface Firmware
- * Copyright (c) 2009-2019, ARM Limited, All Rights Reserved
+ * Copyright (c) 2009-2020 Arm Limited, All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-#include "main.h"
+#include "main_bootloader.h"
 #include "gpio.h"
 #include "validation.h"
 #include "vfs_manager.h"
@@ -38,6 +38,14 @@
 #define MSC_LED_DEF GPIO_LED_ON
 #endif
 
+#if defined (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
+/* Avoids the semihosting issue */
+__asm("  .global __ARM_use_no_argv\n");
+#elif defined(__GNUC__)
+/* Disables part of C/C++ runtime startup/teardown */
+void __libc_init_array (void) {}
+#endif
+
 #if defined(__CC_ARM)
 __asm void modify_stack_pointer_and_start_app(uint32_t r0_sp, uint32_t r1_pc)
 {
@@ -48,15 +56,15 @@ __asm void modify_stack_pointer_and_start_app(uint32_t r0_sp, uint32_t r1_pc)
 void modify_stack_pointer_and_start_app(uint32_t r0_sp, uint32_t r1_pc)
 {
     uint32_t z = 0;
-    asm volatile (  "msr    control, %[z]   \n\t"
-                    "isb                    \n\t"
-                    "mov    sp, %[r0_sp]    \n\t"
-                    "bx     %[r1_pc]"
-                    :
-                    :   [z] "l" (z),
-                        [r0_sp] "l" (r0_sp),
-                        [r1_pc] "l" (r1_pc)
-                    );
+    __ASM volatile (  "msr    control, %[z]   \n\t"
+                      "isb                    \n\t"
+                      "mov    sp, %[r0_sp]    \n\t"
+                      "bx     %[r1_pc]"
+                      :
+                      :   [z] "l" (z),
+                          [r0_sp] "l" (r0_sp),
+                          [r1_pc] "l" (r1_pc)
+                  );
 }
 #else
 #error "Unknown compiler!"
