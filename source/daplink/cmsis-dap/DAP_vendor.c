@@ -360,7 +360,31 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
 #endif /* INTERFACE_STM32H743 */
         break;
     }
-    case ID_DAP_Vendor19: break;
+    case ID_DAP_Vendor19: {
+        // Add a more specific internal version string. 
+
+#ifdef INTERFACE_STM32H743
+        static char string_unique_id[32 + 1];
+
+        static char build_version_str[] = "Hello_new_ver";
+        uint8_t len = strlen(build_version_str);
+
+        uint8_t data_buf[63] = { 0 };
+
+        *response++ = len;
+
+        memcpy(data_buf, build_version_str, len);
+        num += (len + 1); // increment response count by ID length + length byte
+
+
+        for (int i = 0; i < 62; i++) {
+            *response++ = data_buf[i];
+        }
+
+
+#endif /* INTERFACE_STM32H743 */
+        break;
+    }
     case ID_DAP_Vendor20: break;
     case ID_DAP_Vendor21: break;
     case ID_DAP_Vendor22: break;
