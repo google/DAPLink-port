@@ -364,9 +364,7 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
         // Add a more specific internal version string. 
 
 #ifdef INTERFACE_STM32H743
-        static char string_unique_id[32 + 1];
-
-        static char build_version_str[] = "Hello_new_ver";
+        static char build_version_str[] = "udb_0.0.1_68acc48dc";
         uint8_t len = strlen(build_version_str);
 
         uint8_t data_buf[63] = { 0 };
@@ -375,7 +373,6 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
 
         memcpy(data_buf, build_version_str, len);
         num += (len + 1); // increment response count by ID length + length byte
-
 
         for (int i = 0; i < 62; i++) {
             *response++ = data_buf[i];
