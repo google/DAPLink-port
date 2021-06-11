@@ -51,7 +51,26 @@ LD_SCRIPT_IN = stm32h743ii_if.ld
 LD_SCRIPT = $(OUT_DIR)/$(TARGET).generated$(LINKER_EXT)
 
 
-CC_SYMBOLS =  -DDAPLINK_VERSION=254  -DBULK_ENDPOINT  -DMSC_ENDPOINT  -DCDC_ENDPOINT  -DWEBUSB_INTERFACE  -DWINUSB_INTERFACE  -DDRAG_N_DROP_SUPPORT  -DDAPLINK_IF  -DDAPLINK_BUILD_KEY=0x9B939E8F  -DOS_TICK=10000  -DINTERFACE_STM32H743  -DUSE_HAL_DRIVER  -DSTM32H743xx  -DDAPLINK_HIC_ID=0x97969940  -D__packed=__packed  -DDAPLINK_NO_ASSERT_FILENAMES  -DOS_CLOCK=64000000
+CC_SYMBOLS = \
+    -DDAPLINK_VERSION=254 \
+    -DBULK_ENDPOINT \
+    -DMSC_ENDPOINT \
+    -DCDC_ENDPOINT \
+    -DWEBUSB_INTERFACE \
+    -DWINUSB_INTERFACE \
+    -DDRAG_N_DROP_SUPPORT \
+    -DDAPLINK_IF \
+    -DDAPLINK_BUILD_KEY=0x9B939E8F \
+    -DOS_TICK=10000 \
+    -DINTERFACE_STM32H743 \
+    -DUSE_HAL_DRIVER \
+    -DSTM32H743xx \
+    -DDAPLINK_HIC_ID=0x97969940 \
+    -D__packed=__packed \
+    -DDAPLINK_NO_ASSERT_FILENAMES \
+    -DOS_CLOCK=64000000 \
+    $(NULL)
+
 ASM_SYMBOLS = $(CC_SYMBOLS)
 
 LIBS =  -lm  -lgcc  -lc  -lnosys
@@ -61,13 +80,62 @@ LIB_PATHS = -L/usr/lib/arm-none-eabi/newlib/thumb/
 
 
 # directories
-INC_DIRS =  ../../../source/usb  ../../../source/daplink/cmsis-dap  ../../../source/daplink/drag-n-drop  ../../../source/daplink/usb2uart  ../../../source/daplink/settings  ../../../source/daplink  ../../../source/daplink/interface  ../../../source/cmsis-core  ../../../source/hic_hal  ../../../source/target  ../../../source/rtos/Include  ../../../source/rtos/RTX/Include  ../../../source/hic_hal/stm32/stm32h743ii  ../../../source/hic_hal/stm32/stm32h743ii/cmsis  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Inc  ../../../source/hic_hal/stm32/stm32h743ii/STCubeGenerated/Inc
+INC_DIRS = \
+    ../../../source/usb \
+    ../../../source/daplink/cmsis-dap \
+    ../../../source/daplink/drag-n-drop \
+    ../../../source/daplink/usb2uart \
+    ../../../source/daplink/settings \
+    ../../../source/daplink \
+    ../../../source/daplink/interface \
+    ../../../source/cmsis-core \
+    ../../../source/hic_hal \
+    ../../../source/target \
+    ../../../source/rtos/Include \
+    ../../../source/rtos/RTX/Include \
+    ../../../source/hic_hal/stm32/stm32h743ii \
+    ../../../source/hic_hal/stm32/stm32h743ii/cmsis \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Inc \
+    ../../../source/hic_hal/stm32/stm32h743ii/STCubeGenerated/Inc \
+    $(NULL)
 
 OUT_DIR = build
 
 INC_DIRS_F = -I. $(patsubst %, -I%, $(INC_DIRS))
 
-SRC_DIRS =  ../../../source/usb  ../../../source/usb/bulk  ../../../source/usb/msc  ../../../source/usb/cdc  ../../../source/usb/webusb  ../../../source/usb/winusb  ../../../source/daplink/cmsis-dap  ../../../source/daplink/drag-n-drop  ../../../source/daplink/usb2uart  ../../../source/daplink/settings  ../../../source/daplink  ../../../source/daplink/interface  ../../../source/target  ../../../source/rtos/RTX/Config  ../../../source/rtos/RTX/Source  ../../../source/rtos/Source  ../../../source/hic_hal/stm32/stm32h743ii  ../../../source/hic_hal/stm32/stm32h743ii/cmsis  ../../../source/hic_hal/stm32/stm32h743ii/gccarm  ../../../source/hic_hal/stm32/stm32h743ii/armcc  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src  ../../../source/hic_hal/stm32/stm32h743ii/STCubeGenerated/Src  ../../../source/family/freescale  ../../../source/family/nordic  ../../../source/family/realtek  ../../../source/family/ti  ../../../source/family/toshiba  ../../../source/family/wiznet  ../../../source/family/renesas  ../../../source/rtos/RTX/Source/GCC
+SRC_DIRS = \
+    ../../../source/usb \
+    ../../../source/usb/bulk \
+    ../../../source/usb/msc \
+    ../../../source/usb/cdc \
+    ../../../source/usb/webusb \
+    ../../../source/usb/winusb \
+    ../../../source/daplink/cmsis-dap \
+    ../../../source/daplink/drag-n-drop \
+    ../../../source/daplink/usb2uart \
+    ../../../source/daplink/settings \
+    ../../../source/daplink \
+    ../../../source/daplink/interface \
+    ../../../source/target \
+    ../../../source/rtos/RTX/Config \
+    ../../../source/rtos/RTX/Source \
+    ../../../source/rtos/Source \
+    ../../../source/hic_hal/stm32/stm32h743ii \
+    ../../../source/hic_hal/stm32/stm32h743ii/cmsis \
+    ../../../source/hic_hal/stm32/stm32h743ii/gccarm \
+    ../../../source/hic_hal/stm32/stm32h743ii/armcc \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src \
+    ../../../source/hic_hal/stm32/stm32h743ii/STCubeGenerated/Src \
+    ../../../source/family/freescale \
+    ../../../source/family/nordic \
+    ../../../source/family/realtek \
+    ../../../source/family/ti \
+    ../../../source/family/toshiba \
+    ../../../source/family/wiznet \
+    ../../../source/family/renesas \
+    ../../../source/rtos/RTX/Source/GCC \
+    $(NULL)
 
 ifeq ($(strip $(OUT_DIR)), )
 	OBJ_FOLDER =
@@ -76,7 +144,21 @@ else
 endif
 
 # Flags
-COMMON_FLAGS =  -Os  -g3  -Werror  -ffunction-sections  -fdata-sections  -std=gnu99  -fshort-wchar  -fno-common  -ffreestanding  -Wa,-adln=$@.lst  -fverbose-asm  -mno-unaligned-access
+COMMON_FLAGS = \
+    -Os \
+    -g3 \
+    -Werror \
+    -ffunction-sections \
+    -fdata-sections \
+    -std=gnu99 \
+    -fshort-wchar \
+    -fno-common \
+    -ffreestanding \
+    -Wa,-adln=$@.lst \
+    -fverbose-asm \
+    -mno-unaligned-access \
+    $(NULL)
+
 COMMON_FLAGS +=  -mcpu=$(CPU) -m$(INSTRUCTION_MODE) -MMD -MP $(CC_SYMBOLS)
 
 C_FLAGS  =
@@ -89,7 +171,15 @@ ASFLAGS = $(ASM_FLAGS) $(INC_DIRS_F) -c $(ASM_SYMBOLS)
 NMFLAGS = -n -f posix -C -l
 
 # Linker options
-LD_OPTIONS +=  -Wl,--no-wchar-size-warning  --specs=nano.specs  --specs=nosys.specs  -Wl,--gc-sections  -Wl,--defsym=__stack_size__=0x200  -Wl,--defsym=__heap_size__=0x0
+LD_OPTIONS += \
+    -Wl,--no-wchar-size-warning \
+    --specs=nano.specs \
+    --specs=nosys.specs \
+    -Wl,--gc-sections \
+    -Wl,--defsym=__stack_size__=0x200 \
+    -Wl,--defsym=__heap_size__=0x0 \
+    $(NULL)
+
 LD_OPTIONS +=  -mcpu=$(CPU) -m$(INSTRUCTION_MODE) -Wl,-Map=$(OBJ_FOLDER)$(TARGET).map,--cref -T$(LD_SCRIPT)
 
 # Flags to run only preprocessor
@@ -110,7 +200,116 @@ else
 	RM = rm -rf
 endif
 
-C_SRCS :=  ../../../source/daplink/HardFault_Handler.c  ../../../source/daplink/circ_buf.c  ../../../source/daplink/cmsis-dap/DAP.c  ../../../source/daplink/cmsis-dap/DAP_queue.c  ../../../source/daplink/cmsis-dap/DAP_vendor.c  ../../../source/daplink/cmsis-dap/JTAG_DP.c  ../../../source/daplink/cmsis-dap/SWO.c  ../../../source/daplink/cmsis-dap/SW_DP.c  ../../../source/daplink/cortex_m.c  ../../../source/daplink/crc32.c  ../../../source/daplink/drag-n-drop/file_stream.c  ../../../source/daplink/drag-n-drop/flash_decoder.c  ../../../source/daplink/drag-n-drop/flash_intf.c  ../../../source/daplink/drag-n-drop/flash_manager.c  ../../../source/daplink/drag-n-drop/iap_flash_intf.c  ../../../source/daplink/drag-n-drop/intelhex.c  ../../../source/daplink/drag-n-drop/vfs_manager.c  ../../../source/daplink/drag-n-drop/vfs_user.c  ../../../source/daplink/drag-n-drop/virtual_fs.c  ../../../source/daplink/error.c  ../../../source/daplink/flash_hal.c  ../../../source/daplink/info.c  ../../../source/daplink/interface/bootloader_update.c  ../../../source/daplink/interface/daplink.c  ../../../source/daplink/interface/main_interface.c  ../../../source/daplink/interface/swd_host.c  ../../../source/daplink/interface/swd_host_ca.c  ../../../source/daplink/interface/target_flash.c  ../../../source/daplink/sdk_stub.c  ../../../source/daplink/settings/settings.c  ../../../source/daplink/settings/settings_rom.c  ../../../source/daplink/usb2uart/usbd_user_cdc_acm.c  ../../../source/daplink/util.c  ../../../source/daplink/validation.c  ../../../source/family/freescale/target_reset_Kseries.c  ../../../source/family/freescale/target_reset_Lseries.c  ../../../source/family/freescale/target_reset_mimxrt.c  ../../../source/family/freescale/target_reset_rapid_iot.c  ../../../source/family/nordic/target_reset_nrf51.c  ../../../source/family/nordic/target_reset_nrf52.c  ../../../source/family/realtek/target_reset_realtek_rtl8195am.c  ../../../source/family/renesas/target_reset_rza.c  ../../../source/family/ti/target_reset_ti.c  ../../../source/family/toshiba/target_reset_tz.c  ../../../source/family/wiznet/target_reset_wiznet.c  ../../../source/hic_hal/stm32/stm32h743ii/STCubeGenerated/Src/main_743ii.c  ../../../source/hic_hal/stm32/stm32h743ii/STCubeGenerated/Src/stm32h7xx_hal_msp.c  ../../../source/hic_hal/stm32/stm32h743ii/STCubeGenerated/Src/stm32h7xx_it.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_cortex.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma2d.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma_ex.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_exti.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_flash.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_flash_ex.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_gpio.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c_ex.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pcd.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pcd_ex.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc_ex.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi_ex.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim_ex.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_usart.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_usart_ex.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_usb.c  ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/I2C_STM32H7xx.c  ../../../source/hic_hal/stm32/stm32h743ii/cmsis/system_stm32h7xx.c  ../../../source/hic_hal/stm32/stm32h743ii/flash.c  ../../../source/hic_hal/stm32/stm32h743ii/gpio.c  ../../../source/hic_hal/stm32/stm32h743ii/read_uid.c  ../../../source/hic_hal/stm32/stm32h743ii/sdk.c  ../../../source/hic_hal/stm32/stm32h743ii/uart.c  ../../../source/hic_hal/stm32/stm32h743ii/usb_config.c  ../../../source/hic_hal/stm32/stm32h743ii/usbd_STM32F4xx_HS.c  ../../../source/hic_hal/stm32/stm32h743ii/i2c.c  ../../../source/rtos/RTX/Config/RTX_Config.c  ../../../source/rtos/RTX/Source/rtx_delay.c  ../../../source/rtos/RTX/Source/rtx_kernel.c  ../../../source/rtos/RTX/Source/rtx_lib.c  ../../../source/rtos/RTX/Source/rtx_memory.c  ../../../source/rtos/RTX/Source/rtx_mempool.c  ../../../source/rtos/RTX/Source/rtx_msgqueue.c  ../../../source/rtos/RTX/Source/rtx_mutex.c  ../../../source/rtos/RTX/Source/rtx_system.c  ../../../source/rtos/RTX/Source/rtx_thread.c  ../../../source/rtos/RTX/Source/rtx_timer.c  ../../../source/rtos/Source/os_systick.c  ../../../source/target/target_board.c  ../../../source/target/target_family.c  ../../../source/usb/cdc/usbd_cdc_acm.c  ../../../source/usb/cdc/usbd_core_cdc.c  ../../../source/usb/bulk/usbd_bulk.c  ../../../source/usb/msc/usbd_core_msc.c  ../../../source/usb/msc/usbd_msc.c  ../../../source/usb/usbd_core.c  ../../../source/usb/webusb/usbd_core_webusb.c  ../../../source/usb/winusb/usbd_core_winusb.c
+C_SRCS := \
+    ../../../source/daplink/HardFault_Handler.c \
+    ../../../source/daplink/circ_buf.c \
+    ../../../source/daplink/cmsis-dap/DAP.c \
+    ../../../source/daplink/cmsis-dap/DAP_queue.c \
+    ../../../source/daplink/cmsis-dap/DAP_vendor.c \
+    ../../../source/daplink/cmsis-dap/JTAG_DP.c \
+    ../../../source/daplink/cmsis-dap/SWO.c \
+    ../../../source/daplink/cmsis-dap/SW_DP.c \
+    ../../../source/daplink/cortex_m.c \
+    ../../../source/daplink/crc32.c \
+    ../../../source/daplink/drag-n-drop/file_stream.c \
+    ../../../source/daplink/drag-n-drop/flash_decoder.c \
+    ../../../source/daplink/drag-n-drop/flash_intf.c \
+    ../../../source/daplink/drag-n-drop/flash_manager.c \
+    ../../../source/daplink/drag-n-drop/iap_flash_intf.c \
+    ../../../source/daplink/drag-n-drop/intelhex.c \
+    ../../../source/daplink/drag-n-drop/vfs_manager.c \
+    ../../../source/daplink/drag-n-drop/vfs_user.c \
+    ../../../source/daplink/drag-n-drop/virtual_fs.c \
+    ../../../source/daplink/error.c \
+    ../../../source/daplink/flash_hal.c \
+    ../../../source/daplink/info.c \
+    ../../../source/daplink/interface/bootloader_update.c \
+    ../../../source/daplink/interface/daplink.c \
+    ../../../source/daplink/interface/main_interface.c \
+    ../../../source/daplink/interface/swd_host.c \
+    ../../../source/daplink/interface/swd_host_ca.c \
+    ../../../source/daplink/interface/target_flash.c \
+    ../../../source/daplink/sdk_stub.c \
+    ../../../source/daplink/settings/settings.c \
+    ../../../source/daplink/settings/settings_rom.c \
+    ../../../source/daplink/usb2uart/usbd_user_cdc_acm.c \
+    ../../../source/daplink/util.c \
+    ../../../source/daplink/validation.c \
+    ../../../source/family/freescale/target_reset_Kseries.c \
+    ../../../source/family/freescale/target_reset_Lseries.c \
+    ../../../source/family/freescale/target_reset_mimxrt.c \
+    ../../../source/family/freescale/target_reset_rapid_iot.c \
+    ../../../source/family/nordic/target_reset_nrf51.c \
+    ../../../source/family/nordic/target_reset_nrf52.c \
+    ../../../source/family/realtek/target_reset_realtek_rtl8195am.c \
+    ../../../source/family/renesas/target_reset_rza.c \
+    ../../../source/family/ti/target_reset_ti.c \
+    ../../../source/family/toshiba/target_reset_tz.c \
+    ../../../source/family/wiznet/target_reset_wiznet.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STCubeGenerated/Src/main_743ii.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STCubeGenerated/Src/stm32h7xx_hal_msp.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STCubeGenerated/Src/stm32h7xx_it.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_cortex.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma2d.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma_ex.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_exti.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_flash.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_flash_ex.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_gpio.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c_ex.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pcd.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pcd_ex.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc_ex.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi_ex.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim_ex.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_usart.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_usart_ex.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_usb.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src/I2C_STM32H7xx.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/cmsis/system_stm32h7xx.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/flash.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/gpio.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/read_uid.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/sdk.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/uart.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/uartb.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/usb_config.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/usbd_STM32F4xx_HS.c \
+    ../../../source/hic_hal/stm32/stm32h743ii/i2c.c \
+    ../../../source/rtos/RTX/Config/RTX_Config.c \
+    ../../../source/rtos/RTX/Source/rtx_delay.c \
+    ../../../source/rtos/RTX/Source/rtx_kernel.c \
+    ../../../source/rtos/RTX/Source/rtx_lib.c \
+    ../../../source/rtos/RTX/Source/rtx_memory.c \
+    ../../../source/rtos/RTX/Source/rtx_mempool.c \
+    ../../../source/rtos/RTX/Source/rtx_msgqueue.c \
+    ../../../source/rtos/RTX/Source/rtx_mutex.c \
+    ../../../source/rtos/RTX/Source/rtx_system.c \
+    ../../../source/rtos/RTX/Source/rtx_thread.c \
+    ../../../source/rtos/RTX/Source/rtx_timer.c \
+    ../../../source/rtos/Source/os_systick.c \
+    ../../../source/target/target_board.c \
+    ../../../source/target/target_family.c \
+    ../../../source/usb/cdc/usbd_cdc_acm.c \
+    ../../../source/usb/cdc/usbd_core_cdc.c \
+    ../../../source/usb/bulk/usbd_bulk.c \
+    ../../../source/usb/msc/usbd_core_msc.c \
+    ../../../source/usb/msc/usbd_msc.c \
+    ../../../source/usb/usbd_core.c \
+    ../../../source/usb/webusb/usbd_core_webusb.c \
+    ../../../source/usb/winusb/usbd_core_winusb.c \
+    $(NULL)
+
 C_OBJS := $(patsubst %.c,$(OBJ_FOLDER)%.o,$(notdir $(C_SRCS)))
 
 CPP_SRCS :=
