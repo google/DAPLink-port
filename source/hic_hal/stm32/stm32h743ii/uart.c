@@ -84,10 +84,10 @@
 #define RX_OVRF_MSG_SIZE    (sizeof(RX_OVRF_MSG) - 1)
 #define BUFFER_SIZE         (512)
 
-circ_buf_t write_buffer;
-uint8_t write_buffer_data[BUFFER_SIZE];
-circ_buf_t read_buffer;
-uint8_t read_buffer_data[BUFFER_SIZE];
+static circ_buf_t write_buffer;
+static uint8_t write_buffer_data[BUFFER_SIZE];
+static circ_buf_t read_buffer;
+static uint8_t read_buffer_data[BUFFER_SIZE];
 
 static UART_Configuration configuration = {
     .Baudrate = 9600,
