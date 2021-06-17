@@ -301,6 +301,7 @@ C_SRCS := \
     ../../../source/target/target_board.c \
     ../../../source/target/target_family.c \
     ../../../source/usb/cdc/usbd_cdc_acm.c \
+    ../../../source/usb/cdc/usbd_cdcb_acm.c \
     ../../../source/usb/cdc/usbd_core_cdc.c \
     ../../../source/usb/bulk/usbd_bulk.c \
     ../../../source/usb/msc/usbd_core_msc.c \

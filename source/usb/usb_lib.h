@@ -94,6 +94,21 @@ extern U8 USBD_CDC_ACM_SendBuf[];
 extern U8 USBD_CDC_ACM_ReceiveBuf[];
 extern U8 USBD_CDC_ACM_NotifyBuf[10];
 
+extern const U8 usbd_cdcb_acm_enable;
+extern U8 usbd_cdcb_acm_cif_num;
+extern U8 usbd_cdcb_acm_dif_num;
+extern const U8 usbd_cdcb_acm_bufsize;
+extern const U8 usbd_cdcb_acm_ep_intin;
+extern const U8 usbd_cdcb_acm_ep_bulkin;
+extern const U8 usbd_cdcb_acm_ep_bulkout;
+extern const U16 usbd_cdcb_acm_sendbuf_sz;
+extern const U16 usbd_cdcb_acm_receivebuf_sz;
+extern const U16 usbd_cdcb_acm_maxpacketsize[2];
+extern const U16 usbd_cdcb_acm_maxpacketsize1[2];
+extern U8 USBD_CDCB_ACM_SendBuf[];
+extern U8 USBD_CDCB_ACM_ReceiveBuf[];
+extern U8 USBD_CDCB_ACM_NotifyBuf[10];
+
 extern const U8 usbd_webusb_vendor_code;
 extern const U8 usbd_winusb_vendor_code;
 
