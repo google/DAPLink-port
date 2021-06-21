@@ -133,6 +133,29 @@ U8 USBD_CDC_ACM_ReceiveBuf[USBD_CDC_ACM_RECEIVEBUF_SIZE];
 U8 USBD_CDC_ACM_NotifyBuf[10];
 #endif
 
+#ifndef USBD_CDCB_ACM_ENABLE
+#if    (USBD_CDCB_ENABLE == 1)
+#error "Please update usb_config.c file with new definitions for CDCB, as new CDCB is incompatible with the old one!"
+#else
+#define USBD_CDCB_ACM_ENABLE  0
+#endif
+#endif
+
+#if    (USBD_CDCB_ACM_ENABLE)
+U8 usbd_cdcb_acm_cif_num = 0; //assigned during runtime init
+U8 usbd_cdcb_acm_dif_num = 0; //assigned during runtime init
+const U8 usbd_cdcb_acm_ep_intin = USBD_CDCB_ACM_EP_INTIN;
+const U8 usbd_cdcb_acm_ep_bulkin = USBD_CDCB_ACM_EP_BULKIN;
+const U8 usbd_cdcb_acm_ep_bulkout = USBD_CDCB_ACM_EP_BULKOUT;
+const U16 usbd_cdcb_acm_sendbuf_sz = USBD_CDCB_ACM_SENDBUF_SIZE;
+const U16 usbd_cdcb_acm_receivebuf_sz = USBD_CDCB_ACM_RECEIVEBUF_SIZE;
+const U16 usbd_cdcb_acm_maxpacketsize[2] = {USBD_CDCB_ACM_WMAXPACKETSIZE, USBD_CDCB_ACM_HS_WMAXPACKETSIZE};
+const U16 usbd_cdcb_acm_maxpacketsize1[2] = {USBD_CDCB_ACM_WMAXPACKETSIZE1, USBD_CDCB_ACM_HS_WMAXPACKETSIZE1};
+U8 USBD_CDCB_ACM_SendBuf[USBD_CDCB_ACM_SENDBUF_SIZE];
+U8 USBD_CDCB_ACM_ReceiveBuf[USBD_CDCB_ACM_RECEIVEBUF_SIZE];
+U8 USBD_CDCB_ACM_NotifyBuf[10];
+#endif
+
 #if    (USBD_WEBUSB_ENABLE)
 U8 usbd_webusb_if_num; //assigned during runtime init
 const U8 usbd_webusb_vendor_code = USBD_WEBUSB_VENDOR_CODE;
@@ -922,6 +945,281 @@ BOOL USBD_EndPoint0_Out_CDC_ReqToIF(void)
 }
 #endif  /* (USBD_CDC_ACM_ENABLE) */
 
+#if    (USBD_CDCB_ACM_ENABLE)
+#ifdef __RTX
+#if    (USBD_CDCB_ACM_EP_INTIN == 1)
+#define USBD_RTX_EndPoint1               USBD_RTX_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 2)
+#define USBD_RTX_EndPoint2               USBD_RTX_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 3)
+#define USBD_RTX_EndPoint3               USBD_RTX_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 4)
+#define USBD_RTX_EndPoint4               USBD_RTX_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 5)
+#define USBD_RTX_EndPoint5               USBD_RTX_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 6)
+#define USBD_RTX_EndPoint6               USBD_RTX_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 7)
+#define USBD_RTX_EndPoint7               USBD_RTX_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 8)
+#define USBD_RTX_EndPoint8               USBD_RTX_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 9)
+#define USBD_RTX_EndPoint9               USBD_RTX_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 10)
+#define USBD_RTX_EndPoint10              USBD_RTX_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 11)
+#define USBD_RTX_EndPoint11              USBD_RTX_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 12)
+#define USBD_RTX_EndPoint12              USBD_RTX_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 13)
+#define USBD_RTX_EndPoint13              USBD_RTX_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 14)
+#define USBD_RTX_EndPoint14              USBD_RTX_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 15)
+#define USBD_RTX_EndPoint15              USBD_RTX_CDCB_ACM_EP_INTIN_Event
+#endif
+#else
+#if    (USBD_CDCB_ACM_EP_INTIN == 1)
+#define USBD_EndPoint1                   USBD_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 2)
+#define USBD_EndPoint2                   USBD_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 3)
+#define USBD_EndPoint3                   USBD_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 4)
+#define USBD_EndPoint4                   USBD_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 5)
+#define USBD_EndPoint5                   USBD_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 6)
+#define USBD_EndPoint6                   USBD_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 7)
+#define USBD_EndPoint7                   USBD_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 8)
+#define USBD_EndPoint8                   USBD_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 9)
+#define USBD_EndPoint9                   USBD_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 10)
+#define USBD_EndPoint10                  USBD_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 11)
+#define USBD_EndPoint11                  USBD_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 12)
+#define USBD_EndPoint12                  USBD_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 13)
+#define USBD_EndPoint13                  USBD_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 14)
+#define USBD_EndPoint14                  USBD_CDCB_ACM_EP_INTIN_Event
+#elif  (USBD_CDCB_ACM_EP_INTIN == 15)
+#define USBD_EndPoint15                  USBD_CDCB_ACM_EP_INTIN_Event
+#endif
+#endif
+
+#ifdef __RTX
+#if    (USBD_CDCB_ACM_EP_BULKIN != USBD_CDCB_ACM_EP_BULKOUT)
+#if    (USBD_CDCB_ACM_EP_BULKIN == 1)
+#define USBD_RTX_EndPoint1             USBD_RTX_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 2)
+#define USBD_RTX_EndPoint2             USBD_RTX_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 3)
+#define USBD_RTX_EndPoint3             USBD_RTX_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 4)
+#define USBD_RTX_EndPoint4             USBD_RTX_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 5)
+#define USBD_RTX_EndPoint5             USBD_RTX_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 6)
+#define USBD_RTX_EndPoint6             USBD_RTX_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 7)
+#define USBD_RTX_EndPoint7             USBD_RTX_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 8)
+#define USBD_RTX_EndPoint8             USBD_RTX_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 9)
+#define USBD_RTX_EndPoint9             USBD_RTX_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 10)
+#define USBD_RTX_EndPoint10            USBD_RTX_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 11)
+#define USBD_RTX_EndPoint11            USBD_RTX_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 12)
+#define USBD_RTX_EndPoint12            USBD_RTX_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 13)
+#define USBD_RTX_EndPoint13            USBD_RTX_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 14)
+#define USBD_RTX_EndPoint14            USBD_RTX_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 15)
+#define USBD_RTX_EndPoint15            USBD_RTX_CDCB_ACM_EP_BULKIN_Event
+#endif
+
+#if    (USBD_CDCB_ACM_EP_BULKOUT == 1)
+#define USBD_RTX_EndPoint1             USBD_RTX_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 2)
+#define USBD_RTX_EndPoint2             USBD_RTX_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 3)
+#define USBD_RTX_EndPoint3             USBD_RTX_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 4)
+#define USBD_RTX_EndPoint4             USBD_RTX_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 5)
+#define USBD_RTX_EndPoint5             USBD_RTX_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 6)
+#define USBD_RTX_EndPoint6             USBD_RTX_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 7)
+#define USBD_RTX_EndPoint7             USBD_RTX_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 8)
+#define USBD_RTX_EndPoint8             USBD_RTX_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 9)
+#define USBD_RTX_EndPoint9             USBD_RTX_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 10)
+#define USBD_RTX_EndPoint10            USBD_RTX_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 11)
+#define USBD_RTX_EndPoint11            USBD_RTX_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 12)
+#define USBD_RTX_EndPoint12            USBD_RTX_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 13)
+#define USBD_RTX_EndPoint13            USBD_RTX_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 14)
+#define USBD_RTX_EndPoint14            USBD_RTX_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 15)
+#define USBD_RTX_EndPoint15            USBD_RTX_CDCB_ACM_EP_BULKOUT_Event
+#endif
+#else
+#if    (USBD_CDCB_ACM_EP_BULKIN == 1)
+#define USBD_RTX_EndPoint1             USBD_RTX_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 2)
+#define USBD_RTX_EndPoint2             USBD_RTX_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 3)
+#define USBD_RTX_EndPoint3             USBD_RTX_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 4)
+#define USBD_RTX_EndPoint4             USBD_RTX_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 5)
+#define USBD_RTX_EndPoint5             USBD_RTX_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 6)
+#define USBD_RTX_EndPoint6             USBD_RTX_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 7)
+#define USBD_RTX_EndPoint7             USBD_RTX_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 8)
+#define USBD_RTX_EndPoint8             USBD_RTX_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 9)
+#define USBD_RTX_EndPoint9             USBD_RTX_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 10)
+#define USBD_RTX_EndPoint10            USBD_RTX_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 11)
+#define USBD_RTX_EndPoint11            USBD_RTX_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 12)
+#define USBD_RTX_EndPoint12            USBD_RTX_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 13)
+#define USBD_RTX_EndPoint13            USBD_RTX_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 14)
+#define USBD_RTX_EndPoint14            USBD_RTX_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 15)
+#define USBD_RTX_EndPoint15            USBD_RTX_CDCB_ACM_EP_BULK_Event
+#endif
+#endif
+#else
+#if    (USBD_CDCB_ACM_EP_BULKIN != USBD_CDCB_ACM_EP_BULKOUT)
+#if    (USBD_CDCB_ACM_EP_BULKIN == 1)
+#define USBD_EndPoint1                 USBD_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 2)
+#define USBD_EndPoint2                 USBD_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 3)
+#define USBD_EndPoint3                 USBD_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 4)
+#define USBD_EndPoint4                 USBD_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 5)
+#define USBD_EndPoint5                 USBD_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 6)
+#define USBD_EndPoint6                 USBD_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 7)
+#define USBD_EndPoint7                 USBD_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 8)
+#define USBD_EndPoint8                 USBD_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 9)
+#define USBD_EndPoint9                 USBD_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 10)
+#define USBD_EndPoint10                USBD_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 11)
+#define USBD_EndPoint11                USBD_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 12)
+#define USBD_EndPoint12                USBD_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 13)
+#define USBD_EndPoint13                USBD_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 14)
+#define USBD_EndPoint14                USBD_CDCB_ACM_EP_BULKIN_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 15)
+#define USBD_EndPoint15                USBD_CDCB_ACM_EP_BULKIN_Event
+#endif
+
+#if    (USBD_CDCB_ACM_EP_BULKOUT == 1)
+#define USBD_EndPoint1                 USBD_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 2)
+#define USBD_EndPoint2                 USBD_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 3)
+#define USBD_EndPoint3                 USBD_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 4)
+#define USBD_EndPoint4                 USBD_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 5)
+#define USBD_EndPoint5                 USBD_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 6)
+#define USBD_EndPoint6                 USBD_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 7)
+#define USBD_EndPoint7                 USBD_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 8)
+#define USBD_EndPoint8                 USBD_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 9)
+#define USBD_EndPoint9                 USBD_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 10)
+#define USBD_EndPoint10                USBD_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 11)
+#define USBD_EndPoint11                USBD_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 12)
+#define USBD_EndPoint12                USBD_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 13)
+#define USBD_EndPoint13                USBD_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 14)
+#define USBD_EndPoint14                USBD_CDCB_ACM_EP_BULKOUT_Event
+#elif  (USBD_CDCB_ACM_EP_BULKOUT == 15)
+#define USBD_EndPoint15                USBD_CDCB_ACM_EP_BULKOUT_Event
+#endif
+#else
+#if    (USBD_CDCB_ACM_EP_BULKIN == 1)
+#define USBD_EndPoint1                 USBD_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 2)
+#define USBD_EndPoint2                 USBD_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 3)
+#define USBD_EndPoint3                 USBD_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 4)
+#define USBD_EndPoint4                 USBD_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 5)
+#define USBD_EndPoint5                 USBD_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 6)
+#define USBD_EndPoint6                 USBD_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 7)
+#define USBD_EndPoint7                 USBD_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 8)
+#define USBD_EndPoint8                 USBD_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 9)
+#define USBD_EndPoint9                 USBD_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 10)
+#define USBD_EndPoint10                USBD_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 11)
+#define USBD_EndPoint11                USBD_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 12)
+#define USBD_EndPoint12                USBD_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 13)
+#define USBD_EndPoint13                USBD_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 14)
+#define USBD_EndPoint14                USBD_CDCB_ACM_EP_BULK_Event
+#elif  (USBD_CDCB_ACM_EP_BULKIN == 15)
+#define USBD_EndPoint15                USBD_CDCB_ACM_EP_BULK_Event
+#endif
+#endif
+#endif
+#else
+BOOL USBD_EndPoint0_Setup_CDCB_ReqToIF(void)
+{
+    return (__FALSE);
+}
+BOOL USBD_EndPoint0_Out_CDCB_ReqToIF(void)
+{
+    return (__FALSE);
+}
+#endif  /* (USBD_CDCB_ACM_ENABLE) */
+
 #if    (USBD_BULK_ENABLE)
 
 #if    (USBD_BULK_EP_BULKIN != USBD_BULK_EP_BULKOUT)
@@ -1054,21 +1352,24 @@ BOOL USBD_EndPoint0_Out_CLS_ReqToEP(void)
 }
 #endif  /* (USBD_CLS_ENABLE) */
 
-#if   ((USBD_CDC_ACM_ENABLE))
+#if   ((USBD_CDC_ACM_ENABLE) || (USBD_CDCB_ACM_ENABLE))
 #ifndef __RTX
 __WEAK void USBD_Reset_Event(void)
 {
 #if    (USBD_CDC_ACM_ENABLE)
     USBD_CDC_ACM_Reset_Event();
 #endif
+#if    (USBD_CDCB_ACM_ENABLE)
+    USBD_CDCB_ACM_Reset_Event();
+#endif
 #if    (USBD_MSC_ENABLE)
     USBD_MSC_Reset_Event();
 #endif
 }
 #endif
-#endif  /* ((USBD_CDC_ACM_ENABLE)) */
+#endif  /* ((USBD_CDC_ACM_ENABLE) || (USBD_CDCB_ACM_ENABLE)) */
 
-#if   ((USBD_HID_ENABLE) || (USBD_ADC_ENABLE) || (USBD_CDC_ACM_ENABLE) || (USBD_CLS_ENABLE))
+#if   ((USBD_HID_ENABLE) || (USBD_ADC_ENABLE) || (USBD_CDC_ACM_ENABLE) || (USBD_CDCB_ACM_ENABLE) || (USBD_CLS_ENABLE))
 #ifndef __RTX
 __WEAK void USBD_SOF_Event(void)
 {
@@ -1081,12 +1382,15 @@ __WEAK void USBD_SOF_Event(void)
 #if    (USBD_CDC_ACM_ENABLE)
     USBD_CDC_ACM_SOF_Event();
 #endif
+#if    (USBD_CDCB_ACM_ENABLE)
+    USBD_CDC_ACM_SOF_Event();
+#endif
 #if    (USBD_CLS_ENABLE)
     USBD_CLS_SOF_Event();
 #endif
 }
 #endif
-#endif  /* ((USBD_HID_ENABLE) || (USBD_ADC_ENABLE) || (USBD_CDC_ACM_ENABLE) || (USBD_CLS_ENABLE)) */
+#endif  /* ((USBD_HID_ENABLE) || (USBD_ADC_ENABLE) || (USBD_CDC_ACM_ENABLE) || (USBD_CDCB_ACM_ENABLE) || (USBD_CLS_ENABLE)) */
 
 /* USB Device - Device Events Callback Functions */
 __WEAK void USBD_Power_Event(BOOL power);
@@ -1187,7 +1491,7 @@ void (* const USBD_P_Feature_Event)(void) = USBD_Feature_Event;
 #ifdef __RTX
 const BOOL __rtx = __TRUE;
 
-#if   ((USBD_HID_ENABLE) || (USBD_ADC_ENABLE) || (USBD_CDC_ACM_ENABLE) || (USBD_CLS_ENABLE))
+#if   ((USBD_HID_ENABLE) || (USBD_ADC_ENABLE) || (USBD_CDC_ACM_ENABLE) || (USBD_CDCB_ACM_ENABLE) || (USBD_CLS_ENABLE))
 __WEAK void USBD_RTX_Device(void)
 {
     U16 evt;
@@ -1199,6 +1503,9 @@ __WEAK void USBD_RTX_Device(void)
         if (evt & USBD_EVT_RESET) {
 #if (USBD_CDC_ACM_ENABLE)
             USBD_CDC_ACM_Reset_Event();
+#endif
+#if (USBD_CDCB_ACM_ENABLE)
+            USBD_CDCB_ACM_Reset_Event();
 #endif
 #if (USBD_MSC_ENABLE)
             USBD_MSC_Reset_Event();
@@ -1214,6 +1521,9 @@ __WEAK void USBD_RTX_Device(void)
 #endif
 #if (USBD_CDC_ACM_ENABLE)
             USBD_CDC_ACM_SOF_Event();
+#endif
+#if (USBD_CDCB_ACM_ENABLE)
+            USBD_CDCB_ACM_SOF_Event();
 #endif
 #if (USBD_CLS_ENABLE)
             USBD_CLS_SOF_Event();
@@ -1497,6 +1807,23 @@ static U64 usbd_cdc_acm_ep_bulkout_stack[USBD_CDC_ACM_EP_BULKOUT_STACK / 8];
 #error "Multiple CDC stacks defined for same EP"
 #endif
 
+// Check CDCB
+#if (USBD_CDCB_ACM_ENABLE && !USBD_CDCB_ACM_EP_INTIN_STACK)
+#error "CDCB ACM INTIN stack must be defined"
+#endif
+#if (USBD_CDCB_ACM_ENABLE && !USBD_CDCB_ACM_EP_BULKIN_STACK && USBD_CDCB_ACM_EP_BULKIN != USBD_CDCB_ACM_EP_BULKOUT)
+#error "USBD_CDCB_ACM_EP_BULKIN must be defined"
+#endif
+#if (USBD_CDCB_ACM_ENABLE && !USBD_CDCB_ACM_EP_BULKOUT_STACK && USBD_CDCB_ACM_EP_BULKIN != USBD_CDCB_ACM_EP_BULKOUT)
+#error "USBD_CDCB_ACM_EP_BULKOUT must be defined"
+#endif
+#if (USBD_CDCB_ACM_ENABLE && USBD_CDCB_ACM_EP_BULKIN_STACK == 0 && USBD_CDCB_ACM_EP_BULKOUT_STACK == 0)
+#error "CDCB BULK stack must be defined"
+#endif
+#if (USBD_CDCB_ACM_EP_BULKIN_STACK > 0 && USBD_CDCB_ACM_EP_BULKOUT_STACK > 0 && USBD_CDCB_ACM_EP_BULKIN == USBD_CDCB_ACM_EP_BULKOUT)
+#error "Multiple CDCB stacks defined for same EP"
+#endif
+
 static const user_stack_t user_stack_list[16] = {
 #if USBD_ENABLE
     [0] = {usbd_endpoint0_stack, sizeof(usbd_endpoint0_stack)},
@@ -1589,10 +1916,10 @@ void USBD_RTX_TaskInit(void)
 #define USBD_BULK_DESC_LEN                (USB_INTERFACE_DESC_SIZE + 2*USB_ENDPOINT_DESC_SIZE)
 
 #define USBD_HID_DESC_OFS                 (USB_CONFIGUARTION_DESC_SIZE + USB_INTERFACE_DESC_SIZE                                                + \
-                                           USBD_MSC_ENABLE * USBD_MSC_DESC_LEN + USBD_CDC_ACM_ENABLE * USBD_CDC_ACM_DESC_LEN)
+                                           USBD_MSC_ENABLE * USBD_MSC_DESC_LEN + (USBD_CDC_ACM_ENABLE + USBD_CDCB_ACM_ENABLE) * USBD_CDC_ACM_DESC_LEN)
 
 #define USBD_WTOTALLENGTH_MAX              (USB_CONFIGUARTION_DESC_SIZE +                 \
-                                           USBD_CDC_ACM_DESC_LEN * USBD_CDC_ACM_ENABLE + \
+                                           USBD_CDC_ACM_DESC_LEN * (USBD_CDC_ACM_ENABLE + USBD_CDCB_ACM_ENABLE) + \
                                            USBD_HID_DESC_LEN     * USBD_HID_ENABLE     + \
                                            (USB_INTERFACE_DESC_SIZE) * USBD_WEBUSB_ENABLE + \
                                            USBD_BULK_DESC_LEN     * USBD_BULK_ENABLE + \
@@ -1667,7 +1994,7 @@ const U8 USBD_DeviceDescriptor[] = {
     USB_DEVICE_CLASS_MISCELLANEOUS,       /* bDeviceClass */
     0x02,                                 /* bDeviceSubClass */
     0x01,                                 /* bDeviceProtocol */
-#elif (USBD_CDC_ACM_ENABLE)
+#elif (USBD_CDC_ACM_ENABLE || USBD_CDCB_ACM_ENABLE)
     USB_DEVICE_CLASS_COMMUNICATIONS,      /* bDeviceClass CDC*/
     0x00,                                 /* bDeviceSubClass */
     0x00,                                 /* bDeviceProtocol */
@@ -2375,6 +2702,10 @@ const struct {
     USBD_STR_DEF(CDC_ACM_CIF_STRDESC);
     USBD_STR_DEF(CDC_ACM_DIF_STRDESC);
 #endif
+#if (USBD_CDCB_ACM_ENABLE)
+    USBD_STR_DEF(CDCB_ACM_CIF_STRDESC);
+    USBD_STR_DEF(CDCB_ACM_DIF_STRDESC);
+#endif
 #if (USBD_HID_ENABLE)
     USBD_STR_DEF(HID_STRDESC);
 #endif
@@ -2403,6 +2734,10 @@ const struct {
 #if (USBD_CDC_ACM_ENABLE)
     USBD_STR_VAL(CDC_ACM_CIF_STRDESC),
     USBD_STR_VAL(CDC_ACM_DIF_STRDESC),
+#endif
+#if (USBD_CDCB_ACM_ENABLE)
+    USBD_STR_VAL(CDCB_ACM_CIF_STRDESC),
+    USBD_STR_VAL(CDCB_ACM_DIF_STRDESC),
 #endif
 #if (USBD_HID_ENABLE)
     USBD_STR_VAL(HID_STRDESC),
@@ -2717,6 +3052,13 @@ void usbd_class_init(void)
     usbd_cdc_acm_dif_num = if_num++;
     desc_ptr += acm_cdc_desc_fill(&USBD_ConfigDescriptor[desc_ptr], &USBD_ConfigDescriptor_HS[desc_ptr], usbd_cdc_acm_cif_num);
     USBD_CDC_ACM_Initialize();
+#endif
+
+#if (USBD_CDCB_ACM_ENABLE)
+    usbd_cdcb_acm_cif_num = if_num++;
+    usbd_cdcb_acm_dif_num = if_num++;
+    desc_ptr += acm_cdc_desc_fill(&USBD_ConfigDescriptor[desc_ptr], &USBD_ConfigDescriptor_HS[desc_ptr], usbd_cdcb_acm_cif_num);
+    USBD_CDCB_ACM_Initialize();
 #endif
 
 #if (USBD_HID_ENABLE)

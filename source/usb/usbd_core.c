@@ -908,6 +908,10 @@ void USBD_EndPoint0(U32 event)
                             goto setup_class_ok;
                         }
 
+                        if (USBD_EndPoint0_Setup_CDCB_ReqToIF()) {
+                            goto setup_class_ok;
+                        }
+
                         goto stall;                                                  /* not supported */
 
                     /* end case REQUEST_TO_INTERFACE */
@@ -978,6 +982,10 @@ stall:
                                     }
 
                                     if (USBD_EndPoint0_Out_CDC_ReqToIF()) {
+                                        goto out_class_ok;
+                                    }
+
+                                    if (USBD_EndPoint0_Out_CDCB_ReqToIF()) {
                                         goto out_class_ok;
                                     }
 
