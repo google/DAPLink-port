@@ -1,5 +1,5 @@
 /**
- * @file    usbd_cdc_acm.c
+ * @file    usbd_cdcb_acm.c
  * @brief   Communication Device Class driver
  *
  * DAPLink Interface Firmware
@@ -27,8 +27,8 @@
 
 /* Module instance variables                                                    */
 
-/** \ingroup  USBD_CDC_ACM_instance_variables
-    \defgroup USBD_CDC_ACM_INSTANCE_VAR  Instance Variables (INSTANCE_VAR)
+/** \ingroup  USBD_CDCB_ACM_instance_variables
+    \defgroup USBD_CDCB_ACM_INSTANCE_VAR  Instance Variables (INSTANCE_VAR)
     \brief      Instance variables used in USBD CDC ACM module
  */
 static int32_t data_send_access;              /*!< Flag active while send data (in the send intermediate buffer) is being accessed */
@@ -50,137 +50,137 @@ static uint16_t control_line_state;           /*!< Control line state settings b
 
 static CDC_LINE_CODING line_coding;           /*!< Communication settings */
 
-/* end of group USBD_CDC_ACM_INSTANCE_VAR */
+/* end of group USBD_CDCB_ACM_INSTANCE_VAR */
 
 
 /* Functions that should be provided by user to use standard Virtual COM port
    functionality                                                              */
-__WEAK int32_t USBD_CDC_ACM_PortInitialize(void)
+__WEAK int32_t USBD_CDCB_ACM_PortInitialize(void)
 {
     return (0);
 }
-__WEAK int32_t USBD_CDC_ACM_PortUninitialize(void)
+__WEAK int32_t USBD_CDCB_ACM_PortUninitialize(void)
 {
     return (0);
 }
-__WEAK int32_t USBD_CDC_ACM_PortReset(void)
+__WEAK int32_t USBD_CDCB_ACM_PortReset(void)
 {
     return (0);
 }
-__WEAK int32_t USBD_CDC_ACM_PortSetLineCoding(CDC_LINE_CODING *line_coding)
+__WEAK int32_t USBD_CDCB_ACM_PortSetLineCoding(CDC_LINE_CODING *line_coding)
 {
     return (0);
 }
-__WEAK int32_t USBD_CDC_ACM_PortGetLineCoding(CDC_LINE_CODING *line_coding)
+__WEAK int32_t USBD_CDCB_ACM_PortGetLineCoding(CDC_LINE_CODING *line_coding)
 {
     return (0);
 }
-__WEAK int32_t USBD_CDC_ACM_PortSetControlLineState(uint16_t ctrl_bmp)
+__WEAK int32_t USBD_CDCB_ACM_PortSetControlLineState(uint16_t ctrl_bmp)
 {
     return (0);
 }
 
 /* Functions that can be used by user to use standard Virtual COM port
    functionality                                                              */
-int32_t USBD_CDC_ACM_DataSend(const uint8_t *buf, int32_t len);
-int32_t USBD_CDC_ACM_PutChar(const uint8_t  ch);
-int32_t USBD_CDC_ACM_DataRead(uint8_t *buf, int32_t len);
-int32_t USBD_CDC_ACM_GetChar(void);
-__WEAK int32_t USBD_CDC_ACM_DataReceived(int32_t len)
+int32_t USBD_CDCB_ACM_DataSend(const uint8_t *buf, int32_t len);
+int32_t USBD_CDCB_ACM_PutChar(const uint8_t  ch);
+int32_t USBD_CDCB_ACM_DataRead(uint8_t *buf, int32_t len);
+int32_t USBD_CDCB_ACM_GetChar(void);
+__WEAK int32_t USBD_CDCB_ACM_DataReceived(int32_t len)
 {
     return (0);
 }
-int32_t USBD_CDC_ACM_DataAvailable(void);
-int32_t USBD_CDC_ACM_Notify(uint16_t stat);
+int32_t USBD_CDCB_ACM_DataAvailable(void);
+int32_t USBD_CDCB_ACM_Notify(uint16_t stat);
 
 /* Functions handling CDC ACM requests (can be overridden to provide custom
    handling of CDC ACM requests)                                              */
-__WEAK int32_t USBD_CDC_ACM_SendEncapsulatedCommand(void)
+__WEAK int32_t USBD_CDCB_ACM_SendEncapsulatedCommand(void)
 {
     return (0);
 }
-__WEAK int32_t USBD_CDC_ACM_GetEncapsulatedResponse(void)
+__WEAK int32_t USBD_CDCB_ACM_GetEncapsulatedResponse(void)
 {
     return (0);
 }
-__WEAK int32_t USBD_CDC_ACM_SetCommFeature(uint16_t feat)
+__WEAK int32_t USBD_CDCB_ACM_SetCommFeature(uint16_t feat)
 {
     return (0);
 }
-__WEAK int32_t USBD_CDC_ACM_GetCommFeature(uint16_t feat)
+__WEAK int32_t USBD_CDCB_ACM_GetCommFeature(uint16_t feat)
 {
     return (0);
 }
-__WEAK int32_t USBD_CDC_ACM_ClearCommFeature(uint16_t feat)
+__WEAK int32_t USBD_CDCB_ACM_ClearCommFeature(uint16_t feat)
 {
     return (0);
 }
-__WEAK int32_t USBD_CDC_ACM_SendBreak(uint16_t dur)
+__WEAK int32_t USBD_CDCB_ACM_SendBreak(uint16_t dur)
 {
     return (0);
 }
 
 
 /* Local function prototypes                                                  */
-static void USBD_CDC_ACM_EP_BULKOUT_HandleData(void);
-static void USBD_CDC_ACM_EP_BULKIN_HandleData(void);
+static void USBD_CDCB_ACM_EP_BULKOUT_HandleData(void);
+static void USBD_CDCB_ACM_EP_BULKIN_HandleData(void);
 
 
 /*----------------- USB CDC ACM class handling functions ---------------------*/
 
 /** \brief  Initialization of the USB CDC class (ACM)
 
-    The function calls USBD_CDC_ACM_PortInitialize function which
+    The function calls USBD_CDCB_ACM_PortInitialize function which
     initializes Virtual COM Port.
 
     \return             0        Function failed.
     \return             1        Function succeeded.
  */
 
-__WEAK int32_t USBD_CDC_ACM_Initialize(void)
+__WEAK int32_t USBD_CDCB_ACM_Initialize(void)
 {
     data_send_access            = 0;
     data_send_active            = 0;
     data_send_zlp               = 0;
     data_to_send_wr             = 0;
     data_to_send_rd             = 0;
-    ptr_data_to_send            = USBD_CDC_ACM_SendBuf;
-    ptr_data_sent               = USBD_CDC_ACM_SendBuf;
+    ptr_data_to_send            = USBD_CDCB_ACM_SendBuf;
+    ptr_data_sent               = USBD_CDCB_ACM_SendBuf;
     data_read_access            = 0;
     data_receive_int_access     = 0;
     data_received_pending_pckts = 0;
     data_no_space_for_receive   = 0;
-    ptr_data_received           = USBD_CDC_ACM_ReceiveBuf;
-    ptr_data_read               = USBD_CDC_ACM_ReceiveBuf;
+    ptr_data_received           = USBD_CDCB_ACM_ReceiveBuf;
+    ptr_data_read               = USBD_CDCB_ACM_ReceiveBuf;
     control_line_state          = 0;
     line_coding.dwDTERate       = 9600;
     line_coding.bCharFormat     = 0;
     line_coding.bParityType     = 0;
     line_coding.bDataBits       = 8;
-    return (USBD_CDC_ACM_PortInitialize());
+    return (USBD_CDCB_ACM_PortInitialize());
 }
 
 
 /** \brief  Uninitialization of the USB CDC class (ACM)
 
-    The function calls USBD_CDC_ACM_PortUninitialize function which
+    The function calls USBD_CDCB_ACM_PortUninitialize function which
     uninitializes Virtual COM Port.
 
     \return             0        Function failed.
     \return             1        Function succeeded.
  */
 
-__WEAK int32_t USBD_CDC_ACM_Uninitialization(void)
+__WEAK int32_t USBD_CDCB_ACM_Uninitialization(void)
 {
-    return (USBD_CDC_ACM_PortUninitialize());
+    return (USBD_CDCB_ACM_PortUninitialize());
 }
 
 
 /** \brief  Reset of the USB CDC class (ACM) variables and states
 
     The function resets class variables and states, it calls
-    USBD_CDC_ACM_PortReset function which resets Virtual COM Port variables
-    and states and calls USBD_CDC_ACM_PortSetLineCoding function with
+    USBD_CDCB_ACM_PortReset function which resets Virtual COM Port variables
+    and states and calls USBD_CDCB_ACM_PortSetLineCoding function with
     default parameters to set default communication settings for the
     Virtual COM Port.
 
@@ -188,28 +188,28 @@ __WEAK int32_t USBD_CDC_ACM_Uninitialization(void)
     \return             1        Function succeeded.
  */
 
-__WEAK int32_t USBD_CDC_ACM_Reset(void)
+__WEAK int32_t USBD_CDCB_ACM_Reset(void)
 {
     data_send_access            = 0;
     data_send_active            = 0;
     data_send_zlp               = 0;
     data_to_send_wr             = 0;
     data_to_send_rd             = 0;
-    ptr_data_to_send            = USBD_CDC_ACM_SendBuf;
-    ptr_data_sent               = USBD_CDC_ACM_SendBuf;
+    ptr_data_to_send            = USBD_CDCB_ACM_SendBuf;
+    ptr_data_sent               = USBD_CDCB_ACM_SendBuf;
     data_read_access            = 0;
     data_receive_int_access     = 0;
     data_received_pending_pckts = 0;
     data_no_space_for_receive   = 0;
-    ptr_data_received           = USBD_CDC_ACM_ReceiveBuf;
-    ptr_data_read               = USBD_CDC_ACM_ReceiveBuf;
+    ptr_data_received           = USBD_CDCB_ACM_ReceiveBuf;
+    ptr_data_read               = USBD_CDCB_ACM_ReceiveBuf;
     control_line_state          = 0;
-    USBD_CDC_ACM_PortReset();
+    USBD_CDCB_ACM_PortReset();
     line_coding.dwDTERate       = 9600;
     line_coding.bCharFormat     = 0;
     line_coding.bParityType     = 0;
     line_coding.bDataBits       = 8;
-    return (USBD_CDC_ACM_PortSetLineCoding(&line_coding));
+    return (USBD_CDCB_ACM_PortSetLineCoding(&line_coding));
 }
 
 
@@ -222,7 +222,7 @@ __WEAK int32_t USBD_CDC_ACM_Reset(void)
     \return             1        Function succeeded.
  */
 
-__WEAK int32_t USBD_CDC_ACM_SetLineCoding(void)
+__WEAK int32_t USBD_CDCB_ACM_SetLineCoding(void)
 {
     line_coding.dwDTERate   = (USBD_EP0Buf[0] <<  0) |
                               (USBD_EP0Buf[1] <<  8) |
@@ -231,7 +231,7 @@ __WEAK int32_t USBD_CDC_ACM_SetLineCoding(void)
     line_coding.bCharFormat =  USBD_EP0Buf[4];
     line_coding.bParityType =  USBD_EP0Buf[5];
     line_coding.bDataBits   =  USBD_EP0Buf[6];
-    return (USBD_CDC_ACM_PortSetLineCoding(&line_coding));
+    return (USBD_CDCB_ACM_PortSetLineCoding(&line_coding));
 }
 
 
@@ -244,9 +244,9 @@ __WEAK int32_t USBD_CDC_ACM_SetLineCoding(void)
     \return             1        Function succeeded.
  */
 
-__WEAK int32_t USBD_CDC_ACM_GetLineCoding(void)
+__WEAK int32_t USBD_CDCB_ACM_GetLineCoding(void)
 {
-    if (USBD_CDC_ACM_PortGetLineCoding(&line_coding)) {
+    if (USBD_CDCB_ACM_PortGetLineCoding(&line_coding)) {
         USBD_EP0Buf[0] = (line_coding.dwDTERate >>  0) & 0xFF;
         USBD_EP0Buf[1] = (line_coding.dwDTERate >>  8) & 0xFF;
         USBD_EP0Buf[2] = (line_coding.dwDTERate >> 16) & 0xFF;
@@ -273,10 +273,10 @@ __WEAK int32_t USBD_CDC_ACM_GetLineCoding(void)
     \return             1        Function succeeded.
  */
 
-__WEAK int32_t USBD_CDC_ACM_SetControlLineState(uint16_t ctrl_bmp)
+__WEAK int32_t USBD_CDCB_ACM_SetControlLineState(uint16_t ctrl_bmp)
 {
     control_line_state = ctrl_bmp;
-    return (USBD_CDC_ACM_PortSetControlLineState(ctrl_bmp));
+    return (USBD_CDCB_ACM_PortSetControlLineState(ctrl_bmp));
 }
 
 
@@ -284,9 +284,9 @@ __WEAK int32_t USBD_CDC_ACM_SetControlLineState(uint16_t ctrl_bmp)
 
 /** \brief Number of free bytes in the Send buffer
 */
-int32_t USBD_CDC_ACM_DataFree(void)
+int32_t USBD_CDCB_ACM_DataFree(void)
 {
-    return ((int32_t)usbd_cdc_acm_sendbuf_sz) - (data_to_send_wr - data_to_send_rd);
+    return ((int32_t)usbd_cdcb_acm_sendbuf_sz) - (data_to_send_wr - data_to_send_rd);
 }
 
 /** \brief  Sends data over the USB CDC ACM Virtual COM Port
@@ -299,13 +299,13 @@ int32_t USBD_CDC_ACM_DataFree(void)
     \return                      Number of bytes accepted to be sent.
  */
 
-int32_t USBD_CDC_ACM_DataSend(const uint8_t *buf, int32_t len)
+int32_t USBD_CDCB_ACM_DataSend(const uint8_t *buf, int32_t len)
 {
     int32_t  len_data, len_available, len_before_wrap;
     uint8_t *buf_loc;
     buf_loc       = (uint8_t *)buf;       /* Pointer to buf                     */
     len_data      = data_to_send_wr - data_to_send_rd;  /* Num of data in buffer*/
-    len_available = ((int32_t)usbd_cdc_acm_sendbuf_sz) - len_data;  /* Num of
+    len_available = ((int32_t)usbd_cdcb_acm_sendbuf_sz) - len_data;  /* Num of
                                            bytes of space available           */
 
     if (len_available <= 0) {             /* If no space for data to send       */
@@ -321,13 +321,13 @@ int32_t USBD_CDC_ACM_DataSend(const uint8_t *buf, int32_t len)
     len_before_wrap = 0;                  /* Circular buffer size before wrap   */
 
     if ((ptr_data_to_send >= ptr_data_sent) && /* If wrap is possible to happen */
-            ((ptr_data_to_send + len) >= (USBD_CDC_ACM_SendBuf + usbd_cdc_acm_sendbuf_sz))) {
+            ((ptr_data_to_send + len) >= (USBD_CDCB_ACM_SendBuf + usbd_cdcb_acm_sendbuf_sz))) {
         /* If data wraps around end of buffer */
-        len_before_wrap   = USBD_CDC_ACM_SendBuf + usbd_cdc_acm_sendbuf_sz - ptr_data_to_send;
+        len_before_wrap   = USBD_CDCB_ACM_SendBuf + usbd_cdcb_acm_sendbuf_sz - ptr_data_to_send;
         memcpy(ptr_data_to_send, buf_loc, len_before_wrap); /* Copy data till end */
         buf_loc          += len_before_wrap;            /* Increment buf pointer  */
         len              -= len_before_wrap;            /* Decrement bytes to send*/
-        ptr_data_to_send  = USBD_CDC_ACM_SendBuf;       /* Wrap send buffer
+        ptr_data_to_send  = USBD_CDCB_ACM_SendBuf;       /* Wrap send buffer
                                                        pointer to beginning of
                                                        the send buffer        */
     }
@@ -354,9 +354,9 @@ int32_t USBD_CDC_ACM_DataSend(const uint8_t *buf, int32_t len)
     \return                      Character accepted to be sent.
  */
 
-int32_t USBD_CDC_ACM_PutChar(const uint8_t ch)
+int32_t USBD_CDCB_ACM_PutChar(const uint8_t ch)
 {
-    if ((USBD_CDC_ACM_DataSend(&ch, 1)) == 1) {
+    if ((USBD_CDCB_ACM_DataSend(&ch, 1)) == 1) {
         return ((uint32_t) ch);
     }
 
@@ -374,7 +374,7 @@ int32_t USBD_CDC_ACM_PutChar(const uint8_t ch)
     \return                      Number of bytes actually read.
  */
 
-int32_t USBD_CDC_ACM_DataRead(uint8_t *buf, int32_t len)
+int32_t USBD_CDCB_ACM_DataRead(uint8_t *buf, int32_t len)
 {
     int32_t len_data;
 
@@ -404,11 +404,11 @@ int32_t USBD_CDC_ACM_DataRead(uint8_t *buf, int32_t len)
     \return                      Received character.
  */
 
-int32_t USBD_CDC_ACM_GetChar(void)
+int32_t USBD_CDCB_ACM_GetChar(void)
 {
     uint8_t ch;
 
-    if ((USBD_CDC_ACM_DataRead(&ch, 1)) == 1) {
+    if ((USBD_CDCB_ACM_DataRead(&ch, 1)) == 1) {
         return ((int32_t) ch);
     }
 
@@ -424,7 +424,7 @@ int32_t USBD_CDC_ACM_GetChar(void)
     \return                      Number of bytes available for read.
  */
 
-int32_t USBD_CDC_ACM_DataAvailable(void)
+int32_t USBD_CDCB_ACM_DataAvailable(void)
 {
     return (ptr_data_received - ptr_data_read);
 }
@@ -447,22 +447,22 @@ int32_t USBD_CDC_ACM_DataAvailable(void)
     \return             1        Function succeeded.
  */
 
-int32_t USBD_CDC_ACM_Notify(uint16_t stat)
+int32_t USBD_CDCB_ACM_Notify(uint16_t stat)
 {
     if (USBD_Configuration) {
-        USBD_CDC_ACM_NotifyBuf[0] = 0xA1;   /* bmRequestType                      */
-        USBD_CDC_ACM_NotifyBuf[1] = CDC_NOTIFICATION_SERIAL_STATE;/* bNotification
+        USBD_CDCB_ACM_NotifyBuf[0] = 0xA1;   /* bmRequestType                      */
+        USBD_CDCB_ACM_NotifyBuf[1] = CDC_NOTIFICATION_SERIAL_STATE;/* bNotification
                                           (SERIAL_STATE)                      */
-        USBD_CDC_ACM_NotifyBuf[2] = 0x00;   /* wValue                             */
-        USBD_CDC_ACM_NotifyBuf[3] = 0x00;
-        USBD_CDC_ACM_NotifyBuf[4] = 0x00;   /* wIndex (Interface 0)               */
-        USBD_CDC_ACM_NotifyBuf[5] = 0x00;
-        USBD_CDC_ACM_NotifyBuf[6] = 0x02;   /* wLength                            */
-        USBD_CDC_ACM_NotifyBuf[7] = 0x00;
-        USBD_CDC_ACM_NotifyBuf[8] = stat >> 0; /* UART State Bitmap                  */
-        USBD_CDC_ACM_NotifyBuf[9] = stat >> 8;
+        USBD_CDCB_ACM_NotifyBuf[2] = 0x00;   /* wValue                             */
+        USBD_CDCB_ACM_NotifyBuf[3] = 0x00;
+        USBD_CDCB_ACM_NotifyBuf[4] = 0x00;   /* wIndex (Interface 0)               */
+        USBD_CDCB_ACM_NotifyBuf[5] = 0x00;
+        USBD_CDCB_ACM_NotifyBuf[6] = 0x02;   /* wLength                            */
+        USBD_CDCB_ACM_NotifyBuf[7] = 0x00;
+        USBD_CDCB_ACM_NotifyBuf[8] = stat >> 0; /* UART State Bitmap                  */
+        USBD_CDCB_ACM_NotifyBuf[9] = stat >> 8;
         /* Write notification to be sent      */
-        USBD_WriteEP(usbd_cdc_acm_ep_intin | 0x80, USBD_CDC_ACM_NotifyBuf, 10);
+        USBD_WriteEP(usbd_cdcb_acm_ep_intin | 0x80, USBD_CDCB_ACM_NotifyBuf, 10);
         return (1);
     }
 
@@ -477,9 +477,9 @@ int32_t USBD_CDC_ACM_Notify(uint16_t stat)
     The function handles Reset events.
  */
 
-void USBD_CDC_ACM_Reset_Event(void)
+void USBD_CDCB_ACM_Reset_Event(void)
 {
-    USBD_CDC_ACM_Reset();
+    USBD_CDCB_ACM_Reset();
 }
 
 
@@ -487,13 +487,13 @@ void USBD_CDC_ACM_Reset_Event(void)
 
     The function handles Start Of Frame events. It checks if there is pending
     data on the Bulk Out endpoint and handles it
-    (USBD_CDC_ACM_EP_BULKOUT_HandleData) if there is enough space in the
+    (USBD_CDCB_ACM_EP_BULKOUT_HandleData) if there is enough space in the
     intermediate receive buffer and it calls received function callback
-    (USBD_CDC_ACM_DataReceived) it also activates data send over the Bulk In
-    endpoint if there is data to be sent (USBD_CDC_ACM_EP_BULKIN_HandleData).
+    (USBD_CDCB_ACM_DataReceived) it also activates data send over the Bulk In
+    endpoint if there is data to be sent (USBD_CDCB_ACM_EP_BULKIN_HandleData).
  */
 
-void USBD_CDC_ACM_SOF_Event(void)
+void USBD_CDCB_ACM_SOF_Event(void)
 {
     if (!USBD_Configuration) {
         // Don't process events until CDC is
@@ -504,16 +504,16 @@ void USBD_CDC_ACM_SOF_Event(void)
             (ptr_data_received == ptr_data_read) &&     /* If received and read
                                                      pointers point to same
                                                      the location             */
-            (ptr_data_received != USBD_CDC_ACM_ReceiveBuf)) {
+            (ptr_data_received != USBD_CDCB_ACM_ReceiveBuf)) {
         /* and if receive
                                                        pointer does not already
                                                        point to the start of
                                                        the receive buffer       */
         data_read_access = 1;               /* Block access to read data          */
-        ptr_data_received = USBD_CDC_ACM_ReceiveBuf;  /* Correct received pointer
+        ptr_data_received = USBD_CDCB_ACM_ReceiveBuf;  /* Correct received pointer
                                                      to point to the start of
                                                      the receive buffer       */
-        ptr_data_read     = USBD_CDC_ACM_ReceiveBuf;  /* Correct read pointer to
+        ptr_data_read     = USBD_CDCB_ACM_ReceiveBuf;  /* Correct read pointer to
                                                      point to the start of the
                                                      receive buffer           */
         data_no_space_for_receive  = 0;               /* There is space for
@@ -525,11 +525,11 @@ void USBD_CDC_ACM_SOF_Event(void)
             (!data_read_access)          &&    /* and if not read active             */
             (!data_no_space_for_receive)) {    /* and if there is space to receive   */
         data_read_access = 1;               /* Disable access to read data        */
-        USBD_CDC_ACM_EP_BULKOUT_HandleData(); /* Handle received data             */
+        USBD_CDCB_ACM_EP_BULKOUT_HandleData(); /* Handle received data             */
         data_read_access = 0;               /* Enable access to read data         */
 
         if (ptr_data_received != ptr_data_read) {
-            USBD_CDC_ACM_DataReceived(ptr_data_received - ptr_data_read);
+            USBD_CDCB_ACM_DataReceived(ptr_data_received - ptr_data_read);
         }  /* Call
 
                                            received callback                  */
@@ -542,7 +542,7 @@ void USBD_CDC_ACM_SOF_Event(void)
        ) {
         data_send_access = 1;               /* Block access to send data          */
         data_send_active = 1;               /* Start data sending                 */
-        USBD_CDC_ACM_EP_BULKIN_HandleData();/* Handle data to send                */
+        USBD_CDCB_ACM_EP_BULKIN_HandleData();/* Handle data to send                */
         data_send_access = 0;               /* Allow access to send data          */
     }
 }
@@ -555,7 +555,7 @@ void USBD_CDC_ACM_SOF_Event(void)
     \param [in]         event    Type of event (USBD_EVT_IN - input event).
  */
 
-void USBD_CDC_ACM_EP_INTIN_Event(uint32_t event)
+void USBD_CDCB_ACM_EP_INTIN_Event(uint32_t event)
 {
     /* Notification will be loadad aynchronously and sent automatically upon
        Interrupt IN token reception                                             */
@@ -569,16 +569,16 @@ void USBD_CDC_ACM_EP_INTIN_Event(uint32_t event)
     available.
  */
 
-static void USBD_CDC_ACM_EP_BULKOUT_HandleData()
+static void USBD_CDCB_ACM_EP_BULKOUT_HandleData()
 {
     uint32_t len_free_to_recv;
     int32_t len_received;
 
-    if ((usbd_cdc_acm_receivebuf_sz - (ptr_data_received - USBD_CDC_ACM_ReceiveBuf)) >= usbd_cdc_acm_maxpacketsize1[USBD_HighSpeed]) {
+    if ((usbd_cdcb_acm_receivebuf_sz - (ptr_data_received - USBD_CDCB_ACM_ReceiveBuf)) >= usbd_cdcb_acm_maxpacketsize1[USBD_HighSpeed]) {
         /* If there is space for 1 max packet */
         /* Read received packet to receive buf*/
-        len_free_to_recv = usbd_cdc_acm_receivebuf_sz - (ptr_data_received - USBD_CDC_ACM_ReceiveBuf);
-        len_received       = USBD_ReadEP(usbd_cdc_acm_ep_bulkout, ptr_data_received, len_free_to_recv);
+        len_free_to_recv = usbd_cdcb_acm_receivebuf_sz - (ptr_data_received - USBD_CDCB_ACM_ReceiveBuf);
+        len_received       = USBD_ReadEP(usbd_cdcb_acm_ep_bulkout, ptr_data_received, len_free_to_recv);
         ptr_data_received += len_received;  /* Correct pointer to received data   */
 
         if (data_received_pending_pckts &&  /* If packet was pending              */
@@ -606,7 +606,7 @@ static void USBD_CDC_ACM_EP_BULKOUT_HandleData()
     packet.
  */
 
-static void USBD_CDC_ACM_EP_BULKIN_HandleData(void)
+static void USBD_CDCB_ACM_EP_BULKIN_HandleData(void)
 {
     int32_t len_to_send, len_sent;
 
@@ -628,20 +628,20 @@ static void USBD_CDC_ACM_EP_BULKIN_HandleData(void)
         /* If there is data available do be
                                                  sent                               */
         if ((ptr_data_sent >= ptr_data_to_send) && /* If data before end of buf avail*/
-                ((ptr_data_sent + len_to_send) >= (USBD_CDC_ACM_SendBuf + usbd_cdc_acm_sendbuf_sz))) {
+                ((ptr_data_sent + len_to_send) >= (USBD_CDCB_ACM_SendBuf + usbd_cdcb_acm_sendbuf_sz))) {
             /* and if available data wraps around
                the end of the send buffer         */
             /* Correct bytes to send to data
                available untill end of send buf   */
-            len_to_send = USBD_CDC_ACM_SendBuf + usbd_cdc_acm_sendbuf_sz - ptr_data_sent;
+            len_to_send = USBD_CDCB_ACM_SendBuf + usbd_cdcb_acm_sendbuf_sz - ptr_data_sent;
         }
 
-        if (len_to_send > usbd_cdc_acm_maxpacketsize1[USBD_HighSpeed]) {
+        if (len_to_send > usbd_cdcb_acm_maxpacketsize1[USBD_HighSpeed]) {
             /* If
                                                    there is more data to be sent then
                                                    can be sent in a single packet     */
             /* Correct to send maximum pckt size  */
-            len_to_send = usbd_cdc_acm_maxpacketsize1[USBD_HighSpeed];
+            len_to_send = usbd_cdcb_acm_maxpacketsize1[USBD_HighSpeed];
         }
     } else if (data_send_zlp) {           /* or if ZLP should be sent           */
         len_to_send = 0;
@@ -649,21 +649,21 @@ static void USBD_CDC_ACM_EP_BULKIN_HandleData(void)
 
     data_send_zlp = 0;
     /* Send data                          */
-    len_sent = USBD_WriteEP(usbd_cdc_acm_ep_bulkin | 0x80, ptr_data_sent, len_to_send);
+    len_sent = USBD_WriteEP(usbd_cdcb_acm_ep_bulkin | 0x80, ptr_data_sent, len_to_send);
     ptr_data_sent    += len_sent;         /* Correct position of sent pointer   */
     data_to_send_rd  += len_sent;         /* Correct num of bytes left to send  */
 
-    if (ptr_data_sent == USBD_CDC_ACM_SendBuf + usbd_cdc_acm_sendbuf_sz)
+    if (ptr_data_sent == USBD_CDCB_ACM_SendBuf + usbd_cdcb_acm_sendbuf_sz)
         /* If pointer to sent data wraps      */
     {
-        ptr_data_sent = USBD_CDC_ACM_SendBuf;
+        ptr_data_sent = USBD_CDCB_ACM_SendBuf;
     } /* Correct it to beginning of send
 
                                            buffer                             */
 
     if ((data_to_send_wr == data_to_send_rd) &&   /* If there are no more
                                            bytes available to be sent         */
-            (len_sent == usbd_cdc_acm_maxpacketsize1[USBD_HighSpeed])) {
+            (len_sent == usbd_cdcb_acm_maxpacketsize1[USBD_HighSpeed])) {
         /* If last packet size was same as
            maximum packet size                */
         data_send_zlp = 1;                  /* ZLP packet should be sent          */
@@ -676,14 +676,14 @@ static void USBD_CDC_ACM_EP_BULKIN_HandleData(void)
 /** \brief  Handle Bulk Out Endpoint Events
 
     The function handles Bulk Out endpoint events. It calls
-    USBD_CDC_ACM_EP_BULKOUT_HandleData function to handle received data
+    USBD_CDCB_ACM_EP_BULKOUT_HandleData function to handle received data
     unless data was being accessed in which case function just acknowledges
     that there is data to be handled later.
 
     \param [in]         event    Type of event (USBD_EVT_OUT - output event).
  */
 
-void USBD_CDC_ACM_EP_BULKOUT_Event(uint32_t event)
+void USBD_CDCB_ACM_EP_BULKOUT_Event(uint32_t event)
 {
     if (data_read_access) {
         /* If data is being accessed from
@@ -695,12 +695,12 @@ void USBD_CDC_ACM_EP_BULKOUT_Event(uint32_t event)
 
     data_read_access = 1;                 /* Block access to read data          */
     data_receive_int_access = 1;          /* Read access from interrupt function*/
-    USBD_CDC_ACM_EP_BULKOUT_HandleData(); /* Handle received data               */
+    USBD_CDCB_ACM_EP_BULKOUT_HandleData(); /* Handle received data               */
     data_receive_int_access = 0;          /* Read access from interrupt func end*/
     data_read_access = 0;                 /* Allow access to read data          */
 
     if (ptr_data_received != ptr_data_read) {
-        USBD_CDC_ACM_DataReceived(ptr_data_received - ptr_data_read);
+        USBD_CDCB_ACM_DataReceived(ptr_data_received - ptr_data_read);
     }    /* Call
 
                                            received callback                  */
@@ -710,13 +710,13 @@ void USBD_CDC_ACM_EP_BULKOUT_Event(uint32_t event)
 /** \brief  Handle Bulk In Endpoint Events
 
     The function handles Bulk In endpoint events. It calls
-    USBD_CDC_ACM_EP_BULKIN_HandleData function to handle send data
+    USBD_CDCB_ACM_EP_BULKIN_HandleData function to handle send data
     unless data was being accessed in which case function just returns.
 
     \param [in]         event    Type of event (USBD_EVT_IN - input event).
  */
 
-void USBD_CDC_ACM_EP_BULKIN_Event(uint32_t event)
+void USBD_CDCB_ACM_EP_BULKIN_Event(uint32_t event)
 {
     if (data_send_access                  /* If send data is being accessed     */
 // ||((control_line_state & 3) != 3)    /* or if DTR or RTS is 0              */
@@ -725,7 +725,7 @@ void USBD_CDC_ACM_EP_BULKIN_Event(uint32_t event)
     }
 
     data_send_access = 1;                 /* Block access to send data          */
-    USBD_CDC_ACM_EP_BULKIN_HandleData();  /* Handle data to send                */
+    USBD_CDCB_ACM_EP_BULKIN_HandleData();  /* Handle data to send                */
     data_send_access = 0;                 /* Allow access to send data          */
 }
 
@@ -741,14 +741,14 @@ void USBD_CDC_ACM_EP_BULKIN_Event(uint32_t event)
                                    USBD_EVT_OUT - output event).
  */
 
-void USBD_CDC_ACM_EP_BULK_Event(uint32_t event)
+void USBD_CDCB_ACM_EP_BULK_Event(uint32_t event)
 {
     if (event & USBD_EVT_OUT) {
-        USBD_CDC_ACM_EP_BULKOUT_Event(event);
+        USBD_CDCB_ACM_EP_BULKOUT_Event(event);
     }
 
     if (event & USBD_EVT_IN) {
-        USBD_CDC_ACM_EP_BULKIN_Event(event);
+        USBD_CDCB_ACM_EP_BULKIN_Event(event);
     }
 }
 
@@ -758,14 +758,14 @@ void USBD_CDC_ACM_EP_BULK_Event(uint32_t event)
 /** \brief  Task Handling Interrupt In Endpoint Events
 
     The task dispatches Interrupt In events to the Interrupt In handling
-    function (USBD_CDC_ACM_EP_INTIN_Event).
+    function (USBD_CDCB_ACM_EP_INTIN_Event).
  */
 
-void USBD_RTX_CDC_ACM_EP_INTIN_Event(void)
+void USBD_RTX_CDCB_ACM_EP_INTIN_Event(void)
 {
     for (;;) {
         usbd_os_evt_wait_or(0xFFFF, 0xFFFF);
-        USBD_CDC_ACM_EP_INTIN_Event(usbd_os_evt_get());
+        USBD_CDCB_ACM_EP_INTIN_Event(usbd_os_evt_get());
     }
 }
 
@@ -773,16 +773,16 @@ void USBD_RTX_CDC_ACM_EP_INTIN_Event(void)
 /** \brief  Task Handling Bulk In Endpoint Events
 
     The task dispatches Bulk In events to the Bulk In handling
-    function (USBD_CDC_ACM_EP_BULKIN_Event).
+    function (USBD_CDCB_ACM_EP_BULKIN_Event).
  */
 
-void USBD_RTX_CDC_ACM_EP_BULKIN_Event(void)
+void USBD_RTX_CDCB_ACM_EP_BULKIN_Event(void)
 {
     for (;;) {
         usbd_os_evt_wait_or(0xFFFF, 0xFFFF);
 
         if (usbd_os_evt_get() & USBD_EVT_IN) {
-            USBD_CDC_ACM_EP_BULKIN_Event(0);
+            USBD_CDCB_ACM_EP_BULKIN_Event(0);
         }
     }
 }
@@ -791,16 +791,16 @@ void USBD_RTX_CDC_ACM_EP_BULKIN_Event(void)
 /** \brief  Task Handling Bulk Out Endpoint Events
 
     The task dispatches Bulk Out events to the Bulk Out handling
-    function (USBD_CDC_ACM_EP_BULKOUT_Event).
+    function (USBD_CDCB_ACM_EP_BULKOUT_Event).
  */
 
-void USBD_RTX_CDC_ACM_EP_BULKOUT_Event(void)
+void USBD_RTX_CDCB_ACM_EP_BULKOUT_Event(void)
 {
     for (;;) {
         usbd_os_evt_wait_or(0xFFFF, 0xFFFF);
 
         if (usbd_os_evt_get() & USBD_EVT_OUT) {
-            USBD_CDC_ACM_EP_BULKOUT_Event(0);
+            USBD_CDCB_ACM_EP_BULKOUT_Event(0);
         }
     }
 }
@@ -809,14 +809,14 @@ void USBD_RTX_CDC_ACM_EP_BULKOUT_Event(void)
 /** \brief  Task Handling Bulk In/Out Endpoint Events
 
     The task dispatches Bulk In/Out events to the Bulk In/Out handling
-    function (USBD_CDC_ACM_EP_BULK_Event).
+    function (USBD_CDCB_ACM_EP_BULK_Event).
  */
 
-void USBD_RTX_CDC_ACM_EP_BULK_Event(void)
+void USBD_RTX_CDCB_ACM_EP_BULK_Event(void)
 {
     for (;;) {
         usbd_os_evt_wait_or(0xFFFF, 0xFFFF);
-        USBD_CDC_ACM_EP_BULK_Event(usbd_os_evt_get());
+        USBD_CDCB_ACM_EP_BULK_Event(usbd_os_evt_get());
     }
 }
 #endif
