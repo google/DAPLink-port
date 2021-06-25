@@ -83,6 +83,35 @@ extern int32_t  USBD_CDC_ACM_GetLineCoding(void);
 extern int32_t  USBD_CDC_ACM_SetControlLineState(uint16_t ctrl_bmp);
 extern int32_t  USBD_CDC_ACM_SendBreak(uint16_t dur);
 
+/* USB Device CDCB ACM class functions called automatically by USBD Core module*/
+extern int32_t  USBD_CDCB_ACM_Initialize(void);
+extern int32_t  USBD_CDCB_ACM_Uninitialize(void);
+extern int32_t  USBD_CDCB_ACM_Reset(void);
+/* USB Device CDCB ACM class user functions                                    */
+extern int32_t  USBD_CDCB_ACM_PortInitialize(void);
+extern int32_t  USBD_CDCB_ACM_PortUninitialize(void);
+extern int32_t  USBD_CDCB_ACM_PortReset(void);
+extern int32_t  USBD_CDCB_ACM_PortSetLineCoding(CDC_LINE_CODING *line_coding);
+extern int32_t  USBD_CDCB_ACM_PortGetLineCoding(CDC_LINE_CODING *line_coding);
+extern int32_t  USBD_CDCB_ACM_PortSetControlLineState(uint16_t ctrl_bmp);
+extern int32_t  USBD_CDCB_ACM_DataSend(const uint8_t *buf, int32_t len);
+extern int32_t  USBD_CDCB_ACM_DataFree(void);
+extern int32_t  USBD_CDCB_ACM_PutChar(const uint8_t  ch);
+extern int32_t  USBD_CDCB_ACM_DataRead(uint8_t *buf, int32_t len);
+extern int32_t  USBD_CDCB_ACM_GetChar(void);
+extern int32_t  USBD_CDCB_ACM_DataAvailable(void);
+extern int32_t  USBD_CDCB_ACM_Notify(uint16_t stat);
+/* USB Device CDCB ACM class overridable functions                             */
+extern int32_t  USBD_CDCB_ACM_SendEncapsulatedCommand(void);
+extern int32_t  USBD_CDCB_ACM_GetEncapsulatedResponse(void);
+extern int32_t  USBD_CDCB_ACM_SetCommFeature(uint16_t feat);
+extern int32_t  USBD_CDCB_ACM_GetCommFeature(uint16_t feat);
+extern int32_t  USBD_CDCB_ACM_ClearCommFeature(uint16_t feat);
+extern int32_t  USBD_CDCB_ACM_SetLineCoding(void);
+extern int32_t  USBD_CDCB_ACM_GetLineCoding(void);
+extern int32_t  USBD_CDCB_ACM_SetControlLineState(uint16_t ctrl_bmp);
+extern int32_t  USBD_CDCB_ACM_SendBreak(uint16_t dur);
+
 /* USB Device user functions imported to USB Custom Class module              */
 extern void  usbd_cls_init(void);
 extern void  usbd_cls_sof(void);
