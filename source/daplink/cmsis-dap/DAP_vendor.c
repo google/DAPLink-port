@@ -39,6 +39,7 @@
 #include "flash_manager.h"
 #include <string.h>
 #include "i2c.h"
+#include "version_git.h"
 
 #ifdef INTERFACE_STM32H743
 #include "stm32h7xx.h"
@@ -406,7 +407,14 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
         // Add a more specific internal version string.
 
 #ifdef INTERFACE_STM32H743
-        static char build_version_str[] = "udb_0.0.1_68acc48dc";
+
+#if GIT_LOCAL_MODS == 1
+#define GIT_LOCAL_MODS_STR "1"
+#else
+#define GIT_LOCAL_MODS_STR "0"
+#endif //GIT_LOCAL_MODS_STR
+
+        static char build_version_str[] = "udb_0.0.1_" GIT_LOCAL_MODS_STR "_" GIT_COMMIT_SHA;
         uint8_t len = strlen(build_version_str);
 
         uint8_t data_buf[63] = { 0 };
