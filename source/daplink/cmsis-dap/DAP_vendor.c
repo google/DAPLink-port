@@ -66,7 +66,7 @@ file to the MDK-ARM project under the file group Configuration.
                  number of bytes in request (upper 16 bits)
 */
 uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
-  uint32_t num = (1U << 16) | 1U;
+  uint32_t num = (1U << 16) | 1U;  // count the Command ID byte
 
   *response++ = *request;        // copy Command ID
 
@@ -187,25 +187,45 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
     }
     case ID_DAP_Vendor14: break;
     case ID_DAP_Vendor15: {
-        // i2c read
+        //  Read I2C data
+        //
+        //  This reads from the "I2C2" bus on the UDB board.  This is routed to an EEPROM
+        //    (24AA02UIDT) at address 0x50, a voltage measurement chip (PAC1934T-I/J6CX)
+        //    at address 0x17, and pins 13 and 15 of
+        //    connector J1305 (with pullups to 1.8V).  It uses the MCU's internal I2C2 hw block.
+
+        //  The inputs to this command are:
+        //    I2C_TargetAddress
+        //    I2C_starting_register_address
+        //    Read_length (1 to 61 bytes is valid)
+        //  Each input is 1 byte long.
+        //
+        //  This returns a byte array which contains:
+        //    status byte (0x00 = Success, 0xFF = Failure)
+        //    length byte
+        //    1 to 61 data bytes
+        //
         uint8_t target_addr = *request++;
         const uint8_t* internal_addr = request++;
         uint8_t len = *request;
-        uint8_t data_buf[63] = { 0 };
+        uint8_t data_buf[64] = { 0 };
 
         // can add additional responses from I2C_DAP_MasterRead to provide better status
         if (I2C_DAP_MasterRead(target_addr, internal_addr, data_buf, len)) {
-            *response++ = 0x00U;
+            *response++ = DAP_OK;
         } else {
             // transfer incomplete
-            *response++ = 0xFFU;
+            *response++ = DAP_ERROR;
+;
         }
+        *response++ = len;  //length byte
 
-        // optional to loop past len, up to 62
-        // clear out additional data in response to make pyOCD response cleaner
-        for (int i = 0; i < 62; i++) {
+        for (int i = 0; i < len; i++) {
             *response++ = data_buf[i];
         }
+
+        //3 bytes read for the command, returns status byte, length byte, and len data bytes
+        num += (3 << 16) | (2 + len);
         break;
     }
     case ID_DAP_Vendor16: {
@@ -361,7 +381,7 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
         break;
     }
     case ID_DAP_Vendor19: {
-        // Add a more specific internal version string. 
+        // Add a more specific internal version string.
 
 #ifdef INTERFACE_STM32H743
         static char build_version_str[] = "udb_0.0.1_68acc48dc";
