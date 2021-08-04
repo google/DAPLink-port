@@ -367,12 +367,16 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
 #ifdef INTERFACE_STM32H743
 
 #if GIT_LOCAL_MODS == 1
-#define GIT_LOCAL_MODS_STR "1"
+#define GIT_LOCAL_MODS_STR "_modified"
 #else
-#define GIT_LOCAL_MODS_STR "0"
-#endif //GIT_LOCAL_MODS_STR
+#define GIT_LOCAL_MODS_STR ""
+#endif //GIT_LOCAL_MODS
 
-        static char build_version_str[] = "udb_0.0.1_" GIT_LOCAL_MODS_STR "_" GIT_COMMIT_SHA;
+#define STR_IMPL_(x) #x      //stringify argument
+#define STR(x) STR_IMPL_(x)  //indirection to expand argument macros
+
+
+        static char build_version_str[] = "udb_" STR(UDB_VERSION) "_" GIT_COMMIT_SHA GIT_LOCAL_MODS_STR;
         uint8_t len = strlen(build_version_str);
 
         uint8_t data_buf[63] = { 0 };
