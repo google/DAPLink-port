@@ -1,6 +1,6 @@
 common:
     target:
-        - stm32h743iikx
+        - Cortex-M3
     core:
         - Cortex-M3
     macros:
@@ -21,7 +21,6 @@ common:
         hic_hal:
             - source/hic_hal/stm32/stm32h743ii
             - source/hic_hal/stm32/stm32h743ii/cmsis
-            - source/hic_hal/stm32/stm32h743ii/armcc
             - source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src
             - source/hic_hal/stm32/stm32h743ii/STCubeGenerated/Src
 tool_specific:
@@ -35,6 +34,9 @@ tool_specific:
                 - --no_unaligned_access
             asm_flags:
                 - --no_unaligned_access
+        sources:
+            hic_hal:
+                - source/hic_hal/stm32/stm32h743ii/armcc
     make_armcc:
         misc:
             ld_flags:
@@ -45,3 +47,14 @@ tool_specific:
                 - --no_unaligned_access
             asm_flags:
                 - --no_unaligned_access
+        sources:
+            hic_hal:
+                - source/hic_hal/stm32/stm32h743ii/armcc
+    make_gcc_arm:
+        misc:
+            ld_flags:
+                - -L /usr/lib/arm-none-eabi/newlib/thumb/
+                # for some reason GCC links in the non-thumb version, so need to manually tell it to use the right one
+        sources:
+            hic_hal:
+                - source/hic_hal/stm32/stm32h743ii/gccarm

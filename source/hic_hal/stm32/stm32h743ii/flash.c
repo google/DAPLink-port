@@ -1,5 +1,5 @@
 /**
- * @file    flash_hal_stm32f103xb.c
+ * @file    flash_hal_stm32h743ii.c
  * @brief
  *
  * DAPLink Interface Firmware
@@ -60,9 +60,9 @@ uint32_t UnInit(uint32_t fnc)
 
 uint32_t EraseChip(void)
 {
-	//ToDo: Elee: finish porting this!  Has errors, just disable for now.  
+	//ToDo: Elee: finish porting this!  Has errors, just disable for now.
 	return 0;
-	
+
 //    FLASH_EraseInitTypeDef erase_init;
 //    uint32_t error;
 //    uint32_t ret = 0;  // O.K.
@@ -78,7 +78,7 @@ uint32_t EraseChip(void)
 //        if (HAL_FLASHEx_Erase(&erase_init, &error) != HAL_OK) {
 //            ret = 1;
 //        }
-//        
+//
 //        HAL_FLASH_Lock();
 //    }else{
 //        ret = 1;
@@ -88,15 +88,15 @@ uint32_t EraseChip(void)
 
 uint32_t EraseSector(uint32_t adr)
 {
-	//ToDo: Elee: finish porting this!  Has errors, just disable for now. 
+	//ToDo: Elee: finish porting this!  Has errors, just disable for now.
 	return 0;
-	
+
 //    FLASH_EraseInitTypeDef erase_init;
 //    uint32_t error;
 //    uint32_t ret = 0;  // O.K.
 
 //    HAL_FLASH_Unlock();
-//    
+//
 //    memset(&erase_init, 0, sizeof(erase_init));
 //    erase_init.TypeErase = FLASH_TYPEERASE_PAGES;
 //    erase_init.PageAddress = adr;
@@ -111,9 +111,9 @@ uint32_t EraseSector(uint32_t adr)
 
 uint32_t ProgramPage(uint32_t adr, uint32_t sz, uint32_t *buf)
 {
-	//ToDo: Elee: finish porting this!  Has errors, just disable for now. 
+	//ToDo: Elee: finish porting this!  Has errors, just disable for now.
 	return 0;
-	
+
 //    uint32_t i;
 //    uint32_t ret = 0;  // O.K.
 
@@ -130,3 +130,4 @@ uint32_t ProgramPage(uint32_t adr, uint32_t sz, uint32_t *buf)
 //    HAL_FLASH_Lock();
 //    return ret;
 }
+
