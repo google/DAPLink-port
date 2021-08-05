@@ -25,9 +25,7 @@
 #include "util.h"
 #include "string.h"
 #include "target_board.h"
-
-//#include "stm32h7xx_hal.h"  // elee: To review, which headers are the right ones?  I *think* this is the main entry point here.
-
+#include "daplink_addr.h"
 
 /*********************************************************************
 *
@@ -42,6 +40,7 @@
 *
 **********************************************************************
 */
+
 uint32_t Init(uint32_t adr, uint32_t clk, uint32_t fnc)
 {
     //
@@ -60,74 +59,79 @@ uint32_t UnInit(uint32_t fnc)
 
 uint32_t EraseChip(void)
 {
-	//ToDo: Elee: finish porting this!  Has errors, just disable for now.
-	return 0;
+   FLASH_EraseInitTypeDef erase_init;
+   uint32_t error;
+   uint32_t ret = 0;
+   if (g_board_info.target_cfg) {
+        // Called from the bootloader. Interface flashing only concerns 1 flash region.
+        // The start in the board info excludes the bootloader. The HAL erase takes a
+        // sector index, so need to calculate which sector the start address refers to.
+        util_assert((g_board_info.target_cfg->flash_regions[0].end - g_board_info.target_cfg->flash_regions[0].start) %
+                    FLASH_SECTOR_SIZE == 0);
+        util_assert((g_board_info.target_cfg->flash_regions[0].start - FLASH_BASE) % FLASH_SECTOR_SIZE == 0);
 
-//    FLASH_EraseInitTypeDef erase_init;
-//    uint32_t error;
-//    uint32_t ret = 0;  // O.K.
-//    if (g_board_info.target_cfg) {
-//        HAL_FLASH_Unlock();
-//        //bootloader, interface flashing only concerns 1 flash region
-//        util_assert((g_board_info.target_cfg->flash_regions[0].end - g_board_info.target_cfg->flash_regions[0].start) %
-//                    FLASH_PAGE_SIZE == 0);
-//        memset(&erase_init, 0, sizeof(erase_init));
-//        erase_init.TypeErase = FLASH_TYPEERASE_PAGES;
-//        erase_init.PageAddress = g_board_info.target_cfg->flash_regions[0].start;
-//        erase_init.NbPages = (g_board_info.target_cfg->flash_regions[0].end - g_board_info.target_cfg->flash_regions[0].start) % FLASH_PAGE_SIZE;
-//        if (HAL_FLASHEx_Erase(&erase_init, &error) != HAL_OK) {
-//            ret = 1;
-//        }
-//
-//        HAL_FLASH_Lock();
-//    }else{
-//        ret = 1;
-//    }
-//    return ret;
+        memset(&erase_init, 0, sizeof(erase_init));
+
+        uint8_t start_sector_index = (g_board_info.target_cfg->flash_regions[0].start - FLASH_BASE) / FLASH_SECTOR_SIZE;
+        uint8_t number_of_sectors = (g_board_info.target_cfg->flash_regions[0].end - g_board_info.target_cfg->flash_regions[0].start) / FLASH_SECTOR_SIZE;
+        erase_init.TypeErase = FLASH_TYPEERASE_SECTORS;
+        erase_init.Sector = start_sector_index;
+        erase_init.Banks = FLASH_BANK_1;
+        erase_init.NbSectors = number_of_sectors;
+
+        HAL_FLASH_Unlock();
+        if (HAL_FLASHEx_Erase(&erase_init, &error) != HAL_OK) {
+            ret = 1;
+        }
+        HAL_FLASH_Lock();
+
+   } else {
+       ret = 1;
+   }
+   return ret;
 }
 
 uint32_t EraseSector(uint32_t adr)
 {
-	//ToDo: Elee: finish porting this!  Has errors, just disable for now.
-	return 0;
+    util_assert((adr - FLASH_BASE) % FLASH_SECTOR_SIZE == 0);
 
-//    FLASH_EraseInitTypeDef erase_init;
-//    uint32_t error;
-//    uint32_t ret = 0;  // O.K.
+    FLASH_EraseInitTypeDef erase_init;
+    uint32_t error;
+    uint32_t ret = 0;
 
-//    HAL_FLASH_Unlock();
-//
-//    memset(&erase_init, 0, sizeof(erase_init));
-//    erase_init.TypeErase = FLASH_TYPEERASE_PAGES;
-//    erase_init.PageAddress = adr;
-//    erase_init.NbPages = 1;
-//    if (HAL_FLASHEx_Erase(&erase_init, &error) != HAL_OK) {
-//        ret = 1;
-//    }
+    memset(&erase_init, 0, sizeof(erase_init));
 
-//    HAL_FLASH_Lock();
-//    return ret;
+    uint8_t sector_index = (adr - FLASH_BASE) / FLASH_SECTOR_SIZE;
+    erase_init.TypeErase = FLASH_TYPEERASE_SECTORS;
+    erase_init.Sector = sector_index;
+    erase_init.Banks = FLASH_BANK_1;
+    erase_init.NbSectors = 1;
+
+    HAL_FLASH_Unlock();
+    if (HAL_FLASHEx_Erase(&erase_init, &error) != HAL_OK) {
+        ret = 1;
+    }
+    HAL_FLASH_Lock();
+
+    return ret;
 }
 
 uint32_t ProgramPage(uint32_t adr, uint32_t sz, uint32_t *buf)
 {
-	//ToDo: Elee: finish porting this!  Has errors, just disable for now.
-	return 0;
+    util_assert(sz % 32 == 0); // this chip does 256bit writes
 
-//    uint32_t i;
-//    uint32_t ret = 0;  // O.K.
+    uint32_t i;
+    uint32_t ret = 0;
 
-//    HAL_FLASH_Unlock();
+    HAL_FLASH_Unlock();
+    for (i = 0; i < sz / 32; i++) {
+        ret = HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, adr + i * 32, (uint32_t)buf + i * 32);
+        if (ret != HAL_OK) {
+            ret = 1;
+            break;
+        }
+    }
+    HAL_FLASH_Lock();
 
-//    util_assert(sz % 4 == 0);
-//    for (i = 0; i < sz / 4; i++) {
-//        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, adr + i * 4, buf[i]) != HAL_OK) {
-//            ret = 1;
-//            break;
-//        }
-//    }
-
-//    HAL_FLASH_Lock();
-//    return ret;
+    return ret;
 }
-
