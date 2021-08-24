@@ -252,9 +252,6 @@ void main_task(void * arg)
     // Initialize the DAP
     DAP_Setup();
 
-    // Initialize I2C (used for vendor commands)
-    I2C_DAP_Initialize();
-
     // make sure we have a valid board info structure.
     util_assert(g_board_info.info_version == kBoardInfoVersion);
 

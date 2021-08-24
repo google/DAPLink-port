@@ -439,7 +439,7 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
     case ID_DAP_Vendor20:
     {
         // Request to stay in bootloader mode on the next boot for SWU
-        *reponse = DAP_OK;
+        *response = DAP_OK;
         config_ram_set_hold_in_bl(true);
         num += 1;
         break;
