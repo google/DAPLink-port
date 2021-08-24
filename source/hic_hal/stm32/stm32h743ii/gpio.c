@@ -240,7 +240,7 @@ void gpio_init(void)
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     HAL_GPIO_Init(POWER_EN_PIN_PORT, &GPIO_InitStructure);
-    
+
       // Enable power to DUT USB port.
     // skip, same as POWER_EN_PIN_PORT
 //    GPIO_InitStructure.Pin = UDC_DUT_USB_EN_L_PIN;

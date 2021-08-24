@@ -126,16 +126,15 @@ Infinite_Loop:
 g_pfnVectors:
   .word  __StackTop
   .word  Reset_Handler
-
   .word  NMI_Handler
   .word  HardFault_Handler
   .word  MemManage_Handler
   .word  BusFault_Handler
   .word  UsageFault_Handler
   .word  0
-  .word  0
-  .word  0
-  .word  0
+  .word  DAPLINK_BUILD_KEY                    /* Build type - BL/IF*/
+  .word  DAPLINK_HIC_ID                       /* Compatibility*/
+  .word  DAPLINK_VERSION                      /* Version*/
   .word  SVC_Handler
   .word  DebugMon_Handler
   .word  0

@@ -361,7 +361,7 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
         break;
     }
     case ID_DAP_Vendor19: {
-        // Add a more specific internal version string. 
+        // Add a more specific internal version string.
 
 #ifdef INTERFACE_STM32H743
         static char build_version_str[] = "udb_0.0.1_68acc48dc";
@@ -382,7 +382,14 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
 #endif /* INTERFACE_STM32H743 */
         break;
     }
-    case ID_DAP_Vendor20: break;
+    case ID_DAP_Vendor20:
+    {
+        // Request to stay in bootloader mode on the next boot for SWU
+        *reponse = DAP_OK;
+        config_ram_set_hold_in_bl(true);
+        num += 1;
+        break;
+    }
     case ID_DAP_Vendor21: break;
     case ID_DAP_Vendor22: break;
     case ID_DAP_Vendor23: break;
