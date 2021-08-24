@@ -114,6 +114,10 @@ int32_t USBD_CDC_ACM_PortGetLineCoding(CDC_LINE_CODING *line_coding)
 static U32 start_break_time = 0;
 int32_t USBD_CDC_ACM_SendBreak(uint16_t dur)
 {
+// Disable reset of target when a cdc break is received for our case.
+// This is used in MBED test automation, but causes hiccups for our use
+// (i.e. closing the uart on a mac) https://github.com/ARMmbed/DAPLink/issues/738
+#ifndef INTERFACE_STM32H743
     uint32_t end_break_time;
 #ifdef DRAG_N_DROP_SUPPORT
     if (!flash_intf_target->flash_busy())
@@ -134,6 +138,7 @@ int32_t USBD_CDC_ACM_SendBreak(uint16_t dur)
             }
         }
     }
+#endif //INTERFACE_STM32H743
     return (1);
 }
 

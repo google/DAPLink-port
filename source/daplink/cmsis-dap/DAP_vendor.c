@@ -39,6 +39,7 @@
 #include "flash_manager.h"
 #include <string.h>
 #include "i2c.h"
+#include "version_git.h"
 
 #ifdef INTERFACE_STM32H743
 #include "stm32h7xx.h"
@@ -66,7 +67,7 @@ file to the MDK-ARM project under the file group Configuration.
                  number of bytes in request (upper 16 bits)
 */
 uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
-  uint32_t num = (1U << 16) | 1U;
+  uint32_t num = (1U << 16) | 1U;  // count the Command ID byte
 
   *response++ = *request;        // copy Command ID
 
@@ -187,52 +188,94 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
     }
     case ID_DAP_Vendor14: break;
     case ID_DAP_Vendor15: {
-        // i2c read
+        //  Read I2C data
+        //
+        //  This reads from the "I2C2" bus on the UDB board.  This is routed to an EEPROM
+        //    (24AA02UIDT) at address 0x50, a voltage measurement chip (PAC1934T-I/J6CX)
+        //    at address 0x17, and pins 13 and 15 of
+        //    connector J1305 (with pullups to 1.8V).  It uses the MCU's internal I2C2 hw block.
+
+        //  The inputs to this command are:
+        //    I2C_TargetAddress, 1 byte (7 bit I2C chip address)
+        //    I2C_starting_register_address, 1 byte
+        //    Read_length, 1 byte (1 to 61 bytes is valid)
+        //
+        //  This returns a byte array which contains:
+        //    status byte (0x00 = Success, 0xFF = Failure)
+        //    I2C "event" status (2 bytes).  Search for "ARM_I2C_EVENT_TRANSFER_DONE" for bit definitions
+        //      0x01 is "done", 0x10 is "cleared", other bits indicate errors.
+        //    length byte
+        //    1 to 61 data bytes
+        //
         uint8_t target_addr = *request++;
         const uint8_t* internal_addr = request++;
         uint8_t len = *request;
-        uint8_t data_buf[63] = { 0 };
+        uint8_t data_buf[64] = { 0 };
+        uint32_t returnVal = 0;
 
-        // can add additional responses from I2C_DAP_MasterRead to provide better status
-        if (I2C_DAP_MasterRead(target_addr, internal_addr, data_buf, len)) {
-            *response++ = 0x00U;
+
+        returnVal = I2C_DAP_MasterRead(target_addr, internal_addr, data_buf, len);
+        if (returnVal== 0x01) {
+            *response++ = DAP_OK;
         } else {
-            // transfer incomplete
-            *response++ = 0xFFU;
+            // transfer incomplete or error
+            *response++ = DAP_ERROR;
         }
+        *response++ = (returnVal & 0xFF); //9 bits in an event.  Get first byte
+        *response++ = ((returnVal >> 8) & 0xFF); //Get 2nd byte
+        *response++ = len;  //length byte
 
-        // optional to loop past len, up to 62
-        // clear out additional data in response to make pyOCD response cleaner
-        for (int i = 0; i < 62; i++) {
+        for (int i = 0; i < len; i++) {
             *response++ = data_buf[i];
         }
+
+        //3 bytes read for the command, returns status byte, returnVal, length byte, and len data bytes
+        num += (3 << 16) | (4 + len);
         break;
     }
     case ID_DAP_Vendor16: {
-        // i2c write
+        //  Write I2C data
+        //
+        //  This writes data to the "I2C2" bus on the UDB board.  This is routed to an EEPROM
+        //    (24AA02UIDT) at address 0x50, a voltage measurement chip (PAC1934T-I/J6CX)
+        //    at address 0x17, and pins 13 and 15 of
+        //    connector J1305 (with pullups to 1.8V).  It uses the MCU's internal I2C2 hw block.
+
+        //  The inputs to this command are:
+        //    I2C_TargetAddress, 1 byte (7 bit I2C chip address)
+        //    I2C_starting_register_address, 1 byte
+        //    Write_length, 1 byte (1 to 60 bytes is valid)
+        //    Data, 1-60 bytes
+        //
+        //  This returns a byte array which contains:
+        //    status byte (0x00 = Success, 0xFF = Failure)
+        //    I2C "event" status (2 bytes).  Search for "ARM_I2C_EVENT_TRANSFER_DONE" for bit definitions
+        //      0x01 is "done", 0x10 is "cleared", other bits indicate errors.
+        //
         uint8_t target_addr = *request++;
         const uint8_t* internal_addr = request++;
         uint8_t len = *request++;
         uint8_t data_buf[60] = {0};
+        uint32_t returnVal = 0;
 
         for (int i = 0; i < len; i++) {
             data_buf[i] = *request++;
         }
 
-        // can add additional responses from I2C_DAP_MasterRead to provide better status
-        if (I2C_DAP_MasterTransfer(target_addr, internal_addr, data_buf, len)) {
+        // DONE: can add additional responses from I2C_DAP_MasterRead to provide better status
+        returnVal = I2C_DAP_MasterTransfer(target_addr, internal_addr, data_buf, len);
+        if (returnVal== 0x01) {
             // transfer done
-            *response++ = 0x00U;
+            *response++ = DAP_OK;
         } else {
             // transfer incomplete
-            *response++ = 0xFFU;
+            *response++ = DAP_ERROR;
         }
+        *response++ = (returnVal & 0xFF); //9 bits in an event.  Get first byte
+        *response++ = ((returnVal >> 8) & 0xFF); //Get 2nd byte
 
-        // optional
-        // clear out additional data in response to make pyOCD response cleaner
-        for (int i = 0; i < 62; i++) {
-            *response++ = 0x00U;
-        }
+        //3 + len bytes read for the command, 3 bytes returned (status, returnVal)
+        num += ((3 + len) << 16) | (3);
         break;
     }
     case ID_DAP_Vendor17: {
@@ -364,7 +407,18 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
         // Add a more specific internal version string.
 
 #ifdef INTERFACE_STM32H743
-        static char build_version_str[] = "udb_0.0.1_68acc48dc";
+
+#if GIT_LOCAL_MODS == 1
+#define GIT_LOCAL_MODS_STR "_modified"
+#else
+#define GIT_LOCAL_MODS_STR ""
+#endif //GIT_LOCAL_MODS
+
+#define STR_IMPL_(x) #x      //stringify argument
+#define STR(x) STR_IMPL_(x)  //indirection to expand argument macros
+
+
+        static char build_version_str[] = "udb_" STR(UDB_VERSION) "_" GIT_COMMIT_SHA GIT_LOCAL_MODS_STR;
         uint8_t len = strlen(build_version_str);
 
         uint8_t data_buf[63] = { 0 };

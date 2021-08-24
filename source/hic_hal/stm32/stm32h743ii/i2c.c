@@ -1,4 +1,4 @@
-/* 
+/*
  * i2c.c
  *
  * Evan Hassman
@@ -36,7 +36,6 @@ I2C_HandleTypeDef hi2c2;
 void I2C1_EV_IRQHandler(void)
 {
     HAL_I2C_EV_IRQHandler(&hi2c1);
-    while(1);
 }
 
 void I2C2_EV_IRQHandler(void)
@@ -73,14 +72,14 @@ static void I2C1_DAP_PinInit(void)
             // Error
         while(1){};
     }
-    /** Configure Analogue filter 
+    /** Configure Analogue filter
     */
     if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
     {
         // Error
         while(1){};
     }
-    /** Configure Digital filter 
+    /** Configure Digital filter
     */
     if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
     {
@@ -119,14 +118,14 @@ static void I2C2_DAP_PinInit(void)
             // Error
         while(1){};
     }
-    /** Configure Analogue filter 
+    /** Configure Analogue filter
     */
     if (HAL_I2CEx_ConfigAnalogFilter(&hi2c2, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
     {
         // Error
         while(1){};
     }
-    /** Configure Digital filter 
+    /** Configure Digital filter
     */
     if (HAL_I2CEx_ConfigDigitalFilter(&hi2c2, 0) != HAL_OK)
     {
@@ -156,7 +155,7 @@ void I2C_DAP_SignalEvent (uint32_t event)
         /* Less data was transferred than requested */
         completionFlag = false;
     }
- 
+
     if (event & ARM_I2C_EVENT_TRANSFER_DONE) {
         /* Transfer or receive is finished */
         completionFlag = true;
@@ -166,19 +165,19 @@ void I2C_DAP_SignalEvent (uint32_t event)
         /* Slave address was not acknowledged */
         nakFlag = true;
     }
- 
+
     if (event & ARM_I2C_EVENT_ARBITRATION_LOST) {
         /* Master lost bus arbitration */
     }
- 
+
     if (event & ARM_I2C_EVENT_BUS_ERROR) {
         /* Invalid start/stop position detected */
     }
- 
+
     if (event & ARM_I2C_EVENT_BUS_CLEAR) {
         /* Bus clear operation completed */
     }
- 
+
     if (event & ARM_I2C_EVENT_GENERAL_CALL) {
         /* Slave was addressed with a general call address */
     }
@@ -212,46 +211,46 @@ bool I2C_DAP_MasterTransfer(uint16_t device_addr, const uint8_t* reg_addr, const
 {
     uint8_t transfer_data[len+1];
     transfer_data[0] = *reg_addr;
-    
+
+    /* Clear the I2C bus, in case previous traffic caused an issue */
+    I2Cdrv->Control(ARM_I2C_BUS_CLEAR, 0);
+    while (I2Cdrv->GetStatus().busy);
+
     for (int i = 1; i < len+1; i++) {
-        transfer_data[i] = *data;
+        transfer_data[i] = *data++;
     }
     len++;
-    
+
     /* Single write transfer of slave address, register address and data to be written */
     I2Cdrv->MasterTransmit(device_addr, transfer_data, len, false);
-    
+
     /* Wait until transfer completed */
     while (I2Cdrv->GetStatus().busy);
-    
-    /* Check if all data transferred */
-    if ((I2C_Event & ARM_I2C_EVENT_TRANSFER_INCOMPLETE) != 0U)
-        return false;
-    
-    return true;
+
+    return I2C_Event;  //0x01 = done, other bits set indicate an error.
 }
 
 bool I2C_DAP_MasterRead(uint16_t device_addr, const uint8_t* reg_addr, uint8_t* buf, uint32_t len)
 {
+    /* Clear the I2C bus, in case previous traffic caused an issue */
+    I2Cdrv->Control(ARM_I2C_BUS_CLEAR, 0);
+    while (I2Cdrv->GetStatus().busy);
+
     /* Send slave address and device address without stop command at end */
     I2Cdrv->MasterTransmit(device_addr, reg_addr, 1, true);
-    
+
     /* Wait until transfer completed */
     while (I2Cdrv->GetStatus().busy);
-    
+
     /* Check if all data transferred */
     if ((I2C_Event & ARM_I2C_EVENT_TRANSFER_INCOMPLETE) != 0U)
         return false;
-    
+
     /* Send slave address and read from register address with stop command at end */
     I2Cdrv->MasterReceive(device_addr, buf, len, false);
- 
+
     /* Wait until transfer completed */
     while (I2Cdrv->GetStatus().busy);
-    
-    /* Check if all data transferred */
-    if ((I2C_Event & ARM_I2C_EVENT_TRANSFER_INCOMPLETE) != 0U)
-        return false;
-    
-    return true;
+
+    return I2C_Event;  //0x01 = done, other bits set indicate an error.
 }

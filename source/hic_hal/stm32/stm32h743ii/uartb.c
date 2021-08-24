@@ -111,6 +111,9 @@ int32_t uartb_initialize(void)
     GPIO_InitTypeDef GPIO_InitStructure;
 
     CDC_UARTB->CR1 &= ~(USART_ISR_TXE_TXFNF | USART_ISR_RXNE_RXFNE);
+    //Disable interrupt on framing, noise, overrun errors (until they are
+    // handled in IRS)
+    CDC_UARTB->CR3 &= ~USART_CR3_EIE;
     clear_buffers();
 
     CDC_UARTB_ENABLE();
@@ -289,5 +292,12 @@ void CDC_UARTB_IRQn_Handler(void)
         } else {
             CDC_UARTB->CR1 &= ~USART_ISR_TXE_TXFNF;
         }
+    }
+
+    if (sr & USART_ISR_ORE) { 
+        //Overrun (can be seen when closing cdc_uart and lots of traffic from 
+        // DUT.  Clear the interrupt here to avoid getting stuck in a loop.
+        //ToDo: Potentially count overruns/flag errors and report to host.
+        CDC_UARTB->ICR |= USART_ICR_ORECF;
     }
 }
