@@ -1,9 +1,9 @@
 /**
- * @file    read_uid.c
- * @brief   
+ * @file    stm32h743ii.c
+ * @brief   board ID for the STM32 NUCLEO-F103RB board
  *
  * DAPLink Interface Firmware
- * Copyright (c) 2009-2016, ARM Limited, All Rights Reserved
+ * Copyright (c) 2009-2019, ARM Limited, All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -18,20 +18,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-#include "stm32h7xx.h"
-#include "read_uid.h"
 
-void read_unique_id(uint32_t *id)
-{
-    uint32_t Device_Serial0, Device_Serial1, Device_Serial2;    
-    
-    Device_Serial0 = *(uint32_t*)(0x1FF1E800);  //elee change from F103 value, (0x1FFFF7E8); 
-    Device_Serial1 = *(uint32_t*)(0x1FF1E804); 
-    Device_Serial2 = *(uint32_t*)(0x1FF1E808);    
-  
-    id[0] = Device_Serial0;
-    id[1] = Device_Serial1;
-    id[2] = Device_Serial2;
-    id[3] = 0xA5A5A5A5;
+#include "target_family.h"
+#include "target_board.h"
+
+static void prerun_board_config(void) {
+    I2C_DAP_Initialize();
 }
+
+const board_info_t g_board_info = {
+    .info_version = kBoardInfoVersion,
+    .board_id = "0700",
+    .family_id = kStub_HWReset_FamilyID,
+    .daplink_drive_name = "DAPLINK",
+    .prerun_board_config = prerun_board_config,
+    .target_cfg = &target_device,
+};

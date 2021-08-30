@@ -26,11 +26,8 @@
 #include "util.h"
 #include "cortex_m.h"
 
-//#include "stm32h7xx_hal.h" //elee, call cube startup files...
-#include "main_interface.h"  //elee, definitions of the functions declared below.
-
 //elee, pull in the version from cubemx main.c
-extern void SystemClock_Config(void);  
+extern void SystemClock_Config(void);
 extern void MX_GPIO_Init(void);
 extern void MX_USB_OTG_FS_PCD_Init(void);
 extern void MX_USB_OTG_HS_PCD_Init(void);
@@ -72,8 +69,8 @@ void sdk_init()
   MX_GPIO_Init();
   //MX_USB_OTG_FS_PCD_Init();
   //MX_USB_OTG_HS_PCD_Init();
-	
-	
+
+
 //    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 //    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 
@@ -114,8 +111,8 @@ void sdk_init()
 
     pin_out_init(CONNECTED_LED_PORT, CONNECTED_LED_PIN_Bit);
     CONNECTED_LED_PORT->BSRR = CONNECTED_LED_PIN;
-		
-	//elee: toggle the pin, see the LED do something.  
+
+	//elee: toggle the pin, see the LED do something.
 		HAL_Delay(100);
 		CONNECTED_LED_PORT->BSRR = (CONNECTED_LED_PIN << 16);
 
@@ -195,9 +192,9 @@ void HAL_ResumeTick(void)
 static uint32_t tim2_clk_div(uint32_t apb1clkdiv)
 {
 	/*   uint32_t APB1CLKDivider;        The APB1 clock (PCLK1) divider. This clock is derived from the AHB clock (HCLK).
-                                       This parameter can be a value of @ref RCC_APB1_Clock_Source 
+                                       This parameter can be a value of @ref RCC_APB1_Clock_Source
 	*/
-	
+
     switch (apb1clkdiv) {
         case RCC_APB1_DIV2:
             return 1;

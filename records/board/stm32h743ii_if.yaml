@@ -1,0 +1,6 @@
+common:
+    sources:
+        board:
+            - source/board/stm32h743ii.c
+        family:
+            - source/family/st/stm32h743ii/target.c

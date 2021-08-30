@@ -40,6 +40,7 @@
 #include <string.h>
 #include "i2c.h"
 #include "version_git.h"
+#include "cortex_m.h"
 
 #ifdef INTERFACE_STM32H743
 #include "stm32h7xx.h"
@@ -436,8 +437,26 @@ uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
 #endif /* INTERFACE_STM32H743 */
         break;
     }
-    case ID_DAP_Vendor20: break;
-    case ID_DAP_Vendor21: break;
+    case ID_DAP_Vendor20:
+    {
+        // Request to stay in bootloader mode on the next boot for SWU
+        *response = DAP_OK;
+        config_ram_set_hold_in_bl(true);
+
+        num += 1;
+        break;
+    }
+    case ID_DAP_Vendor21:
+    {
+        // Request to reset the UDB. PyOCD will crash.
+        *response = DAP_OK;
+
+        SystemReset();
+        // We should be resetting here
+        while(1){};
+        num += 1;
+        break;
+    }
     case ID_DAP_Vendor22: break;
     case ID_DAP_Vendor23: break;
     case ID_DAP_Vendor24: break;
