@@ -18,12 +18,14 @@ common:
         - source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver
         - source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Inc
         - source/hic_hal/stm32/stm32h743ii/STCubeGenerated/Inc
+        - source/hic_hal/stm32/stm32h743ii/extended_features/include
     sources:
         hic_hal:
             - source/hic_hal/stm32/stm32h743ii
             - source/hic_hal/stm32/stm32h743ii/cmsis
             - source/hic_hal/stm32/stm32h743ii/STM32H7xx_HAL_Driver/Src
             - source/hic_hal/stm32/stm32h743ii/STCubeGenerated/Src
+            - source/hic_hal/stm32/stm32h743ii/extended_features/source
 tool_specific:
     uvision:
         misc:
