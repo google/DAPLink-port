@@ -1,6 +1,10 @@
 common:
+    includes:
+        - source/hic_hal/stm32/stm32h743ii/extended_features/include
     sources:
         board:
             - source/board/stm32h743ii.c
         family:
             - source/family/st/stm32h743ii/target.c
+        hic_hal:
+            - source/hic_hal/stm32/stm32h743ii/extended_features/source

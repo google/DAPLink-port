@@ -21,6 +21,7 @@
 
 #include "target_family.h"
 #include "target_board.h"
+#include "i2c.h"
 
 static void prerun_board_config(void) {
     I2C_DAP_Initialize();
@@ -32,5 +33,5 @@ const board_info_t g_board_info = {
     .family_id = kStub_HWReset_FamilyID,
     .daplink_drive_name = "DAPLINK",
     .prerun_board_config = prerun_board_config,
-    .target_cfg = &target_device,
+    // .target_cfg = &target_device,   This board doesn't have a target
 };

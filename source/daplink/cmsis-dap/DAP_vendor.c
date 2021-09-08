@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 ARM Limited. All rights reserved.
+ * Copyright (c) 2013-2020 Arm Limited. All rights reserved.
  * Copyright 2019, Cypress Semiconductor Corporation
  * or a subsidiary of Cypress Semiconductor Corporation.
  *
@@ -31,7 +31,8 @@
 #include "DAP_config.h"
 #include "DAP.h"
 #include "info.h"
-#include "main.h"
+#include "daplink.h"
+#include DAPLINK_MAIN_HEADER
 #include "uart.h"
 #include "settings.h"
 #include "target_family.h"
