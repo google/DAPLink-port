@@ -29,7 +29,7 @@ static void prerun_board_config(void) {
 
 const board_info_t g_board_info = {
     .info_version = kBoardInfoVersion,
-    .board_id = "0700",
+    .board_id = "0000",
     .family_id = kStub_HWReset_FamilyID,
     .daplink_drive_name = "DAPLINK",
     .prerun_board_config = prerun_board_config,
