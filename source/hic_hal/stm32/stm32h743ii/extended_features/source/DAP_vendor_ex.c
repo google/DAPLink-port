@@ -2,6 +2,7 @@
 #include "settings.h"
 #include <string.h>
 #include "i2c.h"
+#include "adc.h"
 #include "cortex_m.h"
 #include "stm32h7xx.h"
 #include "DAP_vendor_ex.h"

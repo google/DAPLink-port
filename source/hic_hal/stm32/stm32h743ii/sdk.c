@@ -209,3 +209,15 @@ static uint32_t tim2_clk_div(uint32_t apb1clkdiv)
     }
 }
 
+void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
+{
+  __HAL_RCC_ADC3_CLK_ENABLE();
+  UNUSED(hadc);
+}
+
+void HAL_ADC_MspDeInit(ADC_HandleTypeDef *hadc)
+{
+  __HAL_RCC_ADC3_CLK_DISABLE();
+  UNUSED(hadc);
+}
+

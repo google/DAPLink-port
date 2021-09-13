@@ -447,6 +447,7 @@ void main_task(void * arg)
                 default:
                     break;
             }
+            update_ADC_value();
         }
 
         // 30mS tick used for flashing LED when USB is busy
