@@ -22,11 +22,11 @@
 #include "target_family.h"
 #include "target_board.h"
 #include "i2c.h"
-#include "read_ver.h"
+#include "udb_version.h"
 
 static void prerun_board_config(void) {
     I2C_DAP_Initialize();
-    read_udb_board_version();
+    read_udb_version();
 }
 
 const board_info_t g_board_info = {

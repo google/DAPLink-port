@@ -256,12 +256,6 @@ void gpio_init(void)
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     HAL_GPIO_Init(UDC_EXT_RELAY_PORT, &GPIO_InitStructure);
 
-    // Initialize PG5, this is used to decide UDB is P1 or P2
-    GPIO_InitStructure.Pin = PIN_UDB_VERSION;
-    GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStructure.Pull = GPIO_PULLUP;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(PIN_UDB_VERSION_PORT, &GPIO_InitStructure);
 
     //ToDo(elee): Update delay as needed for core clk speed.  This is the value from the stm32f1.
 

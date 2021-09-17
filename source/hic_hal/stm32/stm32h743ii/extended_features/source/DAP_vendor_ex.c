@@ -2,21 +2,12 @@
 #include "settings.h"
 #include <string.h>
 #include "i2c.h"
-#include "version_git.h"
 #include "cortex_m.h"
 #include "stm32h7xx.h"
 #include "DAP_vendor_ex.h"
 #include "DAP_config.h"
-#include "read_ver.h"
+#include "udb_version.h"
 
-#if GIT_LOCAL_MODS == 1
-#define GIT_LOCAL_MODS_STR "_modified"
-#else
-#define GIT_LOCAL_MODS_STR ""
-#endif //GIT_LOCAL_MODS
-
-#define STR_IMPL_(x) #x      //stringify argument
-#define STR(x) STR_IMPL_(x)  //indirection to expand argument macros
 
 /** Process DAP Vendor Command from the Extended Command range and prepare Response Data
 \param request   pointer to request data
@@ -244,19 +235,14 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
     }
     case ID_DAP_VendorEx36_VERSION_DETAILS: {
         // Add a more specific internal version string.
-        static char build_version_str[] = "udb_" STR(UDB_VERSION) "_" GIT_COMMIT_SHA GIT_LOCAL_MODS_STR "_";
-        static char build_version_str_with_board_info[DAP_PACKET_SIZE-1];
-        memset(build_version_str_with_board_info, 0, sizeof(build_version_str_with_board_info));
-        strcat(build_version_str_with_board_info, build_version_str);
-        strcat(build_version_str_with_board_info, get_udb_board_version());
-
-        uint8_t len = strlen(build_version_str_with_board_info);
+        const char *udb_version = get_udb_version();
+        uint8_t len = strlen(udb_version);
 
         uint8_t data_buf[DAP_PACKET_SIZE-1] = { 0 };
 
         *response++ = len;
 
-        memcpy(data_buf, build_version_str_with_board_info, len);
+        memcpy(data_buf, udb_version, len);
         num += (len + 1); // increment response count by ID length + length byte
 
         for (int i = 0; i < (DAP_PACKET_SIZE-2); i++) {

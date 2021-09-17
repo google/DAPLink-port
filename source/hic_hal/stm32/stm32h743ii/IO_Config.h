@@ -119,9 +119,6 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 #define PIN_MSC_LED                  GPIO_PIN_4
 #define PIN_MSC_LED_Bit              4
 
-// UDB version (P1 or P2) detection
-#define PIN_UDB_VERSION_PORT         GPIOG
-#define PIN_UDB_VERSION              GPIO_PIN_5
 
 //UDB specific signals
 #define USBHUB_SELFPWR_PORT          GPIOH
