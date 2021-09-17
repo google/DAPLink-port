@@ -244,22 +244,22 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
     }
     case ID_DAP_VendorEx36_VERSION_DETAILS: {
         // Add a more specific internal version string.
-        static char version_suffix[] = "_" GIT_COMMIT_SHA GIT_LOCAL_MODS_STR;
-        static char build_version_str[DAP_PACKET_SIZE];
-        memset(build_version_str, 0, sizeof(build_version_str));
-        strcat(build_version_str, get_udb_board_version());
-        strcat(build_version_str, version_suffix);
+        static char build_version_str[] = "udb_" STR(UDB_VERSION) "_" GIT_COMMIT_SHA GIT_LOCAL_MODS_STR "_";
+        static char build_version_str_with_board_info[DAP_PACKET_SIZE-1];
+        memset(build_version_str_with_board_info, 0, sizeof(build_version_str_with_board_info));
+        strcat(build_version_str_with_board_info, build_version_str);
+        strcat(build_version_str_with_board_info, get_udb_board_version());
 
-        uint8_t len = strlen(build_version_str);
+        uint8_t len = strlen(build_version_str_with_board_info);
 
-        uint8_t data_buf[DAP_PACKET_SIZE] = { 0 };
+        uint8_t data_buf[DAP_PACKET_SIZE-1] = { 0 };
 
         *response++ = len;
 
-        memcpy(data_buf, build_version_str, len);
+        memcpy(data_buf, build_version_str_with_board_info, len);
         num += (len + 1); // increment response count by ID length + length byte
 
-        for (int i = 0; i < (DAP_PACKET_SIZE - 1); i++) {
+        for (int i = 0; i < (DAP_PACKET_SIZE-2); i++) {
             *response++ = data_buf[i];
         }
 

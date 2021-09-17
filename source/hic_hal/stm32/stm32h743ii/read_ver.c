@@ -15,16 +15,13 @@
  * Prerequisite: initialize GPIO PG15 at gpio_init() in gpio.c
  */
 
-// DAP_PACKET_SIZE = 64
-// "_" + git-sha(40) + "_" + modified(8) + '\0'
-// 64 - 1 - 40 - 1 - 8  - 1= 13
-static char udb_board_version[13];
+static char udb_board_version[4];
 
 void read_udb_board_version(void)
 {
   GPIO_PinState bitstatus;
   uint8_t prefix_len = 0;
-  const char *prefix = "UDB_P";
+  const char *prefix = "p";
 
   prefix_len = strlen(prefix);
   memset(udb_board_version, 0, sizeof(udb_board_version));
