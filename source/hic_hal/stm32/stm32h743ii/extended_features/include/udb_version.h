@@ -12,7 +12,7 @@
 #include "stm32h7xx.h"
 
 #define PIN_UDB_VERSION_PORT         GPIOG
-#define PIN_UDB_VERSION              GPIO_PIN_5
+#define PIN_UDB_VERSION              GPIO_PIN_15
 
 void read_udb_version(void);
 const char *get_udb_version(void);
