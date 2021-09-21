@@ -23,12 +23,12 @@
 #include "target_board.h"
 #include "i2c.h"
 #include "udb_version.h"
-#include "adc.h"
+#include "aux_task.h"
 
 static void prerun_board_config(void) {
     I2C_DAP_Initialize();
-    ADC_DAP_Initialize();
     read_udb_version();
+    create_aux_task();
 }
 
 uint32_t count_blink = 0;

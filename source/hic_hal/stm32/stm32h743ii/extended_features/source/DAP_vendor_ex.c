@@ -8,6 +8,7 @@
 #include "DAP_vendor_ex.h"
 #include "DAP_config.h"
 #include "udb_version.h"
+#include "adc.h"
 
 
 /** Process DAP Vendor Command from the Extended Command range and prepare Response Data
@@ -237,13 +238,17 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
     case ID_DAP_VendorEx36_VERSION_DETAILS: {
         // Add a more specific internal version string.
         const char *udb_version = get_udb_version();
-        uint8_t len = strlen(udb_version);
+        const char *adapter_info = get_adapter_board_info();
+        uint8_t len_ver = strlen(udb_version);
+        uint8_t adapter_ver = strlen(adapter_info);
+        uint8_t len = len_ver + adapter_ver;
 
         uint8_t data_buf[DAP_PACKET_SIZE-1] = { 0 };
 
         *response++ = len;
 
-        memcpy(data_buf, udb_version, len);
+        memcpy(data_buf, udb_version, len_ver);
+        memcpy(data_buf + len_ver, adapter_info, adapter_ver);
         num += (len + 1); // increment response count by ID length + length byte
 
         for (int i = 0; i < (DAP_PACKET_SIZE-2); i++) {
