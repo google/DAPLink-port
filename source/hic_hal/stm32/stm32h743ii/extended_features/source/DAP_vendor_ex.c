@@ -9,9 +9,67 @@
 #include "udb_version.h"
 #include "adapter_detector.h"
 #include "udb_reset.h"
+#include "util.h"
+#include "udb_power_measurement.h"
+#include "udb_errno.h"
 
 #define UDB_RESET_TIMER_MS   (500)
 
+static uint32_t DAP_ProcessVendorCommandEx40_MeasurePower(const uint8_t *request, uint8_t *response)
+{
+    // 2 bytes for voltage and 4 bytes for current
+    util_assert(6 * UDB_POWER_MEASUREMENT_TARGET_COUNT <= DAP_PACKET_SIZE);
+
+    uint32_t num = 0;
+    int ret = udb_power_measurement_measure();
+
+    if (ret != UDB_SUCCESS)
+    {
+        goto power_measurement_error;
+    }
+
+    uint8_t data_buf[DAP_PACKET_SIZE];
+    uint8_t data_buf_idx = 0;
+    for (uint8_t target_type = 0; target_type < UDB_POWER_MEASUREMENT_TARGET_COUNT; ++target_type)
+    {
+        uint16_t voltage_mV;
+        uint32_t current_uA;
+
+        ret = udb_power_measurement_read_voltage_mV(target_type, &voltage_mV);
+        if (ret != UDB_SUCCESS)
+        {
+            goto power_measurement_error;
+        }
+        data_buf[data_buf_idx++] = (voltage_mV & 0xFF);
+        data_buf[data_buf_idx++] = ((voltage_mV >> 8) & 0xFF);
+
+        ret = udb_power_measurement_read_current_uA(target_type, &current_uA);
+        if (ret != UDB_SUCCESS)
+        {
+            goto power_measurement_error;
+        }
+
+        data_buf[data_buf_idx++] = (current_uA & 0xFF);
+        data_buf[data_buf_idx++] = ((current_uA >> 8) & 0xFF);
+        data_buf[data_buf_idx++] = ((current_uA >> 16) & 0xFF);
+        data_buf[data_buf_idx++] = ((current_uA >> 24) & 0xFF);
+    }
+
+    *response++ = DAP_OK;
+
+    memcpy(response, data_buf, data_buf_idx);
+    response += data_buf_idx;
+
+    num += 1 + data_buf_idx;
+
+    return num;
+
+power_measurement_error:
+    *response = DAP_ERROR;
+    num += 1;
+
+    return num;
+}
 
 /** Process DAP Vendor Command from the Extended Command range and prepare Response Data
 \param request   pointer to request data
@@ -272,6 +330,11 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
 
         num += 3;
 
+        break;
+    }
+    case ID_DAP_VendorEx40_MEASURE_POWER:
+    {
+        num += DAP_ProcessVendorCommandEx40_MeasurePower(request, response);
         break;
     }
     default: break;

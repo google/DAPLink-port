@@ -26,6 +26,7 @@
 #include "i2c.h"
 #include "udb_version.h"
 #include "udb_extended_features_task.h"
+#include "udb_power_measurement.h"
 
 static uint32_t s_count_blink = 0;
 
@@ -34,6 +35,7 @@ static void prerun_board_config(void)
     I2C_DAP_Initialize();
     udb_read_hw_version();
     udb_extended_features_task_create();
+    udb_power_measurement_init();
 }
 
 void board_30ms_hook()

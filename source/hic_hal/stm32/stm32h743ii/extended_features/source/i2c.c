@@ -212,10 +212,6 @@ bool I2C_DAP_MasterTransfer(uint16_t device_addr, const uint8_t* reg_addr, const
     uint8_t transfer_data[len+1];
     transfer_data[0] = *reg_addr;
 
-    /* Clear the I2C bus, in case previous traffic caused an issue */
-    I2Cdrv->Control(ARM_I2C_BUS_CLEAR, 0);
-    while (I2Cdrv->GetStatus().busy);
-
     for (int i = 1; i < len+1; i++) {
         transfer_data[i] = *data++;
     }
@@ -232,10 +228,6 @@ bool I2C_DAP_MasterTransfer(uint16_t device_addr, const uint8_t* reg_addr, const
 
 bool I2C_DAP_MasterRead(uint16_t device_addr, const uint8_t* reg_addr, uint8_t* buf, uint32_t len)
 {
-    /* Clear the I2C bus, in case previous traffic caused an issue */
-    I2Cdrv->Control(ARM_I2C_BUS_CLEAR, 0);
-    while (I2Cdrv->GetStatus().busy);
-
     /* Send slave address and device address without stop command at end */
     I2Cdrv->MasterTransmit(device_addr, reg_addr, 1, true);
 
