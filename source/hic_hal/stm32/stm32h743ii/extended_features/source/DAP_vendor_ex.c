@@ -8,6 +8,7 @@
 #include "DAP_config.h"
 #include "udb_version.h"
 #include "adapter_detector.h"
+#include "pac193x.h"
 
 
 /** Process DAP Vendor Command from the Extended Command range and prepare Response Data
@@ -282,6 +283,37 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
         num += 3; 
 
         break;
+    case ID_DAP_VendorEx40_MEASURE_POWER:
+    {
+      *response = DAP_OK;
+      pac193x_refresh();
+      num += 1;
+      break;
+    }
+    case ID_DAP_VendorEx41_READ_POWER:
+    {
+      uint8_t data_buf[PAC193X_ACC_POWER_BYTES];
+      uint32_t returnVal;
+      returnVal = pac193x_read_vpower_acc1(data_buf);
+      if (returnVal == 0x01)
+      {
+        *response++ = DAP_OK;
+      }
+      else
+      {
+        *response++ = DAP_ERROR;
+      }
+      *response++ = (returnVal & 0xFF);
+      *response++ = ((returnVal >> 8) & 0xFF);
+      *response++ = PAC193X_ACC_POWER_BYTES;
+      for (int i = 0; i < PAC193X_ACC_POWER_BYTES; i++) {
+          *response++ = data_buf[i];
+      }
+
+      //3 bytes read for the command, returns status byte, returnVal, length byte, and len data bytes
+      num += (3 << 16) | (4 + PAC193X_ACC_POWER_BYTES);
+
+      break;
     }
     default: break;
   }
