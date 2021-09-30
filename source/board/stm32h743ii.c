@@ -29,6 +29,17 @@ static void prerun_board_config(void) {
     read_udb_version();
 }
 
+uint32_t count_blink = 0;
+
+void board_30ms_hook()
+{
+    count_blink++;
+    if ((count_blink % 50) == 0)
+    {
+        HAL_GPIO_TogglePin( CONNECTED_LED_PORT, CONNECTED_LED_PIN);
+    }
+}
+
 const board_info_t g_board_info = {
     .info_version = kBoardInfoVersion,
     .board_id = "0000",

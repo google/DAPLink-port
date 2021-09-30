@@ -39,7 +39,6 @@
 #include "sdk.h"
 #include "target_family.h"
 #include "target_board.h"
-#include "i2c.h"
 
 #ifdef DRAG_N_DROP_SUPPORT
 #include "vfs_manager.h"
@@ -333,8 +332,6 @@ void main_task(void * arg)
     usb_state = USB_CONNECTING;
     usb_state_count = USB_CONNECT_DELAY;
 
-    uint32_t count_blink = 0;
-
     // Start timer tasks
 #ifndef USE_LEGACY_CMSIS_RTOS
     osTimerId_t tmr_id = osTimerNew(timer_task_30mS, osTimerPeriodic, NULL, &k_timer_30ms_attr);
@@ -390,7 +387,7 @@ void main_task(void * arg)
         if (flags & FLAGS_MAIN_CDC_EVENT) {
             cdc_process_event();
         }
-        
+
         if (flags & FLAGS_BOARD_EVENT) {
             board_custom_event();
         }
@@ -548,14 +545,6 @@ void main_task(void * arg)
                 gpio_set_cdc_led(cdc_led_value);
             }
         }
-        //elee, try toggling LED here...
-#ifdef INTERFACE_STM32H743
-        count_blink++;
-        if ((count_blink % 10000) == 0)
-        {
-            gpio_toggle_LED();
-        }
-#endif
     }
 }
 
