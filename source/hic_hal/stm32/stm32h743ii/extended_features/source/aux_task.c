@@ -34,7 +34,7 @@ void timer_task_100mS(void * arg)
 
 void create_aux_task(void)
 {
-    ADC_DAP_Initialize();
+    adc_dap_initialize();
 #ifndef USE_LEGACY_CMSIS_RTOS
     aux_task_id = osThreadNew(aux_task, NULL, &k_aux_thread_attr);
 #else
@@ -58,7 +58,7 @@ void aux_task(void *arg)
 
         if (flags & FLAGS_AUX_100MS)
         {
-            update_ADC_value();
+            update_adc_value();
         }
     }
 }

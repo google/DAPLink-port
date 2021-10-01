@@ -1,11 +1,13 @@
-#ifndef ADC_H_
-#define ADC_H_
+#ifndef _ADC_H_INCLUDED_
+#define _ADC_H_INCLUDED_
 
-void ADC_DAP_Initialize(void);
+#include <stdint.h>
 
-void update_ADC_value(void);
+void adc_dap_initialize(void);
 
-const char *get_adapter_board_info(void);
+void update_adc_value(void);
+
+uint16_t get_flex_hotplug_adc_value(void);
 
 #endif
 
