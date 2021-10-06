@@ -1,6 +1,6 @@
 #include "aux_task.h"
 #include "util.h"
-#include "adc.h"
+#include "adapter_adc.h"
 
 #ifndef USE_LEGACY_CMSIS_RTOS
 #include "rtx_os.h"

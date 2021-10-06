@@ -14,7 +14,7 @@
 
 
 #if GIT_LOCAL_MODS == 1
-#define GIT_LOCAL_MODS_STR ""
+#define GIT_LOCAL_MODS_STR "_modified"
 #else
 #define GIT_LOCAL_MODS_STR ""
 #endif //GIT_LOCAL_MODS

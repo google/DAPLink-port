@@ -1,5 +1,5 @@
-#ifndef _ADC_H_INCLUDED_
-#define _ADC_H_INCLUDED_
+#ifndef _ADAPTER_ADC_H_INCLUDED_
+#define _ADAPTER_ADC_H_INCLUDED_
 
 #include <stdint.h>
 

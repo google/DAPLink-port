@@ -2,13 +2,12 @@
 #include "settings.h"
 #include <string.h>
 #include "i2c.h"
-#include "adc.h"
 #include "cortex_m.h"
 #include "stm32h7xx.h"
 #include "DAP_vendor_ex.h"
 #include "DAP_config.h"
 #include "udb_version.h"
-#include "adc.h"
+#include "adapter_adc.h"
 
 
 /** Process DAP Vendor Command from the Extended Command range and prepare Response Data

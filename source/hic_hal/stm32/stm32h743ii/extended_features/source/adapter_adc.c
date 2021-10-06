@@ -1,4 +1,4 @@
-#include "adc.h"
+#include "adapter_adc.h"
 #include "stm32h743xx.h"
 #include "stm32h7xx_hal.h"
 
@@ -86,3 +86,16 @@ uint16_t get_flex_hotplug_adc_value(void)
 {
   return s_flex_hotplug_adc_value;
 }
+
+void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
+{
+  __HAL_RCC_ADC3_CLK_ENABLE();
+  UNUSED(hadc);
+}
+
+void HAL_ADC_MspDeInit(ADC_HandleTypeDef *hadc)
+{
+  __HAL_RCC_ADC3_CLK_DISABLE();
+  UNUSED(hadc);
+}
+
