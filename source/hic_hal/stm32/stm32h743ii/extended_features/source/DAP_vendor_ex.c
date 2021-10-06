@@ -7,7 +7,7 @@
 #include "DAP_vendor_ex.h"
 #include "DAP_config.h"
 #include "udb_version.h"
-#include "adapter_adc.h"
+#include "adapter_detector.h"
 
 
 /** Process DAP Vendor Command from the Extended Command range and prepare Response Data
@@ -272,13 +272,12 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
         num += 1;
         break;
     }
-    case ID_DAP_VendorEx39_READ_FLEX_HOTPLUG_ADC:
+    case ID_DAP_VendorEx39_READ_UDC_ADAPTER_TYPE_ADC:
     {
-        uint16_t flex_hotplug_adc_value = get_flex_hotplug_adc_value();
-        *response = DAP_OK;
-        *response++ = 2;
-        *response++ = ((flex_hotplug_adc_value >> 8) & 0xff);
-        *response++ = (flex_hotplug_adc_value & 0xff);
+        adapter_type_t type = adapter_detector_get_adapter_type_adc();
+        *response++ = DAP_OK;
+        *response++ = 1;
+        *response++ = type;
 
         num += 3; 
 

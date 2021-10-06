@@ -57,7 +57,7 @@
 //   <e>Round-Robin Thread switching
 //   <i> Enables Round-Robin Thread switching.
 #ifndef OS_ROBIN_ENABLE
-#define OS_ROBIN_ENABLE             1 // DAPLINK. Default was: 1
+#define OS_ROBIN_ENABLE             0 // DAPLINK. Default was: 1
 #endif
 
 //     <o>Round-Robin Timeout <1-1000>
