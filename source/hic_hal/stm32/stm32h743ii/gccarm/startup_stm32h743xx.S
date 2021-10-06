@@ -132,12 +132,12 @@ g_pfnVectors:
   .word  BusFault_Handler
   .word  UsageFault_Handler
   .word  0
-  .word  DAPLINK_BUILD_KEY                    /* Build type - BL/IF*/
-  .word  DAPLINK_HIC_ID                       /* Compatibility*/
-  .word  DAPLINK_VERSION                      /* Version*/
+  .word  DAPLINK_BUILD_KEY                    /* DAPLINK: Build type - BL/IF*/
+  .word  DAPLINK_HIC_ID                       /* DAPLINK: Compatibility*/
+  .word  DAPLINK_VERSION                      /* DAPLINK: Version*/
   .word  SVC_Handler
   .word  DebugMon_Handler
-  .word  0
+  .word  g_board_info                         /* DAPLINK: Pointer to board/family/target info*/
   .word  PendSV_Handler
   .word  SysTick_Handler
 

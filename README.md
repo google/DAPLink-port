@@ -1,9 +1,8 @@
-# Warning: Experimental branch
+# Warning: Development branch
 
-This is is an experimental branch:
-- It adds support for the GCC (`gcc_arm`) and ARMC6 (`armclang`) compilers.
+This is is a development branch:
+- It adds support for the GCC (`gcc_arm`) and ARMC6 (`armclang`) compilers, ARMC5 (`armcc`) will be deprecated.
 - It focuses on `progen` support using `make` and `cmake`.
-- It will be frequently rebased.
 
 ## Setup
 
@@ -27,7 +26,7 @@ Get the sources and create a virtual environment
 ```
 $ git clone https://github.com/ARMmbed/DAPLink
 $ cd DAPLink
-$ git checkout experimental_compilers
+$ git checkout develop
 $ virtualenv venv
 ```
 
@@ -95,7 +94,7 @@ The following command combines generation and compilation:
 [![DAPLink](/docs/images/daplink-website-logo-link.png)](https://armmbed.github.io/DAPLink/)
 
 **Note:** The master branch requires an Arm Compiler 5 or Keil MDK license to build. See the
-[experimental_compilers](https://github.com/ARMmbed/DAPLink/tree/experimental_compilers) branch for gcc and Arm
+[develop](https://github.com/ARMmbed/DAPLink/tree/develop) branch for gcc and Arm
 Compiler 6 support. As soon as testing is complete, gcc will become the default compiler and AC5 support will be
 dropped.
 

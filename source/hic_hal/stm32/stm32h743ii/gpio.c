@@ -25,8 +25,6 @@
 #include "daplink.h"
 #include "util.h"
 
-//#include "stm32h7xx_hal.h"
-
 static TIM_HandleTypeDef timer;
 
 static void busy_wait(uint32_t cycles)
@@ -285,13 +283,6 @@ void gpio_set_msc_led(gpio_led_state_t state)
     // LED is active low
     HAL_GPIO_WritePin(PIN_MSC_LED_PORT, PIN_MSC_LED, state ? GPIO_PIN_RESET : GPIO_PIN_SET);
 }
-
-void gpio_toggle_LED(void)
-{
-    // Change pin state.
-    HAL_GPIO_TogglePin( CONNECTED_LED_PORT, CONNECTED_LED_PIN);
-}
-
 
 uint8_t gpio_get_reset_btn_no_fwrd(void)
 {
