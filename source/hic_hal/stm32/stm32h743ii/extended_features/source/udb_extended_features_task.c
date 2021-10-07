@@ -4,6 +4,11 @@
 #include "adapter_detector.h"
 #include "rtx_os.h"
 
+#define UDB_EXTENDED_FEATURES_TASK_STACK          (800)
+#define UDB_EXTENDED_FEATURES_TASK_PRIORITY       (osPriorityNormal)
+#define UDB_EXTENDED_FEATURES_TASK_FLAGS_3S       (1 << 0)
+#define UDB_EXTENDED_FEATURES_TASK_TICKS_3S       (osKernelGetTickFreq() * 3)
+
 static osThreadId_t s_udb_extended_features_task_id;
 static uint32_t s_udb_extended_features_task_cb[WORDS(sizeof(osRtxThread_t))];
 static uint64_t s_udb_extended_features_task_stack[UDB_EXTENDED_FEATURES_TASK_STACK / sizeof(uint64_t)];

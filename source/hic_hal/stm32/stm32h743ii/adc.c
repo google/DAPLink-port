@@ -2,8 +2,7 @@
 #include "stm32h743xx.h"
 #include "stm32h7xx_hal.h"
 
-// Timeout value in millisecond
-#define ADC_CONVERSION_TIMEOUT (10)
+#define ADC_CONVERSION_TIMEOUT_MS (10)
 #define ADC_BASE ADC3
 
 static ADC_HandleTypeDef s_adc_handle;
@@ -50,7 +49,7 @@ void adc_init_pins(void)
 
 uint32_t adc_read_channel(uint32_t channelGroup, uint32_t channelNumber, uint32_t channelMux)
 {
-    uint16_t udc_adapter_adc_value;
+    uint16_t adc_value;
 
     s_chan_conf.Channel = channelNumber;
     s_chan_conf.Rank = ADC_REGULAR_RANK_1;
@@ -74,13 +73,13 @@ uint32_t adc_read_channel(uint32_t channelGroup, uint32_t channelNumber, uint32_
         error_handler();
     }
 
-    if (HAL_ADC_PollForConversion(&s_adc_handle, ADC_CONVERSION_TIMEOUT) != HAL_OK)
+    if (HAL_ADC_PollForConversion(&s_adc_handle, ADC_CONVERSION_TIMEOUT_MS) != HAL_OK)
     {
         error_handler();
     } 
     else
     {
-        udc_adapter_adc_value = HAL_ADC_GetValue(&s_adc_handle);
+        adc_value = HAL_ADC_GetValue(&s_adc_handle);
     }
 
     if (HAL_ADC_Stop(&s_adc_handle) != HAL_OK) 
@@ -88,7 +87,7 @@ uint32_t adc_read_channel(uint32_t channelGroup, uint32_t channelNumber, uint32_
         error_handler();
     }
 
-    return udc_adapter_adc_value;
+    return adc_value;
 }
 
 void HAL_ADC_MspInit(ADC_HandleTypeDef *hadc)
