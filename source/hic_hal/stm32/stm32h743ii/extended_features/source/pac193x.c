@@ -1,138 +1,73 @@
 #include "pac193x.h"
 #include "i2c.h"
 
-static void error_handler(void)
+#define PAC193X_ADDR            (0x17)
+#define PAC193X_CFG_REG_SIZE    (1)
+
+static const uint8_t k_pac193x_command_reg_addr[] =
 {
-    for (;;)
-    {
-    }
+    [PAC193X_COMMAND_REFRESH]   = PAC193X_REFRESH_REG,
+    [PAC193X_COMMAND_REFRESH_V] = PAC193X_REFRESH_V_REG,
+    [PAC193X_COMMAND_REFRESH_G] = PAC193X_REFRESH_G_REG,
+};
+
+typedef enum
+{
+    PAC193X_CFG_TYPE_CTRL,
+    PAC193X_CFG_TYPE_CHAN_DIS,
+    PAC193X_CFG_TYPE_NEG_PWR,
+    PAC193X_CFG_TYPE_SLOW
+} pac193x_cfg_type_t;
+
+static const uint8_t k_pac193x_cfg_reg_addr[] =
+{
+    [PAC193X_CFG_TYPE_CTRL]     = PAC193X_CTRL_REG,
+    [PAC193X_CFG_TYPE_CHAN_DIS] = PAC193X_CHANNEL_DIS_REG,
+    [PAC193X_CFG_TYPE_NEG_PWR]  = PAC193X_NEG_PWR_REG,
+    [PAC193X_CFG_TYPE_SLOW]     = PAC193X_SLOW_REG
+};
+
+bool pac193x_send_command(pac193x_command_type_t command_type)
+{
+    return I2C_DAP_MasterTransfer(PAC193X_ADDR, &k_pac193x_command_reg_addr[command_type], NULL, 0); 
 }
 
-static uint32_t s_duration;
-
-uint32_t get_duration(void)
+bool pac193x_init(pac193x_cfg_t *cfg)
 {
-    return s_duration;
-}
+    bool ret;
+    ret = I2C_DAP_MasterTransfer(PAC193X_ADDR, &k_pac193x_cfg_reg_addr[PAC193X_CFG_TYPE_CTRL], (uint8_t*)&cfg->ctrl_cfg, PAC193X_CFG_REG_SIZE);
 
-void pac193x_refresh(void)
-{
-    const uint8_t reg_addr = PAC193X_REFRESH_REG;
-    bool ret = true;
-    ret = I2C_DAP_MasterTransfer(PAC193X_ADDR_SEL, &reg_addr, NULL, 0);
     if (ret == false)
     {
-        error_handler();
+        return false;
     }
-}
 
-void pac193x_refresh_g(void)
-{
-    const uint8_t reg_addr = PAC193X_REFRESH_G_REG;
-    bool ret = true;
-    ret = I2C_DAP_MasterTransfer(PAC193X_ADDR_SEL, &reg_addr, NULL, 0);
+    ret = I2C_DAP_MasterTransfer(PAC193X_ADDR, &k_pac193x_cfg_reg_addr[PAC193X_CFG_TYPE_CHAN_DIS], (uint8_t*)&cfg->chan_dis_cfg, PAC193X_CFG_REG_SIZE);
+
     if (ret == false)
     {
-        error_handler();
+        return false;
     }
-}
 
-void pac193x_refresh_v(void)
-{
-    const uint8_t reg_addr = PAC193X_REFRESH_V_REG;
-    bool ret = true;
-    ret = I2C_DAP_MasterTransfer(PAC193X_ADDR_SEL, &reg_addr, NULL, 0);
+    ret = I2C_DAP_MasterTransfer(PAC193X_ADDR, &k_pac193x_cfg_reg_addr[PAC193X_CFG_TYPE_NEG_PWR], (uint8_t*)&cfg->neg_pwr_cfg, PAC193X_CFG_REG_SIZE);
+
     if (ret == false)
     {
-        error_handler();
+        return false;
     }
-}
 
-void pac193x_init(void)
-{
-    uint8_t reg_addr;
-    bool ret = true;
+    ret = I2C_DAP_MasterTransfer(PAC193X_ADDR, &k_pac193x_cfg_reg_addr[PAC193X_CFG_TYPE_SLOW], (uint8_t*)&cfg->slow_cfg, PAC193X_CFG_REG_SIZE);
 
-    reg_addr = PAC193X_CHANNEL_DIS_REG;
-    pac193x_cfg_t cfg;
-    cfg.chan_dis_cfg.val = 0;
-    cfg.chan_dis_cfg.ch2_dis = 1;
-    cfg.chan_dis_cfg.ch3_dis = 1;
-    cfg.chan_dis_cfg.ch4_dis = 1;
-    ret = I2C_DAP_MasterTransfer(PAC193X_ADDR_SEL, &reg_addr, (uint8_t*)&cfg.chan_dis_cfg, 1);
     if (ret == false)
     {
-        error_handler();
+        return false;
     }
 
-    reg_addr = PAC193X_CTRL_REG;
-    cfg.ctrl_cfg.val = 0;
-    cfg.ctrl_cfg.sample_rate = PAC193X_SAMPLE_RATE_1024;
-    ret = I2C_DAP_MasterTransfer(PAC193X_ADDR_SEL, &reg_addr, (uint8_t*)&cfg.ctrl_cfg, 1);
-    if (ret == false)
-    {
-        error_handler();
-    }
-
-    pac193x_refresh();
+    // Need to refresh to change the configuration
+    return pac193x_send_command(PAC193X_COMMAND_REFRESH);
 }
 
-bool pac193x_read_vpower_acc1(uint8_t* out)
+bool pac193x_read_reg(uint8_t reg_addr, uint8_t reg_size, uint8_t* out)
 {
-    uint8_t buf[PAC193X_ACC_POWER_BYTES];
-    const uint8_t reg_addr = PAC193X_VPOWER1ACC_REG;
-    bool ret = true;
-    ret = I2C_DAP_MasterRead(PAC193X_ADDR_SEL, &reg_addr, buf, PAC193X_ACC_POWER_BYTES);
-    if (!ret)
-    {
-      return false;
-    }
-
-    for (int i = 0; i < PAC193X_ACC_POWER_BYTES; ++i)
-    {
-      *out++ = buf[i];
-    }
-    return true;
-}
-
-uint8_t pac193x_read_product_id(void)
-{
-    uint8_t product_id;
-    const uint8_t reg_addr = PAC193X_PRODUCT_ID_REG;
-    bool ret = true;
-    ret = I2C_DAP_MasterRead(PAC193X_ADDR_SEL, &reg_addr, &product_id, 1);
-    if (ret == false)
-    {
-      return 0;
-    }
-
-    return product_id;
-}
-
-uint8_t pac193x_read_manufacturer_id(void)
-{
-    uint8_t manufacturer_id;
-    const uint8_t reg_addr = PAC193X_MANUFACTURER_ID_REG;
-    bool ret = true;
-    ret = I2C_DAP_MasterRead(PAC193X_ADDR_SEL, &reg_addr, &manufacturer_id, 1);
-    if (ret == false)
-    {
-      return 0;
-    }
-
-    return manufacturer_id;
-}
-
-uint8_t pac193x_read_revision_id(void)
-{
-    uint8_t revision_id;
-    const uint8_t reg_addr = PAC193X_REVISION_ID_REG;
-    bool ret = true;
-    ret = I2C_DAP_MasterRead(PAC193X_ADDR_SEL, &reg_addr, &revision_id, 1);
-    if (ret == false)
-    {
-      return 0;
-    }
-
-    return revision_id;
+    return I2C_DAP_MasterRead(PAC193X_ADDR, &reg_addr, out, reg_size);
 }

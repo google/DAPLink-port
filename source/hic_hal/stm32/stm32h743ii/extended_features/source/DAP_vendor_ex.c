@@ -9,7 +9,13 @@
 #include "udb_version.h"
 #include "adapter_detector.h"
 #include "pac193x.h"
+#include "udb_power_measurement.h"
 
+typedef enum
+{
+    DAP_VENDOREX_POWER_COMMAND_ARG_VOLTAGE  = 0,
+    DAP_VENDOREX_POWER_COMMAND_ARG_CURRENT  = 1
+} dap_vendorex_power_command_arg_t;
 
 /** Process DAP Vendor Command from the Extended Command range and prepare Response Data
 \param request   pointer to request data
@@ -283,37 +289,82 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
         num += 3; 
 
         break;
+    }
     case ID_DAP_VendorEx40_MEASURE_POWER:
     {
-      *response = DAP_OK;
-      pac193x_refresh();
-      num += 1;
-      break;
+        bool ret = udb_power_measurement_measure();
+
+        if (ret)
+        {
+            *response = DAP_OK;
+        }
+        else
+        {
+            *response = DAP_ERROR;
+        }
+        num += 1;
+        break;
     }
     case ID_DAP_VendorEx41_READ_POWER:
     {
-      uint8_t data_buf[PAC193X_ACC_POWER_BYTES];
-      uint32_t returnVal;
-      returnVal = pac193x_read_vpower_acc1(data_buf);
-      if (returnVal == 0x01)
-      {
-        *response++ = DAP_OK;
-      }
-      else
-      {
-        *response++ = DAP_ERROR;
-      }
-      *response++ = (returnVal & 0xFF);
-      *response++ = ((returnVal >> 8) & 0xFF);
-      *response++ = PAC193X_ACC_POWER_BYTES;
-      for (int i = 0; i < PAC193X_ACC_POWER_BYTES; i++) {
-          *response++ = data_buf[i];
-      }
+        uint8_t target_type = *request++;
+        uint8_t query_type = *request;
+        bool ret;
+        if (target_type < UDB_POWER_MEASUREMENT_TARGET_SIZE)
+        {
+            switch (query_type)
+            {
+                case DAP_VENDOREX_POWER_COMMAND_ARG_VOLTAGE:
+                {
+                    float voltage;
+                    ret = udb_power_measurement_read_voltage_v(target_type, &voltage);
+                    if (ret == false)
+                    {
+                        goto power_measurement_error;
+                    }
+                    *response++ = DAP_OK;
+                    *response++ = 2;
+                    uint8_t voltage_int = (int8_t)voltage;
+                    *response++ = voltage_int;
+                    // 2 digits after the decimal point
+                    *response++ = (int8_t)((voltage - voltage_int) * 100);
+                    num += 4;
 
-      //3 bytes read for the command, returns status byte, returnVal, length byte, and len data bytes
-      num += (3 << 16) | (4 + PAC193X_ACC_POWER_BYTES);
-
-      break;
+                    break;
+                }
+                case DAP_VENDOREX_POWER_COMMAND_ARG_CURRENT:
+                {
+                    float current;
+                    ret = udb_power_measurement_read_current_mamp(target_type, &current);
+                    if (ret == false)
+                    {
+                        goto power_measurement_error;
+                    }
+                    *response++ = DAP_OK;
+                    *response++ = 2;
+                    uint8_t current_int = (int8_t)current;
+                    *response++ = current_int;
+                    // 2 digits after the decimal point
+                    *response++ = (int8_t)((current - current_int) * 100);
+                    num += 4;
+                    break;
+                }
+                default:
+                {
+                    goto power_measurement_error;
+                }
+            }
+        }
+        else
+        {
+            goto power_measurement_error;
+        }
+            
+        break;
+power_measurement_error:
+        *response = DAP_ERROR;
+        num += 1;
+        break;
     }
     default: break;
   }

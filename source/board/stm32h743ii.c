@@ -26,6 +26,7 @@
 #include "i2c.h"
 #include "udb_version.h"
 #include "udb_extended_features_task.h"
+#include "udb_power_measurement.h"
 #endif
 
 static void prerun_board_config(void) {
@@ -33,6 +34,7 @@ static void prerun_board_config(void) {
     I2C_DAP_Initialize();
     read_udb_version();
     udb_extended_features_task_create();
+    udb_power_measurement_init();
 #endif
 }
 
