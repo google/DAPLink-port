@@ -1,0 +1,23 @@
+name: "DAPLink"
+description:
+    "Arm Mbed DAPLink is an open-source software project that enables "
+    "programming and debugging application software running on Arm Cortex CPUs. "
+    "Commonly referred to as interface firmware, DAPLink runs on a secondary "
+    "MCU that is attached to the SWD or JTAG port of the application MCU. This "
+    "configuration is found on nearly all development boards. Enumerating as a "
+    "USB composite device, it creates a bridge between your development "
+    "computer and the CPU debug access port."
+
+third_party {
+  url {
+    type: HOMEPAGE
+    value: "https://github.com/ARMmbed/DAPLink"
+  }
+  url {
+    type: GIT
+    value: "https://github.com/ARMmbed/DAPLink.git"
+  }
+  version: "0256"
+  last_upgrade_date { year: 2021 month: 10 day: 7 }
+  license_type: NOTICE
+}
