@@ -7,21 +7,22 @@
 static osThreadId_t s_udb_extended_features_task_id;
 static uint32_t s_udb_extended_features_task_cb[WORDS(sizeof(osRtxThread_t))];
 static uint64_t s_udb_extended_features_task_stack[UDB_EXTENDED_FEATURES_TASK_STACK / sizeof(uint64_t)];
-static const osThreadAttr_t k_udb_extended_features_task_attr = {
-        .name = "aux",
-        .cb_mem = s_udb_extended_features_task_cb,
-        .cb_size = sizeof(s_udb_extended_features_task_cb),
-        .stack_mem = s_udb_extended_features_task_stack,
-        .stack_size = sizeof(s_udb_extended_features_task_stack),
-        .priority = UDB_EXTENDED_FEATURES_TASK_PRIORITY,
-    };
+static const osThreadAttr_t k_udb_extended_features_task_attr =
+{
+    .name = "aux",
+    .cb_mem = s_udb_extended_features_task_cb,
+    .cb_size = sizeof(s_udb_extended_features_task_cb),
+    .stack_mem = s_udb_extended_features_task_stack,
+    .stack_size = sizeof(s_udb_extended_features_task_stack),
+    .priority = UDB_EXTENDED_FEATURES_TASK_PRIORITY,
+};
 
 static uint32_t s_timer_3s_cb[WORDS(sizeof(osRtxTimer_t))];
 static const osTimerAttr_t k_timer_3s_attr = {
-        .name = "3s",
-        .cb_mem = s_timer_3s_cb,
-        .cb_size = sizeof(s_timer_3s_cb),
-    };
+    .name = "3s",
+    .cb_mem = s_timer_3s_cb,
+    .cb_size = sizeof(s_timer_3s_cb),
+};
 
 void timer_task_3s(void * arg)
 {

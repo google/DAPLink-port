@@ -1,3 +1,13 @@
+/*
+ *  Description:
+ *    Detect UDC adapter type:
+ *      0: UDB-13-Flex
+ *      1: Joker-Flex
+ *      2: UDB-6-Flex
+ *      3: UDB-17-Flex
+ *      4: UDB-12-Flex
+ *      5: Unknown
+ */
 #include "adapter_detector.h"
 #include "stm32h743xx.h"
 #include "stm32h7xx_hal.h"

@@ -64,7 +64,8 @@ uint32_t adc_read_channel(uint32_t channelGroup, uint32_t channelNumber, uint32_
         error_handler();
     }
 
-    if (HAL_ADCEx_Calibration_Start(&s_adc_handle, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED) != HAL_OK) {
+    if (HAL_ADCEx_Calibration_Start(&s_adc_handle, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED) != HAL_OK)
+    {
         error_handler();
     }
 
