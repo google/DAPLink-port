@@ -4,14 +4,8 @@
 #include "cmsis_os2.h"
 #include "rtx_os.h"
 
-#ifndef MSC_DEBUG
-#define MSC_DEBUG
-#endif
-#include "daplink_debug.h"
-
 #define ADC_CONVERSION_TIMEOUT_MS (10)
 #define ADC_BASE ADC3
-#define ADC_MUTEX_TIMEOUT_MS (0)
 
 static ADC_HandleTypeDef s_adc_handle;
 static ADC_ChannelConfTypeDef s_chan_conf;
