@@ -14,16 +14,30 @@
 #include "stm32h7xx_hal.h"
 #include "adc.h"
 
+// Use PF4 (AF: ADC3_INP9)
 #define ADAPTER_DETECTOR_ADC_CHANNEL ADC_CHANNEL_9
 
+// The value is selected based on the average of the desired ADC value
+// of adapter type i and adapter type i+1
 static const uint16_t k_adapter_type_adc_map[] =
 {
-    [ADAPTER_UDB_13_FLEX]   = 54000,
-    [ADAPTER_JOKER_FLEX]    = 51000,
-    [ADAPTER_UDB_6_FLEX]    = 47000,
-    [ADAPTER_UDB_17_FLEX]   = 44000,
-    [ADAPTER_UDB_12_FLEX]   = 40000,
-    [ADAPTER_UNKNOWN]       = 100,
+    [ADAPTER_UDB_13_FLEX]   = 54102,
+    [ADAPTER_JOKER_FLEX]    = 50487,
+    [ADAPTER_UDB_6_FLEX]    = 46871,
+    [ADAPTER_UDB_17_FLEX]   = 43470,
+    [ADAPTER_UDB_12_FLEX]   = 40147,
+    [ADAPTER_TYPE_5]        = 36988,
+    [ADAPTER_TYPE_6]        = 33697,
+    [ADAPTER_TYPE_7]        = 30231,
+    [ADAPTER_TYPE_8]        = 26850,
+    [ADAPTER_TYPE_9]        = 23526,
+    [ADAPTER_TYPE_10]       = 20285,
+    [ADAPTER_TYPE_11]       = 17164,
+    [ADAPTER_TYPE_12]       = 14227,
+    [ADAPTER_TYPE_13]       = 11040,
+    [ADAPTER_TYPE_14]       = 7567,
+    [ADAPTER_TYPE_15]       = 5904,
+    [ADAPTER_UNKNOWN]       = 0xff,
     [ADAPTER_NONE]          = 0,
 };
 

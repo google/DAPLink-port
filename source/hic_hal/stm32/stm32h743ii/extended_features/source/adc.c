@@ -1,12 +1,30 @@
 #include "adc.h"
 #include "stm32h743xx.h"
 #include "stm32h7xx_hal.h"
+#include "cmsis_os2.h"
+#include "rtx_os.h"
+
+#ifndef MSC_DEBUG
+#define MSC_DEBUG
+#endif
+#include "daplink_debug.h"
 
 #define ADC_CONVERSION_TIMEOUT_MS (10)
 #define ADC_BASE ADC3
+#define ADC_MUTEX_TIMEOUT_MS (0)
 
 static ADC_HandleTypeDef s_adc_handle;
 static ADC_ChannelConfTypeDef s_chan_conf;
+
+static osMutexId_t s_adc_mutex_id;
+static uint32_t s_adc_mutex_cb[WORDS(sizeof(osRtxMutex_t))];
+static const osMutexAttr_t k_adc_mutex_attr = 
+{
+    .name = "adc_mutex",
+    .attr_bits = osMutexRobust,
+    .cb_mem = s_adc_mutex_cb,
+    .cb_size = sizeof(s_adc_mutex_cb)
+};
 
 static void error_handler(void)
 {
@@ -41,6 +59,12 @@ void adc_init(void)
     {
         error_handler();
     }
+
+    s_adc_mutex_id = osMutexNew(&k_adc_mutex_attr);
+    if (s_adc_mutex_id == NULL)
+    {
+        error_handler();
+    }
 }
 
 void adc_init_pins(void)
@@ -50,6 +74,13 @@ void adc_init_pins(void)
 uint32_t adc_read_channel(uint32_t channelGroup, uint32_t channelNumber, uint32_t channelMux)
 {
     uint16_t adc_value;
+    osStatus_t  status;
+
+    status = osMutexAcquire(s_adc_mutex_id, osWaitForever);
+    if (status != osOK)
+    {
+        error_handler();
+    }
 
     s_chan_conf.Channel = channelNumber;
     s_chan_conf.Rank = ADC_REGULAR_RANK_1;
@@ -83,6 +114,12 @@ uint32_t adc_read_channel(uint32_t channelGroup, uint32_t channelNumber, uint32_
     }
 
     if (HAL_ADC_Stop(&s_adc_handle) != HAL_OK) 
+    {
+        error_handler();
+    }
+
+    status = osMutexRelease(s_adc_mutex_id);
+    if (status != osOK)
     {
         error_handler();
     }

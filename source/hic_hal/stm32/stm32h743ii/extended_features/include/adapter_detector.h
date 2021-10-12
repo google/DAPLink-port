@@ -5,13 +5,24 @@
 
 typedef enum
 {
-    ADAPTER_UDB_13_FLEX,
-    ADAPTER_JOKER_FLEX,
-    ADAPTER_UDB_6_FLEX,
-    ADAPTER_UDB_17_FLEX,
-    ADAPTER_UDB_12_FLEX,
-    ADAPTER_UNKNOWN,
-    ADAPTER_NONE
+    ADAPTER_UDB_13_FLEX     = 0,
+    ADAPTER_JOKER_FLEX      = 1,
+    ADAPTER_UDB_6_FLEX      = 2,
+    ADAPTER_UDB_17_FLEX     = 3,
+    ADAPTER_UDB_12_FLEX     = 4,
+    ADAPTER_TYPE_5          = 5,
+    ADAPTER_TYPE_6          = 6,
+    ADAPTER_TYPE_7          = 7,
+    ADAPTER_TYPE_8          = 8,
+    ADAPTER_TYPE_9          = 9,
+    ADAPTER_TYPE_10         = 10,
+    ADAPTER_TYPE_11         = 11,
+    ADAPTER_TYPE_12         = 12,
+    ADAPTER_TYPE_13         = 13,
+    ADAPTER_TYPE_14         = 14,
+    ADAPTER_TYPE_15         = 15,
+    ADAPTER_UNKNOWN         = 16,
+    ADAPTER_NONE            = 17
 } adapter_type_t;
 
 void adapter_detector_update_adapter_type_adc(void);
