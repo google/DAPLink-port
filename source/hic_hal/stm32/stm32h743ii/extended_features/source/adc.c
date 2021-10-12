@@ -3,6 +3,7 @@
 #include "stm32h7xx_hal.h"
 #include "cmsis_os2.h"
 #include "rtx_os.h"
+#include "util.h"
 
 #define ADC_CONVERSION_TIMEOUT_MS (10)
 #define ADC_BASE ADC3

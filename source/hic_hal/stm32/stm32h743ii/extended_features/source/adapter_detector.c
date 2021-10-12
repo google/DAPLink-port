@@ -37,6 +37,7 @@ static const uint16_t k_adapter_type_adc_map[] =
     [ADAPTER_TYPE_13]       = 11040,
     [ADAPTER_TYPE_14]       = 7567,
     [ADAPTER_TYPE_15]       = 5904,
+    // 0xff is an arbitrarily chosen low value between 0 and adapter type 15
     [ADAPTER_UNKNOWN]       = 0xff,
     [ADAPTER_NONE]          = 0,
 };
