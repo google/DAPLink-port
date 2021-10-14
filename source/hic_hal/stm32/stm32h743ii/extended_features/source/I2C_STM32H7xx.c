@@ -42,21 +42,21 @@
  *  Version 1.0
  *    Initial release
  */
- 
- /*! \page stm32h7_i2c CMSIS-Driver I2C Setup 
+
+ /*! \page stm32h7_i2c CMSIS-Driver I2C Setup
 
 The CMSIS-Driver I2C requires:
   - Setup of I2Cx input clock
   - Setup of I2Cx in I2C mode with optional DMA for Rx and Tx transfers
- 
+
 The example below uses correct settings for STM32H743I-EVAL:
   - I2C1 Mode: I2C
 
 For different boards, refer to the hardware schematics to reflect correct setup values.
 
-The STM32CubeMX configuration steps for Pinout, Clock, and System Configuration are 
+The STM32CubeMX configuration steps for Pinout, Clock, and System Configuration are
 listed below. Enter the values that are marked \b bold.
-   
+
 Pinout tab
 ----------
   1. Configure mode
@@ -104,7 +104,7 @@ Configuration tab
 
      - Parameter Settings: not used
      - User Constants: not used
-   
+
      Click \b OK to close the I2C1 Configuration dialog
 */
 
@@ -151,7 +151,7 @@ static const ARM_DRIVER_VERSION DriverVersion = {
 };
 
 /* Driver Capabilities */
-static const ARM_I2C_CAPABILITIES DriverCapabilities = { 
+static const ARM_I2C_CAPABILITIES DriverCapabilities = {
   0U                    // Does not support 10-bit addressing
 #if (I2C_API_PADDING_EN != 0U)
 , 0U                    // Reserved bits
@@ -417,7 +417,7 @@ static uint32_t I2C_GetKernelClock (I2C_TypeDef *i2c) {
   else if ((src == RCC_I2C1CLKSOURCE_PLL3) || (src == RCC_I2C4CLKSOURCE_PLL3)) {
     /* Get PLL3 frequencies */
     HAL_RCCEx_GetPLL3ClockFreq(&pll3);
-    
+
     /* I2C kernel clock runs from PLL3 R divider */
     clk = pll3.PLL3_R_Frequency;
   }
@@ -440,7 +440,7 @@ static int32_t I2C_GetSCLRatio (I2C_CLK_SETUP *setup, I2C_STD_TIME *spec, I2C_TI
   uint32_t tscl, tscll, tsclh;
   uint32_t scll, sclh;
   int32_t  err;
-  
+
   /* Set minimum bus clock frequency to 80% of max */
   clk_min = (spec->clk_max * 80) / 100;
 
@@ -504,7 +504,7 @@ static uint32_t I2C_GetTimingValue (I2C_CLK_SETUP *setup, I2C_STD_TIME *spec) {
 
   /* SDADEL (max) */
   val = (int32_t)(spec->vddat_max - spec->tr_max - setup->afd_max - ((dnf_en + 4) * setup->i2cclk));
-  
+
   if (val > 0) {
     sdadel_max = (uint32_t)val;
   } else {
@@ -603,7 +603,7 @@ static int32_t I2C_Initialize (ARM_I2C_SignalEvent_t cb_event, I2C_RESOURCES *i2
   if (i2c->info->flags & I2C_INIT) { return ARM_DRIVER_OK; }
 
   i2c->h->Instance = i2c->reg;
-  
+
   i2c->h->Init.Timing           = 0U;
   i2c->h->Init.OwnAddress1      = 0U;
   i2c->h->Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
@@ -675,7 +675,7 @@ static int32_t I2C_PowerControl (ARM_POWER_STATE state, I2C_RESOURCES *i2c) {
       if ((i2c->info->flags & I2C_POWER) != 0U) {
         return ARM_DRIVER_OK;
       }
-      
+
       if (HAL_I2C_Init (i2c->h) != HAL_OK) {
         return ARM_DRIVER_ERROR;
       }
@@ -690,7 +690,7 @@ static int32_t I2C_PowerControl (ARM_POWER_STATE state, I2C_RESOURCES *i2c) {
       if (HAL_I2CEx_ConfigAnalogFilter (i2c->h, val) != HAL_OK) {
         return ARM_DRIVER_ERROR;
       }
-      
+
       /* Configure digital noise filter */
       if (HAL_I2CEx_ConfigDigitalFilter (i2c->h, i2c->dnf_coef) != HAL_OK) {
         return ARM_DRIVER_ERROR;
@@ -957,7 +957,7 @@ static int32_t I2C_SlaveReceive (uint8_t *data, uint32_t num, I2C_RESOURCES *i2c
 
   i2c->info->status.bus_error    = 0U;
   i2c->info->status.general_call = 0U;
-  
+
   i2c->info->flags   = I2C_XFER_SET;
   i2c->info->xfer_sz = cnt;
 
@@ -1033,7 +1033,7 @@ static int32_t I2C_Control (uint32_t control, uint32_t arg, I2C_RESOURCES *i2c) 
           /* Own address is a 7-bit address */
           i2c->h->Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
         }
-        
+
         i2c->h->Init.OwnAddress1 = (arg << 1) & 0x03FFU;
 
         HAL_I2C_Init (i2c->h);
@@ -1053,7 +1053,7 @@ static int32_t I2C_Control (uint32_t control, uint32_t arg, I2C_RESOURCES *i2c) 
           clk_spec = &i2c_spec_fast;
           fscl = 400000;
           break;
-        
+
         case ARM_I2C_BUS_SPEED_FAST_PLUS: /* Clock = 1MHz */
           clk_spec = &i2c_spec_fast_plus;
           fscl = 1000000;
@@ -1069,14 +1069,14 @@ static int32_t I2C_Control (uint32_t control, uint32_t arg, I2C_RESOURCES *i2c) 
 
       /* Determine digital filter delay (ns) */
       clk_setup.dfd = clk_setup.i2cclk * i2c->dnf_coef;
-      
+
       /* Set analog filter delay (ns) */
       clk_setup.afd_min = ((i2c->anf_enable != 0U) ? (I2C_ANALOG_FILTER_DELAY_MIN) : (0));
       clk_setup.afd_max = ((i2c->anf_enable != 0U) ? (I2C_ANALOG_FILTER_DELAY_MAX) : (0));
 
       /* Set max iteration error */
       clk_setup.error  = 0xFFFF;
-      
+
       /* Get TIMING register values */
       val = I2C_GetTimingValue (&clk_setup, clk_spec);
 
@@ -1135,7 +1135,7 @@ static int32_t I2C_Control (uint32_t control, uint32_t arg, I2C_RESOURCES *i2c) 
       GPIO_InitStruct.Alternate = i2c->io.sda_af;
 
       HAL_GPIO_Init (i2c->io.sda_port, &GPIO_InitStruct);
-      
+
       if (i2c->info->cb_event != NULL) {
         i2c->info->cb_event (ARM_I2C_EVENT_BUS_CLEAR);
       }
@@ -1216,7 +1216,7 @@ void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) {
 void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, uint16_t AddrMatchCode) {
   I2C_RESOURCES *i2c;
   uint32_t event;
-  
+
   i2c = I2C_GetResources (hi2c);
 
   if (i2c != NULL) {
