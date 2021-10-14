@@ -21,14 +21,22 @@
 
 #include "target_family.h"
 #include "target_board.h"
+
+#ifdef UDB
 #include "i2c.h"
 #include "udb_version.h"
+#include "udb_extended_features_task.h"
+#endif
 
 static void prerun_board_config(void) {
+#ifdef UDB
     I2C_DAP_Initialize();
     read_udb_version();
+    udb_extended_features_task_create();
+#endif
 }
 
+#ifdef UDB
 uint32_t count_blink = 0;
 
 void board_30ms_hook()
@@ -39,6 +47,7 @@ void board_30ms_hook()
         HAL_GPIO_TogglePin( CONNECTED_LED_PORT, CONNECTED_LED_PIN);
     }
 }
+#endif
 
 const board_info_t g_board_info = {
     .info_version = kBoardInfoVersion,

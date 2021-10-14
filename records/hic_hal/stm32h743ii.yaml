@@ -11,7 +11,9 @@ common:
         - __packed=__packed          # Prevent redefinition of __packed with ARMCC
         - DAPLINK_NO_ASSERT_FILENAMES
         - OS_CLOCK=64000000
+        - OS_ROBIN_ENABLE=1
         - UDB_VERSION="0.9.0"
+        - UDB
     includes:
         - source/hic_hal/stm32/stm32h743ii
         - source/hic_hal/stm32/stm32h743ii/cmsis
