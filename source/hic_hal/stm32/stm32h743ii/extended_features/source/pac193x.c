@@ -32,7 +32,7 @@ bool pac193x_send_command(pac193x_command_type_t command_type)
     return I2C_DAP_MasterTransfer(PAC193X_ADDR, &k_pac193x_command_reg_addr[command_type], NULL, 0); 
 }
 
-bool pac193x_init(pac193x_cfg_t *cfg)
+bool pac193x_init(const pac193x_cfg_t *cfg)
 {
     bool ret;
     ret = I2C_DAP_MasterTransfer(PAC193X_ADDR, &k_pac193x_cfg_reg_addr[PAC193X_CFG_TYPE_CTRL], (uint8_t*)&cfg->ctrl_cfg, PAC193X_CFG_REG_SIZE);

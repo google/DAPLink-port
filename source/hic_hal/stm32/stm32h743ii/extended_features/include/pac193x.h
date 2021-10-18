@@ -60,6 +60,7 @@ typedef enum
 #define PAC193X_VBUSN_AVG_REG_SIZE      (2)
 #define PAC193X_VSENSEN_AVG_REG_SIZE    (2)
 #define PAC193X_VPOWERN_AVG_REG_SIZE    (4)
+#define PAC193X_DEFAULT_REG_SIZE        (1)
 
 typedef union
 {
@@ -157,13 +158,14 @@ typedef enum
     PAC193X_COMMAND_REFRESH_V   = 1,
     PAC193X_COMMAND_REFRESH_G   = 2,
 
+    // This is not a real command, it represents how many commands there are.
     PAC193X_COMMAND_SIZE        = 3,
 } pac193x_command_type_t;
 
-#define PAC193X_FULL_SCALE_VOLTAGE_V    (32.0f)
-#define PAC193X_FULL_SCALE_RANGE_MV     (100.0f)
+#define PAC193X_FULL_SCALE_VOLTAGE_MV   (32000)
+#define PAC193X_FULL_SCALE_RANGE_MV     (100)
 
-bool pac193x_init(pac193x_cfg_t* cfg);
+bool pac193x_init(const pac193x_cfg_t* cfg);
 bool pac193x_send_command(pac193x_command_type_t command_type);
 bool pac193x_read_reg(uint8_t reg_addr, uint8_t reg_size, uint8_t* out);
 

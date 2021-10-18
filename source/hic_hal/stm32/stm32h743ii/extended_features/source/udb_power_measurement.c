@@ -5,10 +5,10 @@
 
 static pac193x_cfg_t s_udb_power_measurement_cfg;
 
-static const float k_udb_power_measurement_resister[] =
+static const uint8_t k_udb_power_measurement_resistor_mohm[] =
 {
-    [UDB_POWER_MEASUREMENT_TARGET_UDB] = 0.015f,
-    [UDB_POWER_MEASUREMENT_TARGET_DUT] = 0.015f
+    [UDB_POWER_MEASUREMENT_TARGET_UDB] = 15,
+    [UDB_POWER_MEASUREMENT_TARGET_DUT] = 15
 };
 
 bool udb_power_measurement_init(void)
@@ -43,7 +43,7 @@ static const uint8_t k_udb_power_measurement_current_reg[] =
 
 #define UDB_POWER_MEASUREMENT_DENOMINATOR       (1<<16)
 
-bool udb_power_measurement_read_voltage_v(udb_power_measurement_target_t target, float *out)
+bool udb_power_measurement_read_voltage_mv(udb_power_measurement_target_t target, uint16_t *out)
 {
     uint8_t vbus_reg[PAC193X_VBUSN_REG_SIZE];
     
@@ -60,12 +60,12 @@ bool udb_power_measurement_read_voltage_v(udb_power_measurement_target_t target,
         vbus = vbus * (1<<8) + vbus_reg[i];
     }
 
-    *out = PAC193X_FULL_SCALE_VOLTAGE_V * ((float)vbus) / UDB_POWER_MEASUREMENT_DENOMINATOR;
+    *out = (uint16_t)(PAC193X_FULL_SCALE_VOLTAGE_MV * vbus / UDB_POWER_MEASUREMENT_DENOMINATOR);
 
     return true;
 }
 
-bool udb_power_measurement_read_current_mamp(udb_power_measurement_target_t target, float *out)
+bool udb_power_measurement_read_current_microamp(udb_power_measurement_target_t target, uint32_t *out)
 {
     uint8_t vsense_reg[PAC193X_VSENSEN_REG_SIZE];
 
@@ -82,8 +82,10 @@ bool udb_power_measurement_read_current_mamp(udb_power_measurement_target_t targ
         vsense = vsense * (1<<8) + vsense_reg[i];
     }
 
-    float full_scale_current_mamp = PAC193X_FULL_SCALE_RANGE_MV / k_udb_power_measurement_resister[target];
-    *out = full_scale_current_mamp * ((float)vsense) / UDB_POWER_MEASUREMENT_DENOMINATOR;
+    // full_scale_range (mV) * 1000000 / R (mOhm) = full_scale_current(micro A)
+
+    uint32_t full_scale_current = PAC193X_FULL_SCALE_RANGE_MV * 1000000 / k_udb_power_measurement_resistor_mohm[target];
+    *out = full_scale_current * vsense / UDB_POWER_MEASUREMENT_DENOMINATOR;
 
     return true;
 }

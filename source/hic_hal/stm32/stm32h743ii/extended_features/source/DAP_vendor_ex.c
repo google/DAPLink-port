@@ -8,7 +8,6 @@
 #include "DAP_config.h"
 #include "udb_version.h"
 #include "adapter_detector.h"
-#include "pac193x.h"
 #include "udb_power_measurement.h"
 
 typedef enum
@@ -316,37 +315,33 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
             {
                 case DAP_VENDOREX_POWER_COMMAND_ARG_VOLTAGE:
                 {
-                    float voltage;
-                    ret = udb_power_measurement_read_voltage_v(target_type, &voltage);
+                    uint16_t voltage;
+                    ret = udb_power_measurement_read_voltage_mv(target_type, &voltage);
                     if (ret == false)
                     {
                         goto power_measurement_error;
                     }
                     *response++ = DAP_OK;
-                    *response++ = 2;
-                    uint8_t voltage_int = (int8_t)voltage;
-                    *response++ = voltage_int;
-                    // 2 digits after the decimal point
-                    *response++ = (int8_t)((voltage - voltage_int) * 100);
-                    num += 4;
+                    *response++ = (voltage & 0xFF);
+                    *response++ = ((voltage >> 8) & 0xFF);
+                    num += 3;
 
                     break;
                 }
                 case DAP_VENDOREX_POWER_COMMAND_ARG_CURRENT:
                 {
-                    float current;
-                    ret = udb_power_measurement_read_current_mamp(target_type, &current);
+                    uint32_t current;
+                    ret = udb_power_measurement_read_current_microamp(target_type, &current);
                     if (ret == false)
                     {
                         goto power_measurement_error;
                     }
                     *response++ = DAP_OK;
-                    *response++ = 2;
-                    uint8_t current_int = (int8_t)current;
-                    *response++ = current_int;
-                    // 2 digits after the decimal point
-                    *response++ = (int8_t)((current - current_int) * 100);
-                    num += 4;
+                    *response++ = (current & 0xFF);
+                    *response++ = ((current >> 8) & 0xFF);
+                    *response++ = ((current >> 16) & 0xFF);
+                    *response++ = ((current >> 24) & 0xFF);
+                    num += 5;
                     break;
                 }
                 default:
