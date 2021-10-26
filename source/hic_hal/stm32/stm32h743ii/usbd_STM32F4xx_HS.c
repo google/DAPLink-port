@@ -297,8 +297,6 @@ void USBD_Init (void) {
   //OTG->DCFG       &= ~3;                /* High speed phy                     */
 	USBx_DEVICE->DCFG       &= ~3;                /* High speed phy                     */
 
-	//TESTING, elee: set to "01: Full speed using HS" for testing.  The line above clears the 2 lower bits, this sets the lowest bit.
-	USBx_DEVICE->DCFG				|= 1;
 
 
 #else
