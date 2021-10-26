@@ -27,25 +27,27 @@
 #include "udb_version.h"
 #include "udb_extended_features_task.h"
 
-static void prerun_board_config(void) {
+static uint32_t s_count_blink = 0;
+
+static void prerun_board_config(void)
+{
     I2C_DAP_Initialize();
-    read_udb_version();
+    udb_read_hw_version();
     udb_extended_features_task_create();
 }
 
-uint32_t count_blink = 0;
-
 void board_30ms_hook()
 {
-    count_blink++;
-    if ((count_blink % 50) == 0)
+    s_count_blink++;
+    if ((s_count_blink % 50) == 0)
     {
         HAL_GPIO_TogglePin( CONNECTED_LED_PORT, CONNECTED_LED_PIN);
     }
 }
 #endif // UDB
 
-const board_info_t g_board_info = {
+const board_info_t g_board_info =
+{
     .info_version = kBoardInfoVersion,
     .board_id = "0000",
     .family_id = kStub_HWReset_FamilyID,
