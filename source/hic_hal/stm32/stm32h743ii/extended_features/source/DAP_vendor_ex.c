@@ -8,6 +8,9 @@
 #include "DAP_config.h"
 #include "udb_version.h"
 #include "adapter_detector.h"
+#include "udb_reset.h"
+
+#define UDB_RESET_TIMER_MS   (500)
 
 
 /** Process DAP Vendor Command from the Extended Command range and prepare Response Data
@@ -263,12 +266,11 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
     }
     case ID_DAP_VendorEx38_RESET_DAPLINK:
     {
-        // Request to reset the UDB. PyOCD will crash.
+        // Request to reset the UDB.
         *response = DAP_OK;
 
-        SystemReset();
-        // We should be resetting here
-        while(1){};
+        udb_reset_async(UDB_RESET_TIMER_MS);
+
         num += 1;
         break;
     }
