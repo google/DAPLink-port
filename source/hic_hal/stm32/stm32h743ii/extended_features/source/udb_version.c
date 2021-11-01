@@ -3,76 +3,76 @@
  * Yang-te Chen
  * yangtechen@google.com
  * September 7, 2021
- * 
+ *
  */
 
 #include <string.h>
+#include <stdio.h>
 #include "udb_version.h"
 #include "version_git.h"
 #include "DAP_config.h"
 #include "IO_Config.h"
 
+#define UDB_MAJOR_VERSION       "0"
+#define UDB_MINOR_VERSION       "9"
+
+#ifndef UDB_BUILD_NUMBER
+// zero for local builds and the CI build will define the appropriate build numbers
+#define UDB_BUILD_NUMBER        "0"
+#endif
 
 #if GIT_LOCAL_MODS == 1
-#define GIT_LOCAL_MODS_STR "_modified"
+#define GIT_LOCAL_MODS_STR      "_modified"
 #else
-#define GIT_LOCAL_MODS_STR ""
-#endif //GIT_LOCAL_MODS
+#define GIT_LOCAL_MODS_STR      ""
+#endif // GIT_LOCAL_MODS
 
-#define STR_IMPL_(x) #x      //stringify argument
-#define STR(x) STR_IMPL_(x)  //indirection to expand argument macros
+#define PIN_UDB_HW_VERSION_PORT GPIOG
+#define PIN_UDB_HW_VERSION      GPIO_PIN_15
 
-/*
- * Read UDB version from GPIO PG15 with weak pull-up register enabled
- * Prerequisite: initialize GPIO PG15 at gpio_init() in gpio.c
- */
-
-static char s_udb_version[DAP_PACKET_SIZE-1];
-static char s_build_version_str[] = "udb_" STR(UDB_VERSION) "_" GIT_COMMIT_SHA GIT_LOCAL_MODS_STR "_p";
-
-static void busy_wait(uint32_t cycles)
+typedef enum
 {
-    volatile uint32_t i;
-    i = cycles;
+    HW_VERSION_UNKNOWN,
+    HW_VERSION_P1,
+    HW_VERSION_P2,
+} hw_version_t;
 
-    while (i > 0) {
-        i--;
+static const char s_build_version_str[] = "udb_" UDB_MAJOR_VERSION "." UDB_MINOR_VERSION "d" UDB_BUILD_NUMBER "_" GIT_DESCRIPTION GIT_LOCAL_MODS_STR "_hw:";
+static hw_version_t s_hw_version = HW_VERSION_UNKNOWN;
+
+static bool is_hw_version_p1(void)
+{
+    uint8_t len;
+    GPIO_InitTypeDef GPIO_InitStructure;
+    GPIO_PinState bitstatus;
+    GPIO_InitStructure.Pin = PIN_UDB_HW_VERSION;
+    GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStructure.Pull = GPIO_PULLUP;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(PIN_UDB_HW_VERSION_PORT, &GPIO_InitStructure);
+
+    HAL_Delay(osKernelGetTickFreq() / 50); // 10ms for GPIO stabilization
+
+    bitstatus = HAL_GPIO_ReadPin(PIN_UDB_HW_VERSION_PORT, PIN_UDB_HW_VERSION);
+    HAL_GPIO_DeInit(PIN_UDB_HW_VERSION_PORT, PIN_UDB_HW_VERSION);
+
+    return bitstatus != GPIO_PIN_RESET;
+}
+
+void udb_read_hw_version(void)
+{
+    if (is_hw_version_p1())
+    {
+        s_hw_version = HW_VERSION_P1;
+    }
+    else
+    {
+        // Todo: read ADC to further differentiate P2, EVT, DVT...
+        s_hw_version = HW_VERSION_P2;
     }
 }
 
-void read_udb_version(void)
+int udb_get_version(uint8_t *buffer, unsigned size)
 {
-  // Initialize PG5, this is used to decide UDB is P1 or P2
-  GPIO_InitTypeDef GPIO_InitStructure;
-  GPIO_InitStructure.Pin = PIN_UDB_VERSION;
-  GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStructure.Pull = GPIO_PULLUP;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(PIN_UDB_VERSION_PORT, &GPIO_InitStructure);
-
-  busy_wait(1000000);
-
-  GPIO_PinState bitstatus;
-  uint8_t len;
-
-  len = strlen(s_build_version_str);
-  memset(s_udb_version, 0, sizeof(s_udb_version));
-  strcat(s_udb_version, s_build_version_str);
-  bitstatus = HAL_GPIO_ReadPin(PIN_UDB_VERSION_PORT, PIN_UDB_VERSION);
-
-  if (bitstatus == GPIO_PIN_RESET)
-  {
-    s_udb_version[len] = '2';
-  }
-  else
-  {
-    s_udb_version[len] = '1';
-  }
+    return snprintf(buffer, size, "%s%d", s_build_version_str, s_hw_version);
 }
-
-const char *get_udb_version(void)
-{
-  return s_udb_version;
-}
-
-

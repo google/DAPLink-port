@@ -239,20 +239,9 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
     }
     case ID_DAP_VendorEx36_VERSION_DETAILS: {
         // Add a more specific internal version string.
-        const char *udb_version = get_udb_version();
-        uint8_t len = strlen(udb_version);
-
-        uint8_t data_buf[DAP_PACKET_SIZE-1] = { 0 };
-
-        *response++ = len;
-
-        memcpy(data_buf, udb_version, len);
-        num += (len + 1); // increment response count by ID length + length byte
-
-        for (int i = 0; i < (DAP_PACKET_SIZE-2); i++) {
-            *response++ = data_buf[i];
-        }
-
+        *response++ = DAP_OK;
+        uint8_t len = udb_get_version(response, DAP_PACKET_SIZE - 1);
+        num += len + 1;
         break;
     }
     case ID_DAP_VendorEx37_HOLD_IN_BL:
@@ -281,7 +270,7 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
         *response++ = 1;
         *response++ = type;
 
-        num += 3; 
+        num += 3;
 
         break;
     }
