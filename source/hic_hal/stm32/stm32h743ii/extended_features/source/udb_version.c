@@ -51,7 +51,7 @@ static bool is_hw_version_p1(void)
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(PIN_UDB_HW_VERSION_PORT, &GPIO_InitStructure);
 
-    HAL_Delay(osKernelGetTickFreq() / 50); // 10ms for GPIO stabilization
+    HAL_Delay(10); // 10ms for GPIO stabilization
 
     bitstatus = HAL_GPIO_ReadPin(PIN_UDB_HW_VERSION_PORT, PIN_UDB_HW_VERSION);
     HAL_GPIO_DeInit(PIN_UDB_HW_VERSION_PORT, PIN_UDB_HW_VERSION);
