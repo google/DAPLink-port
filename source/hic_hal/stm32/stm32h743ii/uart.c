@@ -20,102 +20,107 @@
  */
 
 #include "string.h"
-
 #include "stm32h7xx.h"
 #include "uart.h"
 #include "gpio.h"
 #include "util.h"
 #include "circ_buf.h"
 #include "IO_Config.h"
+#include "settings.h"
+#include "stm32h7xx_hal_uart_ex.h"
 
-//#include "stm32h7xx_hal.h"  //elee: porting to h7
+#define CDC_UART                    USART3
+#define CDC_UART_ENABLE()           __HAL_RCC_USART3_CLK_ENABLE()
+#define CDC_UART_DISABLE()          __HAL_RCC_USART3_CLK_DISABLE()
+#define CDC_UART_IRQn               USART3_IRQn
+#define CDC_UART_IRQn_Handler       USART3_IRQHandler
 
-/*
-// UDB: UART4, on the AUX connector (for bringup).
-// pd1=UART4_TX pd0=UART4_RX
-#define CDC_UART                     UART4
-#define CDC_UART_ENABLE()            __HAL_RCC_UART4_CLK_ENABLE()
-#define CDC_UART_DISABLE()           __HAL_RCC_UART4_CLK_DISABLE()
-#define CDC_UART_IRQn                UART4_IRQn
-#define CDC_UART_IRQn_Handler        UART4_IRQHandler
+#define CDC_UART_RXFIFO_THRESHOLD   UART_RXFIFO_THRESHOLD_3_4
 
-#define UART_PINS_PORT_ENABLE()      __HAL_RCC_GPIOD_CLK_ENABLE()
-#define UART_PINS_PORT_DISABLE()     __HAL_RCC_GPIOD_CLK_DISABLE()
+#define UART_PINS_PORT_ENABLE()     __HAL_RCC_GPIOD_CLK_ENABLE()
+#define UART_PINS_PORT_DISABLE()    __HAL_RCC_GPIOD_CLK_DISABLE()
 
-#define UART_ALTFUNC                 GPIO_AF8_UART4  //Select the correct alt func
+#define UART_ALTFUNC                GPIO_AF7_USART3  //Select the correct alt func
 
-#define UART_TX_PORT                 GPIOD
-#define UART_TX_PIN                  GPIO_PIN_1
+#define UART_TX_PORT                GPIOD
+#define UART_TX_PIN                 GPIO_PIN_8
 
-#define UART_RX_PORT                 GPIOD
-#define UART_RX_PIN                  GPIO_PIN_0
-*/
+#define UART_RX_PORT                GPIOD
+#define UART_RX_PIN                 GPIO_PIN_9
 
+#define CDC_UART_BAUDRATE_DEFAULT   (115200)
 
-// UDB: USART3, UART0_MCU_UDC_TXD or UART0_UDC_TXD
-// pd8=USART3_TX pd9=USART3_RX
-#define CDC_UART                     USART3
-#define CDC_UART_ENABLE()            __HAL_RCC_USART3_CLK_ENABLE()
-#define CDC_UART_DISABLE()           __HAL_RCC_USART3_CLK_DISABLE()
-#define CDC_UART_IRQn                USART3_IRQn
-#define CDC_UART_IRQn_Handler        USART3_IRQHandler
+#define RX_OVRF_MSG                 "<DAPLink:Overflow>\n"
+#define RX_OVRF_MSG_SIZE            (sizeof(RX_OVRF_MSG) - 1)
 
-#define UART_PINS_PORT_ENABLE()      __HAL_RCC_GPIOD_CLK_ENABLE()
-#define UART_PINS_PORT_DISABLE()     __HAL_RCC_GPIOD_CLK_DISABLE()
+// This buffer size should be power of two.
+#define BUFFER_SIZE                 (512)
+COMPILER_ASSERT((BUFFER_SIZE > 0U) && ((BUFFER_SIZE & (BUFFER_SIZE - 1U)) == 0U));
 
-#define UART_ALTFUNC                 GPIO_AF7_USART3  //Select the correct alt func
+static circ_buf_t s_write_buffer;
+static uint8_t s_write_buffer_data[BUFFER_SIZE];
+static circ_buf_t s_read_buffer;
+static uint8_t s_read_buffer_data[BUFFER_SIZE];
 
-#define UART_TX_PORT                 GPIOD
-#define UART_TX_PIN                  GPIO_PIN_8
-
-#define UART_RX_PORT                 GPIOD
-#define UART_RX_PIN                  GPIO_PIN_9
-
-//ToDo(elee): CTS/RTS not used on main UDC uarts.  How to ensure they are not used?  Just don't set the Alternate function?
-// Just choose one of the possible pins for CTS/RTS for usart3 for now.
-#define UART_CTS_PORT                GPIOD
-#define UART_CTS_PIN                 GPIO_PIN_11
-
-#define UART_RTS_PORT                GPIOD
-#define UART_RTS_PIN                 GPIO_PIN_12
-
-
-#define RX_OVRF_MSG         "<DAPLink:Overflow>\n"
-#define RX_OVRF_MSG_SIZE    (sizeof(RX_OVRF_MSG) - 1)
-#define BUFFER_SIZE         (512)
-
-static circ_buf_t write_buffer;
-static uint8_t write_buffer_data[BUFFER_SIZE];
-static circ_buf_t read_buffer;
-static uint8_t read_buffer_data[BUFFER_SIZE];
-
-static UART_Configuration configuration = {
-    .Baudrate = 9600,
+static UART_Configuration s_configuration =
+{
+    .Baudrate = CDC_UART_BAUDRATE_DEFAULT,
     .DataBits = UART_DATA_BITS_8,
     .Parity = UART_PARITY_NONE_DAPLINK,
     .StopBits = UART_STOP_BITS_1,
     .FlowControl = UART_FLOW_CONTROL_NONE,
 };
 
-extern uint32_t SystemCoreClock;
+static UART_HandleTypeDef s_uart_handle;
 
-
+static void error_handler(void)
+{
+    while (1)
+    {
+    }
+}
 
 static void clear_buffers(void)
 {
-    circ_buf_init(&write_buffer, write_buffer_data, sizeof(write_buffer_data));
-    circ_buf_init(&read_buffer, read_buffer_data, sizeof(read_buffer_data));
+    circ_buf_init(&s_write_buffer, s_write_buffer_data, sizeof(s_write_buffer_data));
+    circ_buf_init(&s_read_buffer, s_read_buffer_data, sizeof(s_read_buffer_data));
+}
+
+static void uart_read_from_fifo_in_isr(void)
+{
+    uint16_t size = circ_buf_count_free(&s_read_buffer);
+    uint8_t data;
+    while (CDC_UART->ISR & USART_ISR_RXNE_RXFNE)
+    {
+        data = CDC_UART->RDR;
+        if (size > RX_OVRF_MSG_SIZE)
+        {
+            circ_buf_push(&s_read_buffer, data);
+        }
+        else if (config_get_overflow_detect())
+        {
+            if (RX_OVRF_MSG_SIZE == size)
+            {
+                circ_buf_write(&s_read_buffer, (uint8_t*)RX_OVRF_MSG, RX_OVRF_MSG_SIZE);
+            }
+            else
+            {
+                // drop characters
+            }
+            break;
+        }
+        else
+        {
+            // drop characters
+            break;
+        }
+        --size;
+    }
 }
 
 int32_t uart_initialize(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
-
-    CDC_UART->CR1 &= ~(USART_ISR_TXE_TXFNF | USART_ISR_RXNE_RXFNE);
-    //Disable interrupt on framing, noise, overrun errors (until they are
-    // handled in IRS)
-    CDC_UART->CR3 &= ~USART_CR3_EIE;
-    clear_buffers();
 
     CDC_UART_ENABLE();
     UART_PINS_PORT_ENABLE();
@@ -124,32 +129,22 @@ int32_t uart_initialize(void)
     GPIO_InitStructure.Pin = UART_TX_PIN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-	  GPIO_InitStructure.Pull = GPIO_NOPULL;
-	  GPIO_InitStructure.Alternate = UART_ALTFUNC;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Alternate = UART_ALTFUNC;
     HAL_GPIO_Init(UART_TX_PORT, &GPIO_InitStructure);
+
     //RX pin
     GPIO_InitStructure.Pin = UART_RX_PIN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStructure.Pull = GPIO_PULLUP;
-	  GPIO_InitStructure.Alternate = UART_ALTFUNC;
-    HAL_GPIO_Init(UART_RX_PORT, &GPIO_InitStructure);
-    //CTS pin, input
-    GPIO_InitStructure.Pin = UART_CTS_PIN;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
-    GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStructure.Pull = GPIO_PULLUP;
-    //GPIO_InitStructure.Alternate = UART_ALTFUNC;  //cts is not used?
-    HAL_GPIO_Init(UART_CTS_PORT, &GPIO_InitStructure);
-    //RTS pin, output low
-    HAL_GPIO_WritePin(UART_RTS_PORT, UART_RTS_PIN, GPIO_PIN_RESET);
-    GPIO_InitStructure.Pin = UART_RTS_PIN;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
-    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStructure.Pull = GPIO_NOPULL;
-    //GPIO_InitStructure.Alternate = UART_ALTFUNC;  //rts is not used?
-    HAL_GPIO_Init(UART_RTS_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Alternate = UART_ALTFUNC;
 
+    HAL_GPIO_Init(UART_RX_PORT, &GPIO_InitStructure);
+
+    clear_buffers();
+
+    NVIC_ClearPendingIRQ(CDC_UART_IRQn);
     NVIC_EnableIRQ(CDC_UART_IRQn);
 
     return 1;
@@ -157,148 +152,205 @@ int32_t uart_initialize(void)
 
 int32_t uart_uninitialize(void)
 {
-    CDC_UART->CR1 &= ~(USART_ISR_TXE_TXFNF | USART_ISR_RXNE_RXFNE);
+    NVIC_DisableIRQ(CDC_UART_IRQn);
     clear_buffers();
+
+    HAL_GPIO_DeInit(UART_RX_PORT, UART_RX_PIN);
+    HAL_GPIO_DeInit(UART_TX_PORT, UART_TX_PIN);
+
+    UART_PINS_PORT_DISABLE();
+    CDC_UART_DISABLE();
+
     return 1;
 }
 
 int32_t uart_reset(void)
 {
-    const uint32_t cr1 = CDC_UART->CR1;
-    CDC_UART->CR1 = cr1 & ~(USART_ISR_TXE_TXFNF | USART_ISR_RXNE_RXFNE);
+    NVIC_DisableIRQ(CDC_UART_IRQn);
+
     clear_buffers();
-    CDC_UART->CR1 = cr1 & ~USART_ISR_TXE_TXFNF;
+
+    NVIC_ClearPendingIRQ(CDC_UART_IRQn);
+    NVIC_EnableIRQ(CDC_UART_IRQn);
+
     return 1;
 }
 
 int32_t uart_set_configuration(UART_Configuration *config)
 {
-    UART_HandleTypeDef uart_handle;
     HAL_StatusTypeDef status;
 
-    memset(&uart_handle, 0, sizeof(uart_handle));
-    uart_handle.Instance = CDC_UART;
+    s_uart_handle.Instance = CDC_UART;
+    status = HAL_UART_DeInit(&s_uart_handle);
+
+    if (status == HAL_ERROR)
+    {
+        error_handler();
+    }
 
     // parity
-    configuration.Parity = config->Parity;
-    if(config->Parity == UART_PARITY_ODD_DAPLINK) {
-        uart_handle.Init.Parity = UART_PARITY_ODD;
-    } else if(config->Parity == UART_PARITY_EVEN_DAPLINK) {
-        uart_handle.Init.Parity = UART_PARITY_EVEN;
-    } else if(config->Parity == UART_PARITY_NONE_DAPLINK) {
-        uart_handle.Init.Parity = UART_PARITY_NONE;
-    } else {   //Other not support
-        uart_handle.Init.Parity = UART_PARITY_NONE;
-        configuration.Parity = UART_PARITY_NONE_DAPLINK;
+    s_configuration.Parity = config->Parity;
+    if (config->Parity == UART_PARITY_ODD_DAPLINK)
+    {
+        s_uart_handle.Init.Parity = UART_PARITY_ODD;
+    }
+    else if (config->Parity == UART_PARITY_EVEN_DAPLINK)
+    {
+        s_uart_handle.Init.Parity = UART_PARITY_EVEN;
+    }
+    else if (config->Parity == UART_PARITY_NONE_DAPLINK)
+    {
+        s_uart_handle.Init.Parity = UART_PARITY_NONE;
+    }
+    else
+    {
+        // not support other parity
+        util_assert(0);
     }
 
     // stop bits
-    configuration.StopBits = config->StopBits;
-    if(config->StopBits == UART_STOP_BITS_2) {
-        uart_handle.Init.StopBits = UART_STOPBITS_2;
-    } else if(config->StopBits == UART_STOP_BITS_1_5) {
-        uart_handle.Init.StopBits = UART_STOPBITS_2;
-        configuration.StopBits = UART_STOP_BITS_2;
-    } else if(config->StopBits == UART_STOP_BITS_1) {
-        uart_handle.Init.StopBits = UART_STOPBITS_1;
-    } else {
-        uart_handle.Init.StopBits = UART_STOPBITS_1;
-        configuration.StopBits = UART_STOP_BITS_1;
+    s_configuration.StopBits = config->StopBits;
+    if (config->StopBits == UART_STOP_BITS_2)
+    {
+        s_uart_handle.Init.StopBits = UART_STOPBITS_2;
+    }
+    else if (config->StopBits == UART_STOP_BITS_1_5)
+    {
+        s_uart_handle.Init.StopBits = UART_STOPBITS_2;
+        s_configuration.StopBits = UART_STOP_BITS_2;
+    }
+    else if (config->StopBits == UART_STOP_BITS_1)
+    {
+        s_uart_handle.Init.StopBits = UART_STOPBITS_1;
+    }
+    else
+    {
+        s_uart_handle.Init.StopBits = UART_STOPBITS_1;
+        s_configuration.StopBits = UART_STOP_BITS_1;
     }
 
     //Only 8 bit support
-    configuration.DataBits = UART_DATA_BITS_8;
-    if (uart_handle.Init.Parity == UART_PARITY_ODD || uart_handle.Init.Parity == UART_PARITY_EVEN) {
-        uart_handle.Init.WordLength = UART_WORDLENGTH_9B;
-    } else {
-        uart_handle.Init.WordLength = UART_WORDLENGTH_8B;
+    util_assert(config->DataBits == UART_DATA_BITS_8);
+    s_configuration.DataBits = config->DataBits;
+
+    if (s_uart_handle.Init.Parity == UART_PARITY_ODD || s_uart_handle.Init.Parity == UART_PARITY_EVEN)
+    {
+        s_uart_handle.Init.WordLength = UART_WORDLENGTH_9B;
+    }
+    else
+    {
+        s_uart_handle.Init.WordLength = UART_WORDLENGTH_8B;
     }
 
     // No flow control
-    configuration.FlowControl = UART_FLOW_CONTROL_NONE;
-    uart_handle.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+    util_assert(config->FlowControl == UART_FLOW_CONTROL_NONE);
+    s_configuration.FlowControl = config->FlowControl;
 
     // Specified baudrate
-    configuration.Baudrate = config->Baudrate;
-    uart_handle.Init.BaudRate = config->Baudrate;
+    s_configuration.Baudrate = config->Baudrate;
+    s_uart_handle.Init.BaudRate = config->Baudrate;
 
     // TX and RX
-    uart_handle.Init.Mode = UART_MODE_TX_RX;
+    s_uart_handle.Init.Mode = UART_MODE_TX_RX;
 
-    // Disable uart and tx/rx interrupt
-    CDC_UART->CR1 &= ~(USART_ISR_TXE_TXFNF | USART_ISR_RXNE_RXFNE);
+    status = HAL_UART_Init(&s_uart_handle);
+    if (status == HAL_ERROR)
+    {
+        error_handler();
+    }
+
+    status = HAL_UARTEx_EnableFifoMode(&s_uart_handle);
+    if (status == HAL_ERROR)
+    {
+        error_handler();
+    }
+
+    status = HAL_UARTEx_SetRxFifoThreshold(&s_uart_handle, CDC_UART_RXFIFO_THRESHOLD);
+    if (status == HAL_ERROR)
+    {
+        error_handler();
+    }
 
     clear_buffers();
 
-    status = HAL_UART_DeInit(&uart_handle);
-    util_assert(HAL_OK == status);
-    status = HAL_UART_Init(&uart_handle);
-    util_assert(HAL_OK == status);
-    (void)status;
-
-    CDC_UART->CR1 |= USART_ISR_RXNE_RXFNE;
+    CDC_UART->CR1 |= USART_CR1_IDLEIE;
+    CDC_UART->CR3 |= USART_CR3_RXFTIE;
 
     return 1;
 }
 
 int32_t uart_get_configuration(UART_Configuration *config)
 {
-    config->Baudrate = configuration.Baudrate;
-    config->DataBits = configuration.DataBits;
-    config->Parity   = configuration.Parity;
-    config->StopBits = configuration.StopBits;
-    config->FlowControl = UART_FLOW_CONTROL_NONE;
+    config->Baudrate    = s_configuration.Baudrate;
+    config->DataBits    = s_configuration.DataBits;
+    config->Parity      = s_configuration.Parity;
+    config->StopBits    = s_configuration.StopBits;
+    config->FlowControl = s_configuration.FlowControl;
 
     return 1;
 }
 
 int32_t uart_write_free(void)
 {
-    return circ_buf_count_free(&write_buffer);
+    return circ_buf_count_free(&s_write_buffer);
 }
 
 int32_t uart_write_data(uint8_t *data, uint16_t size)
 {
-    uint32_t cnt = circ_buf_write(&write_buffer, data, size);
-	//USART_IT_TXE; elee: USART_IT_TXE doesn't work!  Some bit packed format to use with __HAL_USART_ENABLE_IT
-    CDC_UART->CR1 |= USART_ISR_TXE_TXFNF;
+    uint32_t cnt = circ_buf_write(&s_write_buffer, data, size);
+    if (cnt > 0)
+    {
+        CDC_UART->CR1 |= USART_CR1_TXEIE_TXFNFIE;
+    }
     return cnt;
 }
 
 int32_t uart_read_data(uint8_t *data, uint16_t size)
 {
-    return circ_buf_read(&read_buffer, data, size);
+    return circ_buf_read(&s_read_buffer, data, size);
 }
 
 void CDC_UART_IRQn_Handler(void)
 {
-    const uint32_t sr = CDC_UART->ISR;
+    const uint32_t isr_reg = CDC_UART->ISR;
+    const uint32_t cr1 = CDC_UART->CR1;
+    const uint32_t cr3 = CDC_UART->CR3;
 
-		//Rx not empty (data remaining...)
-    if (sr & USART_ISR_RXNE_RXFNE) {
-        uint8_t dat = CDC_UART->RDR; //RDR = Read Data Register
-        uint32_t free = circ_buf_count_free(&read_buffer);
-        if (free > RX_OVRF_MSG_SIZE) {
-            circ_buf_push(&read_buffer, dat);
-        } else if (RX_OVRF_MSG_SIZE == free) {
-            circ_buf_write(&read_buffer, (uint8_t*)RX_OVRF_MSG, RX_OVRF_MSG_SIZE);
-        } else {
-            // Drop character
-        }
+    // UART Rx
+    if ((isr_reg & USART_ISR_RXFT) && (cr3 & USART_CR3_RXFTIE))
+    {
+        uart_read_from_fifo_in_isr();
+    }
+    else if((cr1 & USART_CR1_IDLEIE) && (isr_reg & USART_ISR_IDLE))
+    {
+        // Handle IDLE interrupt to deal with the data left in FIFO,
+        // which is less than CDC_UART_FIFO_SIZE and cannot trigger
+        // USART_ISR_RXFT
+        CDC_UART->ICR |= USART_ICR_IDLECF;
+        uart_read_from_fifo_in_isr();
     }
 
-    if (sr & USART_ISR_TXE_TXFNF)  {   //USART_SR_TXE) {
-        if (circ_buf_count_used(&write_buffer) > 0) {
-            CDC_UART->TDR = circ_buf_pop(&write_buffer);
-        } else {
-            CDC_UART->CR1 &= ~USART_ISR_TXE_TXFNF;
-        }
-    }
+    // UART Tx
+    if ((isr_reg & USART_ISR_TXE_TXFNF) && (cr1 & USART_CR1_TXEIE_TXFNFIE))
+    {
+        uint16_t size = circ_buf_count_used(&s_write_buffer);
+        if (size > 0)
+        {
+            while (size && (CDC_UART->ISR & USART_ISR_TXE_TXFNF))
+            {
+                CDC_UART->TDR = circ_buf_pop(&s_write_buffer);
+                --size;
+            }
 
-    if (sr & USART_ISR_ORE) { 
-        //Overrun (can be seen when closing cdc_uart and lots of traffic from 
-        // DUT.  Clear the interrupt here to avoid getting stuck in a loop.
-        //ToDo: Potentially count overruns/flag errors and report to host.
-        CDC_UART->ICR |= USART_ICR_ORECF;
+            if (size == 0)
+            {
+                CDC_UART->CR1 &= ~USART_CR1_TXEIE_TXFNFIE;
+            }
+        }
+        else
+        {
+            // transmission is done
+            CDC_UART->CR1 &= ~USART_CR1_TXEIE_TXFNFIE;
+        }
     }
 }
