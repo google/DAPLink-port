@@ -13,12 +13,13 @@
 #include "DAP_config.h"
 #include "IO_Config.h"
 
-#define UDB_MAJOR_VERSION       "0"
-#define UDB_MINOR_VERSION       "9"
+#if defined(UDB_VERSION_BASE) && defined(UDB_BUILD_NUMBER)
+#define VAL(str) #str
+#define TO_STRING(str) VAL(str)
 
-#ifndef UDB_BUILD_NUMBER
-// zero for local builds and the CI build will define the appropriate build numbers
-#define UDB_BUILD_NUMBER        "0"
+#define UDB_BUILD_VERSION        TO_STRING(UDB_VERSION_BASE) "d" TO_STRING(UDB_BUILD_NUMBER)
+#else
+#define UDB_BUILD_VERSION       "local_build"
 #endif
 
 #if GIT_LOCAL_MODS == 1
@@ -37,7 +38,7 @@ typedef enum
     HW_VERSION_P2,
 } hw_version_t;
 
-static const char s_build_version_str[] = "udb_" UDB_MAJOR_VERSION "." UDB_MINOR_VERSION "d" UDB_BUILD_NUMBER "_" GIT_DESCRIPTION GIT_LOCAL_MODS_STR "_hw:";
+static const char s_build_version_str[] = "udb_" UDB_BUILD_VERSION  "_" GIT_DESCRIPTION GIT_LOCAL_MODS_STR "_hw:";
 static hw_version_t s_hw_version = HW_VERSION_UNKNOWN;
 
 static bool is_hw_version_p1(void)
