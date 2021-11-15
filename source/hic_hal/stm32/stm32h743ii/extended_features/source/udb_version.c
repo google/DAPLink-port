@@ -14,19 +14,21 @@
 #include "IO_Config.h"
 
 #if defined(UDB_VERSION_BASE) && defined(UDB_BUILD_NUMBER)
+
 #define VAL(str) #str
 #define TO_STRING(str) VAL(str)
+#define UDB_BUILD_VERSION        TO_STRING(UDB_VERSION_BASE) TO_STRING(UDB_BUILD_NUMBER)
 
-#define UDB_BUILD_VERSION        TO_STRING(UDB_VERSION_BASE) "d" TO_STRING(UDB_BUILD_NUMBER)
 #else
-#define UDB_BUILD_VERSION       "local_build"
-#endif
 
 #if GIT_LOCAL_MODS == 1
 #define GIT_LOCAL_MODS_STR      "_modified"
 #else
 #define GIT_LOCAL_MODS_STR      ""
 #endif // GIT_LOCAL_MODS
+#define UDB_BUILD_VERSION       "local_build" GIT_LOCAL_MODS_STR
+
+#endif // defined(UDB_VERSION_BASE) && defined(UDB_BUILD_NUMBER)
 
 #define PIN_UDB_HW_VERSION_PORT GPIOG
 #define PIN_UDB_HW_VERSION      GPIO_PIN_15
@@ -38,7 +40,7 @@ typedef enum
     HW_VERSION_P2,
 } hw_version_t;
 
-static const char s_build_version_str[] = "udb_" UDB_BUILD_VERSION  "_" GIT_DESCRIPTION GIT_LOCAL_MODS_STR "_hw:";
+static const char s_build_version_str[] = "udb_" UDB_BUILD_VERSION "_" GIT_DESCRIPTION "_hw:";
 static hw_version_t s_hw_version = HW_VERSION_UNKNOWN;
 
 static bool is_hw_version_p1(void)
