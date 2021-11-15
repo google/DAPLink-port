@@ -297,9 +297,7 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
     }
     case ID_DAP_VendorEx36_VERSION_DETAILS: {
         // Add a more specific internal version string.
-        *response++ = DAP_OK;
-        uint8_t len = udb_get_version(response, DAP_PACKET_SIZE - 1);
-        num += len + 1;
+        num += udb_get_version(response, DAP_PACKET_SIZE - 1);
         break;
     }
     case ID_DAP_VendorEx37_HOLD_IN_BL:
@@ -307,7 +305,6 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
         // Request to stay in bootloader mode on the next boot for SWU
         *response = DAP_OK;
         config_ram_set_hold_in_bl(true);
-
         num += 1;
         break;
     }
@@ -315,21 +312,15 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
     {
         // Request to reset the UDB.
         *response = DAP_OK;
-
         udb_reset_async(UDB_RESET_TIMER_MS);
-
         num += 1;
         break;
     }
     case ID_DAP_VendorEx39_READ_UDC_ADAPTER_TYPE_ADC:
     {
-        adapter_type_t type = adapter_detector_get_adapter_type_adc();
-        *response++ = DAP_OK;
-        *response++ = 1;
-        *response++ = type;
-
-        num += 3;
-
+        adapter_type_t adapter = adapter_detector_get_adapter_type_adc();
+        memcpy(response, &adapter, sizeof(adapter));
+        num += sizeof(adapter);
         break;
     }
     case ID_DAP_VendorEx40_MEASURE_POWER:
@@ -337,7 +328,8 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
         num += DAP_ProcessVendorCommandEx40_MeasurePower(request, response);
         break;
     }
-    default: break;
+    default:
+      break;
   }
 
   return (num);
