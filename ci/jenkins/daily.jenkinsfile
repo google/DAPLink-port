@@ -12,7 +12,7 @@ def config =
     repositoryBranch : "master" ,
     repositoryHistory : true ,
     platform : "linux" ,
-    imagesPath : "/images/DAPLink/Builds" ,
+    imagesPath : "/images/UDB-DAPLink/Builds" ,
     buildType : "Daily" ,
     targets :
     [
