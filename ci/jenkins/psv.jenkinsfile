@@ -1,0 +1,28 @@
+import groovy.json.JsonOutput
+
+library 'jenkins-shared-library@master'
+
+def version = "0.10"
+def repository = "tps/udb-daplink"
+
+def config =
+[
+    versionBase : "${version}d" ,
+    repository : repository ,
+    repositoryBranch : "master" ,
+    repositoryHistory : true ,
+    platform : "linux" ,
+    imagesPath : "/images/DAPLink/Builds" ,
+    buildType : "PSV" ,
+    targets :
+    [
+        [
+            buildProduct : "udb-daplink" ,
+            buildConfig : "development" ,
+            os: "debian" ,
+            compileScriptAlternate : "pushd ${repository} ; ./ci/scripts/build.sh" ,
+        ] ,
+    ] ,
+]
+
+builder(JsonOutput.toJson(config))
