@@ -128,7 +128,6 @@ void sdk_init()
     {
         Error_Handler();
     }
-    HAL_RCC_MCOConfig(RCC_MCO2, RCC_MCO2SOURCE_SYSCLK, RCC_MCODIV_1);
 
     /** Enable USB Voltage detector
     */

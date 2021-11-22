@@ -2,8 +2,10 @@ common:
     macros:
         - CDC_B_ENDPOINT
         - UDB_DEBUG
+        - MAIN_TASK_STACK=1024
     includes:
         - source/hic_hal/stm32/stm32h743ii/extended_features/include
+        - source/hic_hal/stm32/stm32h743ii/extended_features/lib/nlutilities/include
     sources:
         board:
             - source/board/stm32h743ii.c
@@ -11,3 +13,4 @@ common:
             - source/family/st/stm32h743ii/target.c
         hic_hal:
             - source/hic_hal/stm32/stm32h743ii/extended_features/source
+            - source/hic_hal/stm32/stm32h743ii/extended_features/lib/nlutilities/source

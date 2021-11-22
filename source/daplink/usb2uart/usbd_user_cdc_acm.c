@@ -197,17 +197,3 @@ void cdc_process_event()
     // Always process events
     main_cdc_send_event();
 }
-
-#if defined(CDC_B_ENDPOINT)
-void cdc_b_process_event()
-{
-    int32_t len_data = 0;
-    uint8_t data[64];
-
-    len_data = sizeof(data);
-    len_data = USBD_CDC_B_ACM_DataRead(data, len_data);
-
-    // Always process events
-    main_cdc_b_send_event();
-}
-#endif
