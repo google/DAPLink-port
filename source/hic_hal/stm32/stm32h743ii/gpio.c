@@ -25,93 +25,6 @@
 #include "daplink.h"
 #include "util.h"
 
-static TIM_HandleTypeDef timer;
-
-static void busy_wait(uint32_t cycles)
-{
-    volatile uint32_t i;
-    i = cycles;
-
-    while (i > 0) {
-        i--;
-    }
-}
-
-static uint32_t tim1_clk_div(uint32_t apb2clkdiv)
-{
-    switch (apb2clkdiv) {
-        case RCC_APB2_DIV1:
-            return 1;
-        case RCC_APB2_DIV4:
-            return 2;
-        case RCC_APB2_DIV8:
-            return 4;
-        default: // RCC_CFGR_PPRE2_DIV1
-            return 1;
-    }
-}
-
-static void output_clock_enable(void)
-{
-    HAL_StatusTypeDef ret;
-    RCC_ClkInitTypeDef clk_init;
-    TIM_OC_InitTypeDef pwm_config;
-    uint32_t unused;
-    uint32_t period;
-    uint32_t source_clock;
-
-    HAL_RCC_GetClockConfig(&clk_init, &unused);
-
-    /* Compute the period value to have TIMx counter clock equal to 8000000 Hz */
-    source_clock = SystemCoreClock / tim1_clk_div(clk_init.APB2CLKDivider);
-    period = (uint32_t)(source_clock / 8000000) - 1;
-
-    /* Set TIMx instance */
-    timer.Instance = TIM1;
-
-    timer.Init.Period            = period;
-    timer.Init.Prescaler         = 0;
-    timer.Init.ClockDivision     = 0;
-    timer.Init.CounterMode       = TIM_COUNTERMODE_UP;
-    timer.Init.RepetitionCounter = 0;//period / 2;
-
-    __HAL_RCC_TIM1_CLK_ENABLE();
-
-    ret = HAL_TIM_PWM_DeInit(&timer);
-    if (ret != HAL_OK) {
-        util_assert(0);
-        return;
-    }
-
-    ret = HAL_TIM_PWM_Init(&timer);
-    if (ret != HAL_OK) {
-        util_assert(0);
-        return;
-    }
-
-    pwm_config.OCMode = TIM_OCMODE_PWM2;
-    pwm_config.Pulse = 0; // TODO - make sure this isn't used
-    pwm_config.OCPolarity = TIM_OCPOLARITY_HIGH;
-    pwm_config.OCNPolarity = TIM_OCPOLARITY_HIGH;
-    pwm_config.OCFastMode = TIM_OCFAST_DISABLE;
-    pwm_config.OCIdleState = TIM_OCIDLESTATE_RESET;
-    pwm_config.OCNIdleState = TIM_OCIDLESTATE_RESET;
-    ret = HAL_TIM_PWM_ConfigChannel(&timer, &pwm_config, TIM_CHANNEL_1);
-    if (ret != HAL_OK) {
-        util_assert(0);
-        return;
-    }
-
-    __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_1, period / 2);
-    ret = HAL_TIM_PWM_Start(&timer, TIM_CHANNEL_1);
-    if (ret != HAL_OK) {
-        util_assert(0);
-        return;
-    }
-
-    return;
-}
-
 void gpio_init_buffered_dut_pin(GPIO_TypeDef *dir_port, uint16_t dir_pin, GPIO_TypeDef *input_port, uint16_t input_pin, bool activeHigh)
 {
     // Initialize GPIO signals to DUT
@@ -140,7 +53,6 @@ void gpio_init_buffered_dut_pin(GPIO_TypeDef *dir_port, uint16_t dir_pin, GPIO_T
     GPIO_InitStructure.Pull = GPIO_NOPULL;
 }
 
-
 void gpio_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -149,25 +61,12 @@ void gpio_init(void)
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
-    __HAL_RCC_GPIOE_CLK_ENABLE();  //gpio, spi, etc
-    __HAL_RCC_GPIOF_CLK_ENABLE();  //gpio direction, etc.
-    __HAL_RCC_GPIOG_CLK_ENABLE();  //elee: udb led's
-    __HAL_RCC_GPIOH_CLK_ENABLE();  //elee: usb hub signals, SPI, I2C
-	  __HAL_RCC_GPIOI_CLK_ENABLE();  //udb usb ulpi dir, spi, jtag
-    // Enable USB connect pin
-		__HAL_RCC_SYSCFG_CLK_ENABLE();   //elee: this macro maps to the same as __HAL_RCC_AFIO_CLK_ENABLE(); (in the F1) and still exists.  Try it...
+    __HAL_RCC_GPIOE_CLK_ENABLE();
+    __HAL_RCC_GPIOF_CLK_ENABLE();
+    __HAL_RCC_GPIOG_CLK_ENABLE();
+    __HAL_RCC_GPIOH_CLK_ENABLE();
+    __HAL_RCC_GPIOI_CLK_ENABLE();
 
-		// Disable JTAG to free pins for other uses
-    // Note - SWD is still enabled
-		//ToDo: elee: this doesn't exist in the H7 hal.  Can it be skipped, or need to find a replacement?  Skip it for now...
-		//__HAL_AFIO_REMAP_SWJ_NOJTAG();
-
-    USB_CONNECT_PORT_ENABLE();
-    USB_CONNECT_OFF();
-	  GPIO_InitStructure.Pin = USB_CONNECT_PIN;  //elee: WHAT does this pin do?  PA15?  what board is it from?  stm429?  discovery?  MB1075.pdf doesn't have it.  I guess USB power (to detect if connected?).  Or LED to show USB connected?
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
-    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-    HAL_GPIO_Init(USB_CONNECT_PORT, &GPIO_InitStructure);
     // configure LEDs
     HAL_GPIO_WritePin(RUNNING_LED_PORT, RUNNING_LED_PIN, GPIO_PIN_SET);
     GPIO_InitStructure.Pin = RUNNING_LED_PIN;
@@ -193,16 +92,6 @@ void gpio_init(void)
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     HAL_GPIO_Init(PIN_MSC_LED_PORT, &GPIO_InitStructure);
 
-    // Reset (to DUT):
-    gpio_init_buffered_dut_pin(nRESET_DIR_PIN_PORT, nRESET_DIR_PIN, nRESET_PIN_PORT, nRESET_PIN, false);
-
-    // Setup the MCO.  MCO2 for UDB
-    GPIO_InitStructure.Pin = GPIO_PIN_9;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
-    output_clock_enable();
-
     // Setup the USB Hub to be "self powered" (very common setting, even if not strictly compliant).
     GPIO_InitStructure.Pin = USBHUB_SELFPWR_PIN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
@@ -218,34 +107,26 @@ void gpio_init(void)
     HAL_GPIO_Init(SWD_BUFFER_EN_PORT, &GPIO_InitStructure);
 
     //These are "open drain/open collector" style, with an external buffer.
-    //UDC0_RST_L is configured by the nRESET section above...
-    //UDC0_BOOT_L
+    // UDC0_RST_L Reset (to DUT):
+    gpio_init_buffered_dut_pin(nRESET_DIR_PIN_PORT, nRESET_DIR_PIN, nRESET_PIN_PORT, nRESET_PIN, false);
+    // UDC0_BOOT_L
     gpio_init_buffered_dut_pin(UDC0_BOOT_L_DIR_PORT, UDC0_BOOT_L_DIR_PIN, UDC0_BOOT_L_PORT, UDC0_BOOT_L_PIN, false);
-    //UDC0_BUTTON_L
+    // UDC0_BUTTON_L
     gpio_init_buffered_dut_pin(UDC0_BUTTON_L_DIR_PORT, UDC0_BUTTON_L_DIR_PIN, UDC0_BUTTON_L_PORT, UDC0_BUTTON_L_PIN, false);
-    //UDC1_RST
+    // UDC1_RST
     gpio_init_buffered_dut_pin(UDC1_RST_DIR_PORT, UDC1_RST_DIR_PIN, UDC1_RST_PORT, UDC1_RST_PIN, true);
-    //UDC1_BOOT
+    // UDC1_BOOT
     gpio_init_buffered_dut_pin(UDC1_BOOT_DIR_PORT, UDC1_BOOT_DIR_PIN, UDC1_BOOT_PORT, UDC1_BOOT_PIN, true);
-    //UDC1_BUTTON
+    // UDC1_BUTTON
     gpio_init_buffered_dut_pin(UDC1_BUTTON_DIR_PORT, UDC1_BUTTON_DIR_PIN, UDC1_BUTTON_PORT, UDC1_BUTTON_PIN, true);
 
     // Turn on power to the board. When the target is unpowered
     // it holds the reset line low.
-    // This switched the DUT USB port, using UDC_DUT_USB_EN_L_PIN
     HAL_GPIO_WritePin(POWER_EN_PIN_PORT, POWER_EN_PIN, GPIO_PIN_RESET);
     GPIO_InitStructure.Pin = POWER_EN_PIN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     HAL_GPIO_Init(POWER_EN_PIN_PORT, &GPIO_InitStructure);
-
-      // Enable power to DUT USB port.
-    // skip, same as POWER_EN_PIN_PORT
-//    GPIO_InitStructure.Pin = UDC_DUT_USB_EN_L_PIN;
-//    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-//    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-//    HAL_GPIO_Init(UDC_DUT_USB_EN_L_PORT, &GPIO_InitStructure);
-//    HAL_GPIO_WritePin(UDC_DUT_USB_EN_L_PORT, UDC_DUT_USB_EN_L_PIN, GPIO_PIN_RESET);  //enable DUT USB power
 
     //Initialize external relay (turned on)
     HAL_GPIO_WritePin(UDC_EXT_RELAY_PORT, UDC_EXT_RELAY_PIN, GPIO_PIN_SET);
