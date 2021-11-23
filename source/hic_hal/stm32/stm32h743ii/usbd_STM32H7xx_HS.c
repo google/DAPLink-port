@@ -27,14 +27,16 @@
 #define TX2_FIFO_SIZE   512
 #define TX3_FIFO_SIZE   512
 #define TX4_FIFO_SIZE   512
+#define TX5_FIFO_SIZE   512
+#define TX6_FIFO_SIZE   512
 
 // 00: Control, 01: Isochronous, 10: Bulk, 11: Interrupt
 #define EP_IN_TYPE(num)     ((USBx_INEP(num)->DIEPCTL & USB_OTG_DIEPCTL_EPTYP) >> USB_OTG_DIEPCTL_EPTYP_Pos)
 #define EP_OUT_TYPE(num)    ((USBx_OUTEP(num)->DOEPCTL & USB_OTG_DOEPCTL_EPTYP) >> USB_OTG_DOEPCTL_EPTYP_Pos)
 
-uint32_t OutMaxPacketSize[5] = {USBD_MAX_PACKET0, 0, 0, 0, 0};
-uint8_t OutPacketCnt[5] = {1, 0, 0, 0, 0};
-uint8_t InPacketCnt[5] = {1, 0, 0, 0, 0};
+uint32_t OutMaxPacketSize[7] = {USBD_MAX_PACKET0, 0, 0, 0, 0, 0, 0};
+uint8_t OutPacketCnt[7] = {1, 0, 0, 0, 0, 0, 0};
+uint8_t InPacketCnt[7] = {1, 0, 0, 0, 0, 0, 0};
 
 #if (USBD_HID_ENABLE == 1)
 uint32_t HID_IntInPacketData[(USBD_HID_MAX_PACKET + 3) / 4];
@@ -44,7 +46,11 @@ uint32_t HID_IntInPacketData[(USBD_HID_MAX_PACKET + 3) / 4];
 uint32_t CDC_ACM_IntInPacketData[(USBD_CDC_ACM_MAX_PACKET + 3) / 4];
 #endif
 
-uint32_t *InPacketDataPtr[5] =
+#if (USBD_CDC_B_ACM_ENABLE == 1)
+uint32_t CDC_B_ACM_IntInPacketData[(USBD_CDC_B_ACM_MAX_PACKET + 3) / 4];
+#endif
+
+uint32_t *InPacketDataPtr[7] =
 {
 /* endpoint 0 */
     0,
@@ -80,9 +86,25 @@ uint32_t *InPacketDataPtr[5] =
 #else
     0,
 #endif
+/* endpoint 5 */
+#if ((USBD_HID_ENABLE == 1) && (USBD_HID_EP_INTIN == 5))
+    HID_IntInPacketData,
+#elif ((USBD_CDC_B_ACM_ENABLE == 1) && (USBD_CDC_B_ACM_EP_INTIN == 5))
+    CDC_B_ACM_IntInPacketData,
+#else
+    0,
+#endif
+/* endpoint 6 */
+#if ((USBD_HID_ENABLE == 1) && (USBD_HID_EP_INTIN == 6))
+    HID_IntInPacketData,
+#elif ((USBD_CDC_B_ACM_ENABLE == 1) && (USBD_CDC_B_ACM_EP_INTIN == 6))
+    CDC_B_ACM_IntInPacketData,
+#else
+    0,
+#endif
 };
 
-uint32_t InPacketDataCnt[5] = {0};
+uint32_t InPacketDataCnt[7] = {0};
 uint32_t InPacketDataReady = 0;
 uint32_t SyncWriteEP = 0;
 
@@ -305,6 +327,13 @@ void USBD_Reset(void)
     OTG->DIEPTXF[3] = ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE +
                         TX2_FIFO_SIZE + TX3_FIFO_SIZE) / 4) |
                       ((TX4_FIFO_SIZE / 4) << 16);
+    // DIEPTXF5
+    OTG->DIEPTXF[4]  = ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE + TX3_FIFO_SIZE + TX4_FIFO_SIZE)/4) |
+                       ((TX5_FIFO_SIZE/4) << 16);
+
+    // DIEPTXF6
+    OTG->DIEPTXF[5]  = ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE + TX3_FIFO_SIZE + TX4_FIFO_SIZE + TX5_FIFO_SIZE)/4) |
+                       ((TX6_FIFO_SIZE/4) << 16);
 
     USBx_OUTEP(0)->DOEPTSIZ = (1 << USB_OTG_DOEPTSIZ_STUPCNT_Pos) | // setup count = 1
                               (1 << USB_OTG_DOEPTSIZ_PKTCNT_Pos) |  // packet count

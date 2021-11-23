@@ -35,5 +35,16 @@ extern int32_t USBD_CDC_ACM_GetLineCoding(void);
 extern int32_t USBD_CDC_ACM_SetControlLineState(uint16_t ctrl_bmp);
 extern int32_t USBD_CDC_ACM_SendBreak(uint16_t dur);
 
+#if defined(CDC_B_ENDPOINT)
+extern int32_t USBD_CDC_B_ACM_SendEncapsulatedCommand(void);
+extern int32_t USBD_CDC_B_ACM_GetEncapsulatedResponse(void);
+extern int32_t USBD_CDC_B_ACM_SetCommFeature(uint16_t feat);
+extern int32_t USBD_CDC_B_ACM_GetCommFeature(uint16_t feat);
+extern int32_t USBD_CDC_B_ACM_ClearCommFeature(uint16_t feat);
+extern int32_t USBD_CDC_B_ACM_SetLineCoding(void);
+extern int32_t USBD_CDC_B_ACM_GetLineCoding(void);
+extern int32_t USBD_CDC_B_ACM_SetControlLineState(uint16_t ctrl_bmp);
+extern int32_t USBD_CDC_B_ACM_SendBreak(uint16_t dur);
+#endif // CDC_B_ENDPOINT
 
 #endif  /* __USBD_LIB_CDC_H__ */

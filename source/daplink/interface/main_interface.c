@@ -79,6 +79,9 @@ void __libc_init_array (void) {}
 #define FLAGS_MAIN_PROC_USB     (1 << 9)
 // Used by cdc when an event occurs
 #define FLAGS_MAIN_CDC_EVENT    (1 << 11)
+#if defined(CDC_B_ENDPOINT)
+#define FLAGS_MAIN_CDC_B_EVENT    (1 << 12)
+#endif
 // Used by msd when flashing a new binary
 #define FLAGS_LED_BLINK_30MS    (1 << 6)
 
@@ -251,6 +254,14 @@ void main_cdc_send_event(void)
     return;
 }
 
+#if defined(CDC_B_ENDPOINT)
+void main_cdc_b_send_event(void)
+{
+    osThreadFlagsSet(main_task_id, FLAGS_MAIN_CDC_B_EVENT);
+    return;
+}
+#endif
+
 void main_usb_set_test_mode(bool enabled)
 {
     usb_test_mode = enabled;
@@ -262,6 +273,10 @@ void USBD_SignalHandler()
 }
 
 extern void cdc_process_event(void);
+
+#if defined(CDC_B_ENDPOINT)
+extern void cdc_b_process_event(void);
+#endif
 
 void main_task(void * arg)
 {
@@ -347,6 +362,9 @@ void main_task(void * arg)
                        | FLAGS_MAIN_DISABLEDEBUG    // Disable target debug
                        | FLAGS_MAIN_PROC_USB        // process usb events
                        | FLAGS_MAIN_CDC_EVENT       // cdc event
+#if defined(CDC_B_ENDPOINT)
+                       | FLAGS_MAIN_CDC_B_EVENT     // cdc_b event
+#endif
                        | FLAGS_BOARD_EVENT          // custom board event
                        , osFlagsWaitAny
                        , osWaitForever);
@@ -387,6 +405,12 @@ void main_task(void * arg)
         if (flags & FLAGS_MAIN_CDC_EVENT) {
             cdc_process_event();
         }
+
+#if defined(CDC_B_ENDPOINT)
+        if (flags & FLAGS_MAIN_CDC_B_EVENT) {
+            cdc_b_process_event();
+        }
+#endif
 
         if (flags & FLAGS_BOARD_EVENT) {
             board_custom_event();

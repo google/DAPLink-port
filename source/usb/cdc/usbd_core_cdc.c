@@ -101,76 +101,6 @@ __WEAK BOOL USBD_EndPoint0_Setup_CDC_ReqToIF(void)
         }
     }
 
-#if (USBD_CDCB_ACM_ENABLE)
-    if ((USBD_SetupPacket.wIndexL == usbd_cdcb_acm_cif_num)  || /* IF number correct? */
-            (USBD_SetupPacket.wIndexL == usbd_cdcb_acm_dif_num)) {
-        switch (USBD_SetupPacket.bRequest) {
-            case CDC_SEND_ENCAPSULATED_COMMAND:
-                USBD_EP0Data.pData = USBD_EP0Buf;                    /* data to be received, see USBD_EVT_OUT */
-                return (__TRUE);
-
-            case CDC_GET_ENCAPSULATED_RESPONSE:
-                if (USBD_CDCB_ACM_GetEncapsulatedResponse()) {
-                    USBD_EP0Data.pData = USBD_EP0Buf;                  /* point to data to be sent */
-                    USBD_DataInStage();                                /* send requested data */
-                    return (__TRUE);
-                }
-
-                break;
-
-            case CDC_SET_COMM_FEATURE:
-                USBD_EP0Data.pData = USBD_EP0Buf;                    /* data to be received, see USBD_EVT_OUT */
-                return (__TRUE);
-
-            case CDC_GET_COMM_FEATURE:
-                if (USBD_CDCB_ACM_GetCommFeature(USBD_SetupPacket.wValue)) {
-                    USBD_EP0Data.pData = USBD_EP0Buf;                  /* point to data to be sent */
-                    USBD_DataInStage();                                /* send requested data */
-                    return (__TRUE);
-                }
-
-                break;
-
-            case CDC_CLEAR_COMM_FEATURE:
-                if (USBD_CDCB_ACM_ClearCommFeature(USBD_SetupPacket.wValue)) {
-                    USBD_StatusInStage();                              /* send Acknowledge */
-                    return (__TRUE);
-                }
-
-                break;
-
-            case CDC_SET_LINE_CODING:
-                USBD_EP0Data.pData = USBD_EP0Buf;                    /* data to be received, see USBD_EVT_OUT */
-                return (__TRUE);
-
-            case CDC_GET_LINE_CODING:
-                if (USBD_CDCB_ACM_GetLineCoding()) {
-                    USBD_EP0Data.pData = USBD_EP0Buf;                  /* point to data to be sent */
-                    USBD_DataInStage();                                /* send requested data */
-                    return (__TRUE);
-                }
-
-                break;
-
-            case CDC_SET_CONTROL_LINE_STATE:
-                if (USBD_CDCB_ACM_SetControlLineState(USBD_SetupPacket.wValue)) {
-                    USBD_StatusInStage();                              /* send Acknowledge */
-                    return (__TRUE);
-                }
-
-                break;
-
-            case CDC_SEND_BREAK:
-                if (USBD_CDCB_ACM_SendBreak(USBD_SetupPacket.wValue)) {
-                    USBD_StatusInStage();                              /* send Acknowledge */
-                    return (__TRUE);
-                }
-
-                break;
-        }
-    }
-#endif
-
     return (__FALSE);
 }
 
@@ -212,12 +142,104 @@ __WEAK BOOL USBD_EndPoint0_Out_CDC_ReqToIF(void)
         }
     }
 
-#if (USBD_CDCB_ACM_ENABLE)
-    if ((USBD_SetupPacket.wIndexL == usbd_cdcb_acm_cif_num) || /* IF number correct? */
-            (USBD_SetupPacket.wIndexL == usbd_cdcb_acm_dif_num)) {
+    return (__FALSE);
+}
+
+#if defined(CDC_B_ENDPOINT)
+
+/*
+ *  USB Device Endpoint 0 Event Callback - CDC specific handling (Setup Request To Interface)
+ *    Parameters:      none
+ *    Return Value:    TRUE - Setup class request ok, FALSE - Setup class request not supported
+ */
+
+__WEAK BOOL USBD_EndPoint0_Setup_CDC_B_ReqToIF(void)
+{
+    if ((USBD_SetupPacket.wIndexL == usbd_cdc_b_acm_cif_num)  || /* IF number correct? */
+        (USBD_SetupPacket.wIndexL == usbd_cdc_b_acm_dif_num)) {
         switch (USBD_SetupPacket.bRequest) {
             case CDC_SEND_ENCAPSULATED_COMMAND:
-                if (USBD_CDCB_ACM_SendEncapsulatedCommand()) {
+                USBD_EP0Data.pData = USBD_EP0Buf;                    /* data to be received, see USBD_EVT_OUT */
+                return (__TRUE);
+
+            case CDC_GET_ENCAPSULATED_RESPONSE:
+                if (USBD_CDC_B_ACM_GetEncapsulatedResponse()) {
+                    USBD_EP0Data.pData = USBD_EP0Buf;                  /* point to data to be sent */
+                    USBD_DataInStage();                                /* send requested data */
+                    return (__TRUE);
+                }
+
+                break;
+
+            case CDC_SET_COMM_FEATURE:
+                USBD_EP0Data.pData = USBD_EP0Buf;                    /* data to be received, see USBD_EVT_OUT */
+                return (__TRUE);
+
+            case CDC_GET_COMM_FEATURE:
+                if (USBD_CDC_B_ACM_GetCommFeature(USBD_SetupPacket.wValue)) {
+                    USBD_EP0Data.pData = USBD_EP0Buf;                  /* point to data to be sent */
+                    USBD_DataInStage();                                /* send requested data */
+                    return (__TRUE);
+                }
+
+                break;
+
+            case CDC_CLEAR_COMM_FEATURE:
+                if (USBD_CDC_B_ACM_ClearCommFeature(USBD_SetupPacket.wValue)) {
+                    USBD_StatusInStage();                              /* send Acknowledge */
+                    return (__TRUE);
+                }
+
+                break;
+
+            case CDC_SET_LINE_CODING:
+                USBD_EP0Data.pData = USBD_EP0Buf;                    /* data to be received, see USBD_EVT_OUT */
+                return (__TRUE);
+
+            case CDC_GET_LINE_CODING:
+                if (USBD_CDC_B_ACM_GetLineCoding()) {
+                    USBD_EP0Data.pData = USBD_EP0Buf;                  /* point to data to be sent */
+                    USBD_DataInStage();                                /* send requested data */
+                    return (__TRUE);
+                }
+
+                break;
+
+            case CDC_SET_CONTROL_LINE_STATE:
+                if (USBD_CDC_B_ACM_SetControlLineState(USBD_SetupPacket.wValue)) {
+                    USBD_StatusInStage();                              /* send Acknowledge */
+                    return (__TRUE);
+                }
+
+                break;
+
+            case CDC_SEND_BREAK:
+                if (USBD_CDC_B_ACM_SendBreak(USBD_SetupPacket.wValue)) {
+                    USBD_StatusInStage();                              /* send Acknowledge */
+                    return (__TRUE);
+                }
+
+                break;
+        }
+    }
+
+    return (__FALSE);
+}
+
+
+/*
+ *  USB Device Endpoint 0 Event Callback - CDC specific handling (Out Request To Interface)
+ *    Parameters:      none
+ *    Return Value:    TRUE - Out class request ok, FALSE - Out class request not supported
+ */
+
+__WEAK BOOL USBD_EndPoint0_Out_CDC_B_ReqToIF(void)
+{
+    if ((USBD_SetupPacket.wIndexL == usbd_cdc_b_acm_cif_num) || /* IF number correct? */
+        (USBD_SetupPacket.wIndexL == usbd_cdc_b_acm_dif_num)) {
+        switch (USBD_SetupPacket.bRequest) {
+            case CDC_SEND_ENCAPSULATED_COMMAND:
+                if (USBD_CDC_B_ACM_SendEncapsulatedCommand()) {
                     USBD_StatusInStage();                        /* send Acknowledge */
                     return (__TRUE);
                 }
@@ -225,7 +247,7 @@ __WEAK BOOL USBD_EndPoint0_Out_CDC_ReqToIF(void)
                 break;
 
             case CDC_SET_COMM_FEATURE:
-                if (USBD_CDCB_ACM_SetCommFeature(USBD_SetupPacket.wValue)) {
+                if (USBD_CDC_B_ACM_SetCommFeature(USBD_SetupPacket.wValue)) {
                     USBD_StatusInStage();                        /* send Acknowledge */
                     return (__TRUE);
                 }
@@ -233,7 +255,7 @@ __WEAK BOOL USBD_EndPoint0_Out_CDC_ReqToIF(void)
                 break;
 
             case CDC_SET_LINE_CODING:
-                if (USBD_CDCB_ACM_SetLineCoding()) {
+                if (USBD_CDC_B_ACM_SetLineCoding()) {
                     USBD_StatusInStage();                        /* send Acknowledge */
                     return (__TRUE);
                 }
@@ -241,7 +263,8 @@ __WEAK BOOL USBD_EndPoint0_Out_CDC_ReqToIF(void)
                 break;
         }
     }
-#endif
 
     return (__FALSE);
 }
+
+#endif // CDC_B_ENDPOINT

@@ -908,9 +908,11 @@ void USBD_EndPoint0(U32 event)
                             goto setup_class_ok;
                         }
 
-                        if (USBD_EndPoint0_Setup_CDCB_ReqToIF()) {
+#if defined (CDC_B_ENDPOINT)
+                        if (USBD_EndPoint0_Setup_CDC_B_ReqToIF()) {
                             goto setup_class_ok;
                         }
+#endif
 
                         goto stall;                                                  /* not supported */
 
@@ -985,9 +987,11 @@ stall:
                                         goto out_class_ok;
                                     }
 
-                                    if (USBD_EndPoint0_Out_CDCB_ReqToIF()) {
+#if defined (CDC_B_ENDPOINT)
+                                    if (USBD_EndPoint0_Out_CDC_B_ReqToIF()) {
                                         goto out_class_ok;
                                     }
+#endif // CDC_B_ENDPOINT
 
                                     goto stall_i;
 

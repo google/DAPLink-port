@@ -24,7 +24,6 @@
 
 /* USB Device header files                                                    */
 #include "usbd_lib_cdc.h"
-#include "usbd_lib_cdcb.h"
 #include "usbd_lib_hid.h"
 #include "usbd_lib_msc.h"
 

@@ -1,4 +1,7 @@
 common:
+    macros:
+        - CDC_B_ENDPOINT
+        - UDB_DEBUG
     includes:
         - source/hic_hal/stm32/stm32h743ii/extended_features/include
     sources:
