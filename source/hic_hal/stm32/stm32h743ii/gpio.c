@@ -254,16 +254,12 @@ void gpio_init(void)
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     HAL_GPIO_Init(UDC_EXT_RELAY_PORT, &GPIO_InitStructure);
 
-
-    //ToDo(elee): Update delay as needed for core clk speed.  This is the value from the stm32f1.
-
     // Let the voltage rails stabilize.  This is especailly important
     // during software resets, since the target's 3.3v rail can take
     // 20-50ms to drain.  During this time the target could be driving
     // the reset pin low, causing the bootloader to think the reset
     // button is pressed.
-    // Note: With optimization set to -O2 the value 1000000 delays for ~85ms
-    busy_wait(1000000);
+    HAL_Delay(100);
 }
 
 void gpio_set_hid_led(gpio_led_state_t state)
