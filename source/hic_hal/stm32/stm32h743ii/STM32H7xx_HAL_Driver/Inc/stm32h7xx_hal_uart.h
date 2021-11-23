@@ -355,9 +355,9 @@ typedef  void (*pUART_CallbackTypeDef)(UART_HandleTypeDef *huart);  /*!< pointer
 /** @defgroup UART_Parity  UART Parity
   * @{
   */
-#define UART_PARITY_NONE                    0x00000000U                        /*!< No parity   */
-#define UART_PARITY_EVEN                    USART_CR1_PCE                      /*!< Even parity */
-#define UART_PARITY_ODD                     (USART_CR1_PCE | USART_CR1_PS)     /*!< Odd parity  */
+#define STM32_UART_PARITY_NONE                    0x00000000U                        /*!< No parity   */
+#define STM32_UART_PARITY_EVEN                    USART_CR1_PCE                      /*!< Even parity */
+#define STM32_UART_PARITY_ODD                     (USART_CR1_PCE | USART_CR1_PS)     /*!< Odd parity  */
 /**
   * @}
   */
@@ -1246,9 +1246,9 @@ typedef  void (*pUART_CallbackTypeDef)(UART_HandleTypeDef *huart);  /*!< pointer
   * @param __PARITY__ UART frame parity.
   * @retval SET (__PARITY__ is valid) or RESET (__PARITY__ is invalid)
   */
-#define IS_UART_PARITY(__PARITY__) (((__PARITY__) == UART_PARITY_NONE) || \
-                                    ((__PARITY__) == UART_PARITY_EVEN) || \
-                                    ((__PARITY__) == UART_PARITY_ODD))
+#define IS_UART_PARITY(__PARITY__) (((__PARITY__) == STM32_UART_PARITY_NONE) || \
+                                    ((__PARITY__) == STM32_UART_PARITY_EVEN) || \
+                                    ((__PARITY__) == STM32_UART_PARITY_ODD))
 
 /**
   * @brief Ensure that UART hardware flow control is valid.

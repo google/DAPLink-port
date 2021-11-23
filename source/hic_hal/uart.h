@@ -31,11 +31,11 @@ extern "C" {
 
 /* Parity enumerator */
 typedef enum {
-    UART_PARITY_NONE_DAPLINK    = 0,
-    UART_PARITY_ODD_DAPLINK     = 1,
-    UART_PARITY_EVEN_DAPLINK    = 2,
-    UART_PARITY_MARK_DAPLINK    = 3,
-    UART_PARITY_SPACE_DAPLINK   = 4
+    UART_PARITY_NONE    = 0,
+    UART_PARITY_ODD     = 1,
+    UART_PARITY_EVEN    = 2,
+    UART_PARITY_MARK    = 3,
+    UART_PARITY_SPACE   = 4
 } UART_Parity;
 
 /* Stop Bits enumerator */
