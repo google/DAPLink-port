@@ -66,7 +66,7 @@ static UART_Configuration s_configuration =
 {
     .Baudrate = CDC_UART_BAUDRATE_DEFAULT,
     .DataBits = UART_DATA_BITS_8,
-    .Parity = UART_PARITY_NONE_DAPLINK,
+    .Parity = UART_PARITY_NONE,
     .StopBits = UART_STOP_BITS_1,
     .FlowControl = UART_FLOW_CONTROL_NONE,
 };
@@ -190,17 +190,17 @@ int32_t uart_set_configuration(UART_Configuration *config)
 
     // parity
     s_configuration.Parity = config->Parity;
-    if (config->Parity == UART_PARITY_ODD_DAPLINK)
+    if (config->Parity == UART_PARITY_ODD)
     {
-        s_uart_handle.Init.Parity = UART_PARITY_ODD;
+        s_uart_handle.Init.Parity = STM32_UART_PARITY_ODD;
     }
-    else if (config->Parity == UART_PARITY_EVEN_DAPLINK)
+    else if (config->Parity == UART_PARITY_EVEN)
     {
-        s_uart_handle.Init.Parity = UART_PARITY_EVEN;
+        s_uart_handle.Init.Parity = STM32_UART_PARITY_EVEN;
     }
-    else if (config->Parity == UART_PARITY_NONE_DAPLINK)
+    else if (config->Parity == UART_PARITY_NONE)
     {
-        s_uart_handle.Init.Parity = UART_PARITY_NONE;
+        s_uart_handle.Init.Parity = STM32_UART_PARITY_NONE;
     }
     else
     {
@@ -233,7 +233,7 @@ int32_t uart_set_configuration(UART_Configuration *config)
     util_assert(config->DataBits == UART_DATA_BITS_8);
     s_configuration.DataBits = config->DataBits;
 
-    if (s_uart_handle.Init.Parity == UART_PARITY_ODD || s_uart_handle.Init.Parity == UART_PARITY_EVEN)
+    if (s_uart_handle.Init.Parity == STM32_UART_PARITY_ODD || s_uart_handle.Init.Parity == STM32_UART_PARITY_EVEN)
     {
         s_uart_handle.Init.WordLength = UART_WORDLENGTH_9B;
     }
