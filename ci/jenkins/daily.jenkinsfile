@@ -14,6 +14,8 @@ def config =
     platform : "linux" ,
     imagesPath : "/images/UDB-DAPLink/Builds" ,
     buildType : "Daily" ,
+    tagBuild : true ,
+    tagScriptAlternate : "pushd ${repository} ; ./ci/scripts/tag_builds.sh" ,
     targets :
     [
         [
