@@ -15,6 +15,80 @@
 
 #define UDB_RESET_TIMER_MS   (500)
 
+
+/** Read back the output value and direction of a UDB DUT gpio pin.
+ * External buffers are used, so there is one MCU pin to set the buffer
+ * direction, and a separate MCU pin to set the gpio value.
+ * The return value is formatted so that up to 8 gpio's can be left shifted and OR'ed
+ * together.
+\param GPIO_io_port   PORT for the "gpio value" pin
+\param GPIO_io_pin    PIN for the "gpio value" pin
+\param GPIO_dir_port  PORT for the "direction" pin
+\param GPIO_dir_pin   PIN for the "direction" pin
+
+\return          a 16 bit value formatted as 0b0000000<dir>0000000<value>
+*/
+static uint16_t read_gpio(GPIO_TypeDef* GPIO_io_port, uint16_t GPIO_io_pin,
+                  GPIO_TypeDef* GPIO_dir_port, uint16_t GPIO_dir_pin)
+{
+    uint16_t pin_value = 0;
+    // ToDo: port to "HAL_GPIO_xxx" functions, like
+    // pin_value |= HAL_GPIO_ReadPin(GPIO_io_port, GPIO_io_pin) ? 0x1 : 0x0;
+    pin_value |= (GPIO_io_port->IDR & GPIO_io_pin) ? 0x1 : 0x0;
+    pin_value |= (GPIO_dir_port->IDR & GPIO_dir_pin) ? 0x0100 : 0x0000;
+    return pin_value;
+}
+
+
+/** Set one of the DUT GPIO pins.
+ * External buffers are used, so there is one MCU pin to set the buffer
+ * direction, and a separate MCU pin to set the gpio value.
+ * To set the output value we actually set a weak pullup/pulldown on the MCU
+ * gpio, then there is no issue if the external buffer drives a value into the
+ * MCU pin.
+\param GPIO_io_PORT   PORT for the "gpio value" pin
+\param GPIO_io_PIN_Bit   PIN_Bit for the "gpio value" pin.
+                          Note: this is a decimal (0-15), NOT a bit-mask.
+\param GPIO_dir_PORT  PORT for the "direction" pin
+\param GPIO_dir_PIN   PIN for the "direction" pin.  This is a bit-mask.
+\param pin_direction   bitmask of all the gpio directions
+\param pin_values   bitmask of all the gpio values
+\param which_bit    Which bit to extract from the pin_direction/pin_values.
+\return          NA
+*/
+static void write_gpio(GPIO_TypeDef* GPIO_io_PORT, uint16_t GPIO_io_PIN_Bit,
+                  GPIO_TypeDef* GPIO_dir_PORT, uint16_t GPIO_dir_PIN,
+                  uint8_t pin_direction,
+                  uint8_t pin_values,
+                  uint8_t which_bit)
+{
+  uint32_t temp = 0;
+
+  //Only update pullup/down if we are driving the DUT.
+  if(pin_direction & which_bit)
+  {
+    // ToDo: port to "HAL_xxx" functions
+    // The pullups have 2bits per pin.  01: Pull-up, 10: Pull-down
+    temp = GPIO_io_PORT->PUPDR;
+    temp &= ~(3UL << (GPIO_io_PIN_Bit * 2U)); //Clear 2 bits in register
+
+    if(pin_values & which_bit)  // If pull-high...
+      temp |= (1U << (GPIO_io_PIN_Bit * 2U));  //01: Pull-up
+    else
+      temp |= (2U << (GPIO_io_PIN_Bit * 2U));  //10: Pull-down
+
+    GPIO_io_PORT->PUPDR = temp;
+    GPIO_dir_PORT->BSRR = GPIO_dir_PIN; //Set input or output.
+  }
+  else
+  {
+    // If is an input, just set the direction pin.
+    GPIO_dir_PORT->BSRR = (uint32_t)GPIO_dir_PIN << 16;
+  }
+}
+
+
+
 static uint32_t DAP_ProcessVendorCommandEx40_MeasurePower(const uint8_t *request, uint8_t *response)
 {
     // 2 bytes for voltage and 4 bytes for current
@@ -175,111 +249,127 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
         break;
     }
     case ID_DAP_VendorEx34_GPIO: {
-        //  Write GPIO pins (Open Drain / Open collector)
+        //  Write GPIO pins (as OpenDrain or PushPull) and also read back values.
         //
-        //  There are several gpio pins used as open-drain (pull-low) or open-collector (pull-high) signals.
-        //  This command writes to those pins.  The command has the following bytes:
-        //    VALUE, MASK (optional), DURATION(future):
+        //  There are several gpio pins used to drive DUT signals.  They can be
+        //  "open-drain" (for many products), or "push-pull" for some adaptor boards.
         //
-        //  VALUE byte:
-        //    0_RST_L
-        //    0_BOOT_L
-        //    0_BTN_L
-        //    RSVD
-        //    1_RST_H
-        //    1_BOOT_H
-        //    1_BTN_H
-        //    RSVD
-
+        //  This command has the following bytes:
+        //    OUTPUT_VALUE, DIRECTION, MASK (optional), DURATION(future):
+        //
+        //  OUTPUT_VALUE byte:
+        //    bit 0 : 0_RST_L.  0 = pull low, 1 = pull high
+        //    bit 1 : 0_BOOT_L
+        //    bit 2 : 0_BTN_L
+        //    bit 3 : RSVD
+        //    bit 4 : 1_RST_H
+        //    bit 5 : 1_BOOT_H
+        //    bit 6 : 1_BTN_H
+        //    bit 7 :  RSVD
+        //
+        //  DIRECTION byte:
+        //    Same bit mapping as OUTPUT_VALUE. 0 = INPUT, 1 = OUTPUT
+        //
         //  MASK byte:
-        //    0_RST_L
-        //    0_BOOT_L
-        //    0_BTN_L
-        //    RSVD
-        //    1_RST_H
-        //    1_BOOT_H
-        //    1_BTN_H
-        //    RSVD
-
+        //    Same bit mapping as OUTPUT_VALUE. 0 = MASKED (don't write to that pin), 1 = write to that pin.
         //  DURATION (future)
         //    0.1 sec increments, 0 = no pulse (stay at that level).  1-255 = 0.1 to 25.5 sec pulse duration.
         //    TBD: blocking or non-blocking?  Blocking is simplest, might need to increase timeout on host, though.
         //    For a 0.1 sec pulse it is probably fine.
         //
-        uint8_t pins = *request++;
-        uint8_t mask = *request;
+        //  This command also reads the values from all the gpios (even if writing is masked)
+        //  It returns 2 bytes, the first byte is the DIRECTION, the 2nd byte is the PIN_VALUE
+        //  NOTE: If you just want to READ the pins, this command can be used with 0x00, 0x00, 0x00 (to mask writing to any pins)
+        //
+        uint8_t pin_values = *request++;            // When is an output, should it pull HIGH (1) or LOW (0)?  For
+                                                    //  "open-drain" operation it should be 0 to pull low.  For
+                                                    //  "push-pull" toggle between 1 and 0.
+        uint8_t pin_direction = *request++;         // Should the buffer drive the DUT (1), or be an input (0) from DUT?
+        uint8_t pin_mask = *request;                // Masking byte, to allow indiviual pins to be set.  1=set,
+                                                    //  0=don't change that pin.
 
-        *response = DAP_OK;
+        uint16_t pin_readback = 0;
 
-        //Port0
-        if(mask & 0x1) {
-            if(pins & 0x1)
-              UDC0_RST_L_DIR_PORT->BSRR = UDC0_RST_L_DIR_PIN;
-            else
-              UDC0_RST_L_DIR_PORT->BSRR = (uint32_t)UDC0_RST_L_DIR_PIN << 16;
-          }
-        if(mask & 0x2) {
-            if(pins & 0x2)
-              UDC0_BOOT_L_DIR_PORT->BSRR = UDC0_BOOT_L_DIR_PIN;
-            else
-              UDC0_BOOT_L_DIR_PORT->BSRR = (uint32_t)UDC0_BOOT_L_DIR_PIN << 16;
-          }
-        if(mask & 0x4) {
-            if(pins & 0x4)
-              UDC0_BUTTON_L_DIR_PORT->BSRR = UDC0_BUTTON_L_DIR_PIN;
-            else
-              UDC0_BUTTON_L_DIR_PORT->BSRR = UDC0_BUTTON_L_DIR_PIN << 16;
-          }
+        //Port0 WRITE
+        if (pin_mask & 0x01)
+            write_gpio(UDC0_RST_L_PORT, UDC0_RST_L_PIN_Bit,
+                       UDC0_RST_L_DIR_PORT, UDC0_RST_L_DIR_PIN,
+                       pin_direction, pin_values,
+                       0x01);
 
-        //Port1
-        if(mask & 0x10) {
-            if(pins & 0x10)
-              UDC1_RST_DIR_PORT->BSRR = UDC1_RST_DIR_PIN;
-            else
-              UDC1_RST_DIR_PORT->BSRR = (uint32_t)UDC1_RST_DIR_PIN << 16;
-          }
-        if(mask & 0x20) {
-            if(pins & 0x20)
-              //Can use port1 boot pin to get an active high signal
-              UDC1_BOOT_DIR_PORT->BSRR = UDC1_BOOT_DIR_PIN;
-            else
-              UDC1_BOOT_DIR_PORT->BSRR = (uint32_t)UDC1_BOOT_DIR_PIN << 16;
-          }
-        if(mask & 0x40) {
-            if(pins & 0x40)
-              UDC1_BUTTON_DIR_PORT->BSRR = UDC1_BUTTON_DIR_PIN;
-            else
-              UDC1_BUTTON_DIR_PORT->BSRR = UDC1_BUTTON_DIR_PIN << 16;
-          }
+        if (pin_mask & 0x02)
+            write_gpio(UDC0_BOOT_L_PORT, UDC0_BOOT_L_PIN_Bit,
+                       UDC0_BOOT_L_DIR_PORT, UDC0_BOOT_L_DIR_PIN,
+                       pin_direction, pin_values,
+                       0x02);
+        if (pin_mask & 0x04)
+            write_gpio(UDC0_BUTTON_L_PORT, UDC0_BUTTON_L_PIN_Bit,
+                       UDC0_BUTTON_L_DIR_PORT, UDC0_BUTTON_L_DIR_PIN,
+                       pin_direction, pin_values,
+                       0x04);
 
-        //ToDo(elee): zero out the rest of the response buffer?  Can see stale data (from request) in pyOCD.
-        num += (2U << 16) | 1U; // 2 bytes read, 1 byte written
+        //Port1 WRITE
+        if (pin_mask & 0x10)
+            write_gpio(UDC1_RST_PORT, UDC1_RST_PIN_Bit,
+                       UDC1_RST_DIR_PORT, UDC1_RST_DIR_PIN,
+                       pin_direction, pin_values,
+                       0x10);
+        if (pin_mask & 0x20)
+            write_gpio(UDC1_BOOT_PORT, UDC1_BOOT_PIN_Bit,
+                       UDC1_BOOT_DIR_PORT, UDC1_BOOT_DIR_PIN,
+                       pin_direction, pin_values,
+                       0x20);
+        if (pin_mask & 0x40)
+            write_gpio(UDC1_BUTTON_PORT, UDC1_BUTTON_PIN_Bit,
+                       UDC1_BUTTON_DIR_PORT, UDC1_BUTTON_DIR_PIN,
+                       pin_direction, pin_values,
+                       0x40);
+
+        //Port0 READ
+        pin_readback = read_gpio(UDC0_RST_L_PORT, UDC0_RST_L_PIN, UDC0_RST_L_DIR_PORT, UDC0_RST_L_DIR_PIN);
+        pin_readback |= (read_gpio(UDC0_BOOT_L_PORT, UDC0_BOOT_L_PIN, UDC0_BOOT_L_DIR_PORT, UDC0_BOOT_L_DIR_PIN) << 1);
+        pin_readback |= (read_gpio(UDC0_BUTTON_L_PORT, UDC0_BUTTON_L_PIN, UDC0_BUTTON_L_DIR_PORT, UDC0_BUTTON_L_DIR_PIN) << 2);
+
+        //Port1 READ
+        pin_readback |= (read_gpio(UDC1_RST_PORT, UDC1_RST_PIN, UDC1_RST_DIR_PORT, UDC1_RST_DIR_PIN) << 4);
+        pin_readback |= (read_gpio(UDC1_BOOT_PORT, UDC1_BOOT_PIN, UDC1_BOOT_DIR_PORT, UDC1_BOOT_DIR_PIN) << 5);
+        pin_readback |= (read_gpio(UDC1_BUTTON_PORT, UDC1_BUTTON_PIN, UDC1_BUTTON_DIR_PORT, UDC1_BUTTON_DIR_PIN) << 6);
+
+        *response++ = ((pin_readback >> 8) & 0xFF); //Get MSByte (DIRECTION)
+        *response++ = (pin_readback & 0xFF);        //Get LSByte (PIN_VALUES)
+
+        num += (3U << 16) | 2U; // 3 bytes read, 2 byte written
         break;
     }
     case ID_DAP_VendorEx35_DUT_PWR_CTRL: {
         //  DUT Power control
         //
         //  This command controls several DUT power signals.  The command has the following bytes:
-        //    VALUE, MASK (optional), DURATION(future):
+        //    OUTPUT_VALUE, MASK (optional), DURATION(future)
+        //  Note: There is no DIRECTION byte, as these pins are "output only"
         //
-        //  VALUE byte:
-        //    UDC_DUT_USB_EN (1 = enabled)
-        //    UDC_EXT_RELAY (1 = enabled)
-        //    bits 2-7 RSVD
+        //  OUTPUT_VALUE byte:
+        //    bit 0 : UDC_DUT_USB_EN (1 = enabled)
+        //    bit 1 : UDC_EXT_RELAY (1 = enabled)
+        //    bit 2 : bits 2-7 RSVD
         //
         //  MASK byte:
-        //    UDC_DUT_USB_EN
-        //    UDC_EXT_RELAY
-        //    bits 2-7 RSVD
+        //    bit 0 : UDC_DUT_USB_EN
+        //    bit 1 : UDC_EXT_RELAY
+        //    bit 2 : bits 2-7 RSVD
         //
+        //  This command also reads the values from all the gpios (even if writing is masked)
+        //  It returns 1 btye, with the PIN_VALUEs
+        //  NOTE: If you just want to READ the pins, this command can be used with 0x00, 0x00, 0x00 (to mask writing to any pins)
         uint8_t pins = *request++;
         uint8_t mask = *request;
 
-        *response = DAP_OK;
+        uint8_t readback_byte = 0;
 
         if(mask & 0x1) {
             if(pins & 0x1)
-              //Set low to enable USB power
+              // ToDo: port to "HAL_xxx" functions
+              // Set low to enable USB power
               UDC_DUT_USB_EN_L_PORT->BSRR = (uint32_t)UDC_DUT_USB_EN_L_PIN << 16;
             else
               UDC_DUT_USB_EN_L_PORT->BSRR = UDC_DUT_USB_EN_L_PIN;
@@ -291,7 +381,12 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
               UDC_EXT_RELAY_PORT->BSRR = UDC_EXT_RELAY_PIN << 16;
           }
 
-        //ToDo(elee): zero out the rest of the response buffer?  Can see stale data (from request) in pyOCD.
+        //Readback actual values (even if write is masked out)
+        readback_byte |= (UDC_DUT_USB_EN_L_PORT->IDR & UDC_DUT_USB_EN_L_PIN) ? 0x01 : 0x00;
+        readback_byte |= (UDC_EXT_RELAY_PORT->IDR & UDC_EXT_RELAY_PIN) ? 0x02 : 0x00;
+
+        *response++ = readback_byte;
+
         num += (2U << 16) | 1U; // 2 bytes read, 1 byte written
         break;
     }
