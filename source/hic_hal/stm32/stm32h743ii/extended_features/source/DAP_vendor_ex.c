@@ -295,9 +295,9 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
         num += (2U << 16) | 1U; // 2 bytes read, 1 byte written
         break;
     }
-    case ID_DAP_VendorEx36_VERSION_DETAILS: {
+    case ID_DAP_VendorEx36_INTERFACE_VERSION_DETAILS: {
         // Add a more specific internal version string.
-        num += udb_get_version(response, DAP_PACKET_SIZE - 1);
+        num += udb_get_interface_version(response, DAP_PACKET_SIZE - 1);
         break;
     }
     case ID_DAP_VendorEx37_HOLD_IN_BL:
@@ -326,6 +326,11 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
     case ID_DAP_VendorEx40_MEASURE_POWER:
     {
         num += DAP_ProcessVendorCommandEx40_MeasurePower(request, response);
+        break;
+    }
+    case ID_DAP_VendorEx41_BOOTLOADER_VERSION_DETAILS: {
+        // Add a more specific internal version string.
+        num += udb_get_bootloader_version(response, DAP_PACKET_SIZE - 1);
         break;
     }
     default:
