@@ -1,11 +1,14 @@
 #if defined(CDC_B_ENDPOINT)
 
 #include "rl_usb.h"
+#include "usb_for_lib.h"
+#include "util.h"
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
 #include "nluif_udb-daplink.h"
 #include "daplink.h"
+#include "udb_log.h"
 #include DAPLINK_MAIN_HEADER
 
 static const char error_msg[] = "\r\n<OVERFLOW>\r\n";
@@ -19,6 +22,21 @@ int32_t USBD_CDC_B_ACM_PortInitialize(void)
     return 1;
 }
 
+int32_t USBD_CDC_B_ACM_PortSetControlLineState(uint16_t ctrl_bmp)
+{
+    // bit 0 of ctrl_bmp is DTR state. If the terminal implements
+    // flow control, it will set DTR to 1 when cdc is connected
+    // and set DTR to 0 when disconnected
+    if (ctrl_bmp & 1)
+    {
+        udb_log_set_cdc_ready(true);
+    }
+    else
+    {
+        udb_log_set_cdc_ready(false);
+    }
+}
+
 void cdc_b_process_event()
 {
     uint8_t data[64];
@@ -30,6 +48,7 @@ void cdc_b_process_event()
         {
             if (uif_handle_input_char(data[i]))
             {
+                udb_log_set_cdc_ready(true);
                 uif_run_cmd();
                 uif_prompt();
             }
@@ -47,6 +66,12 @@ int _write(int file, char *ptr, int len_to_write)
     uint32_t write_free;
     uint32_t total_free = USBD_CDC_B_ACM_DataFree();
     uint32_t error_len = strlen(error_msg);
+
+    if (!udb_log_cdc_ready())
+    {
+        udb_log_push(ptr, len_to_write);
+        return len_to_write;
+    }
 
     if (total_free < error_len) {
         // No space

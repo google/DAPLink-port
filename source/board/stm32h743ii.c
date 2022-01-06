@@ -21,14 +21,44 @@
 
 #include "target_family.h"
 #include "target_board.h"
+#include <stdio.h>
 
 #ifdef UDB
 #include "i2c.h"
 #include "udb_version.h"
 #include "udb_extended_features_task.h"
 #include "udb_power_measurement.h"
+#include "udb_log.h"
+#include "udb_version.h"
+#include "nluif_udb-daplink.h"
 
 static uint32_t s_count_blink = 0;
+
+static void udb_welcome_message(void)
+{
+    char ver_buf[UDB_VERSION_MAX_LENGTH];
+
+    printf("Welcome to\n");
+    printf("\t          ______   ______      \n");
+    printf("\t|\\     /|(  __  \\ (  ___ \\  \n");
+    printf("\t| )   ( || (  \\  )| (   ) )   \n");
+    printf("\t| |   | || |   ) || (__/ /     \n");
+    printf("\t| |   | || |   | ||  __ (      \n");
+    printf("\t| |   | || |   ) || (  \\ \\   \n");
+    printf("\t| (___) || (__/  )| )___) )    \n");
+    printf("\t(_______)(______/ |/ \\___/    \n\n");
+
+    udb_get_interface_version((uint8_t*)ver_buf, UDB_VERSION_MAX_LENGTH);
+    printf("interface version: %s\n", ver_buf);
+
+    udb_get_bootloader_version((uint8_t*)ver_buf, UDB_VERSION_MAX_LENGTH);
+    printf("bootloader version: %s\n", ver_buf);
+    printf("You can start typing commands.\n");
+    printf("To know more about udb, visit go/udb\n");
+    printf("Please report issue at go/udb-bug\n");
+
+    uif_prompt();
+}
 
 static void prerun_board_config(void)
 {
@@ -37,6 +67,7 @@ static void prerun_board_config(void)
     udb_read_hw_version();
     udb_extended_features_task_create();
     udb_power_measurement_init();
+    udb_welcome_message();
 }
 
 void board_30ms_hook()
@@ -45,6 +76,11 @@ void board_30ms_hook()
     if ((s_count_blink % 50) == 0)
     {
         HAL_GPIO_TogglePin( CONNECTED_LED_PORT, CONNECTED_LED_PIN);
+    }
+
+    if (udb_log_cdc_ready())
+    {
+        udb_log_flush();
     }
 }
 #endif // UDB
