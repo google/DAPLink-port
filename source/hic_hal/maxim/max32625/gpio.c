@@ -57,6 +57,7 @@ static inline void use_vddioh(int port, int pin)
 }
 
 /******************************************************************************/
+#if !defined(MAX32625_FORCE_IO_SWD_EXT) && !defined(MAX32625_FORCE_IO_DIP_EXT)
 static uint16_t readADC(uint8_t ch)
 {
     uint32_t ctrl_tmp;
@@ -95,6 +96,7 @@ static uint16_t readADC(uint8_t ch)
 
     return (uint16_t)(MXC_ADC->data);
 }
+#endif
 
 /******************************************************************************/
 void target_set_interface(TARGET_INTERFACE mode)
@@ -108,9 +110,9 @@ void target_set_interface(TARGET_INTERFACE mode)
             nreset_port = PIN_nRESET_PORT;
             nreset_pin = PIN_nRESET_PIN;
 
-            MXC_CLRBIT(&MXC_GPIO->out_val[EN_VDDIOH_PORT], EN_VDDIOH_PIN);      // Low to disable SWOUT
-            MXC_SETBIT(&MXC_GPIO->out_val[IOH_OW_EN_PORT], IOH_OW_EN_PIN);      // High to power MAX14689
-            MXC_SETBIT(&MXC_GPIO->out_val[SWD_DIP_SEL_PORT], SWD_DIP_SEL_PIN);  // High to connect Bn <-> Cn
+            MXC_GPIO_CLRBIT(EN_VDDIOH_PORT, EN_VDDIOH_PIN);      // Low to disable SWOUT
+            MXC_GPIO_SETBIT(IOH_OW_EN_PORT, IOH_OW_EN_PIN);      // High to power MAX14689
+            MXC_GPIO_SETBIT(SWD_DIP_SEL_PORT, SWD_DIP_SEL_PIN);  // High to connect Bn <-> Cn
             uart_set_instance(CDC_ACM_UART_SWD);
             break;
         case IO_DIP_EXT:
@@ -121,9 +123,9 @@ void target_set_interface(TARGET_INTERFACE mode)
             nreset_port = PIN_DIP_nRESET_PORT;
             nreset_pin = PIN_DIP_nRESET_PIN;
 
-            MXC_CLRBIT(&MXC_GPIO->out_val[EN_VDDIOH_PORT], EN_VDDIOH_PIN);      // Low to disable SWOUT
-            MXC_SETBIT(&MXC_GPIO->out_val[IOH_OW_EN_PORT], IOH_OW_EN_PIN);      // High to power MAX14689
-            MXC_CLRBIT(&MXC_GPIO->out_val[SWD_DIP_SEL_PORT], SWD_DIP_SEL_PIN);  // Low to connect Bn <-> An
+            MXC_GPIO_CLRBIT(EN_VDDIOH_PORT, EN_VDDIOH_PIN);      // Low to disable SWOUT
+            MXC_GPIO_SETBIT(IOH_OW_EN_PORT, IOH_OW_EN_PIN);      // High to power MAX14689
+            MXC_GPIO_CLRBIT(SWD_DIP_SEL_PORT, SWD_DIP_SEL_PIN);  // Low to connect Bn <-> An
             uart_set_instance(CDC_ACM_UART_DIP);
             break;
     }
@@ -133,7 +135,6 @@ void target_set_interface(TARGET_INTERFACE mode)
 void gpio_init(void)
 {
     int i;
-    uint32_t out_mode;
 
     // Ensure that the GPIO clock is enabled
     if (MXC_CLKMAN->sys_clk_ctrl_6_gpio == MXC_S_CLKMAN_CLK_SCALE_DISABLED) {
@@ -147,66 +148,46 @@ void gpio_init(void)
 
     // Set to enable the board to power VDDIOH and in turn the target micro
     // Clear to disable the board from powering VDDIOH
-    MXC_CLRBIT(&MXC_GPIO->out_val[EN_VDDIOH_PORT], EN_VDDIOH_PIN);
-    out_mode = MXC_GPIO->out_mode[EN_VDDIOH_PORT];
-    out_mode &= ~(0xFU << (4 * EN_VDDIOH_PIN));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_NORMAL << (4 * EN_VDDIOH_PIN));
-    MXC_GPIO->out_mode[EN_VDDIOH_PORT] = out_mode;
+    MXC_GPIO_CLRBIT(EN_VDDIOH_PORT, EN_VDDIOH_PIN);
+    MXC_GPIO_SETMODE(EN_VDDIOH_PORT, EN_VDDIOH_PIN, MXC_V_GPIO_OUT_MODE_NORMAL);
 
     // LED initial state off
-    MXC_GPIO->out_val[PIN_DAP_LED_PORT] |= (1 << PIN_DAP_LED_PIN);
-    MXC_GPIO->out_val[PIN_MSD_LED_PORT] |= (1 << PIN_MSD_LED_PIN);
-    MXC_GPIO->out_val[PIN_CDC_LED_PORT] |= (1 << PIN_CDC_LED_PIN);
+    MXC_GPIO_SETBIT(PIN_DAP_LED_PORT, PIN_DAP_LED_PIN); 
+    MXC_GPIO_SETBIT(PIN_MSD_LED_PORT, PIN_MSD_LED_PIN); 
+    MXC_GPIO_SETBIT(PIN_CDC_LED_PORT, PIN_CDC_LED_PIN); 
 
-    // LED outputs
-    out_mode = MXC_GPIO->out_mode[PIN_DAP_LED_PORT];
-    out_mode &= ~(0xFU << (4 * PIN_DAP_LED_PIN));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_OPEN_DRAIN << (4 * PIN_DAP_LED_PIN));
-    MXC_GPIO->out_mode[PIN_DAP_LED_PORT] = out_mode;
-
-    out_mode = MXC_GPIO->out_mode[PIN_MSD_LED_PORT];
-    out_mode &= ~(0xFU << (4 * PIN_MSD_LED_PIN));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_OPEN_DRAIN << (4 * PIN_MSD_LED_PIN));
-    MXC_GPIO->out_mode[PIN_MSD_LED_PORT] = out_mode;
-
-    out_mode = MXC_GPIO->out_mode[PIN_CDC_LED_PORT];
-    out_mode &= ~(0xFU << (4 * PIN_CDC_LED_PIN));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_OPEN_DRAIN << (4 * PIN_CDC_LED_PIN));
-    MXC_GPIO->out_mode[PIN_CDC_LED_PORT] = out_mode;
+    // LED outputs  
+    MXC_GPIO_SETMODE(PIN_DAP_LED_PORT, PIN_DAP_LED_PIN, MXC_V_GPIO_OUT_MODE_OPEN_DRAIN);
+    MXC_GPIO_SETMODE(PIN_MSD_LED_PORT, PIN_MSD_LED_PIN, MXC_V_GPIO_OUT_MODE_OPEN_DRAIN);
+    MXC_GPIO_SETMODE(PIN_CDC_LED_PORT, PIN_CDC_LED_PIN, MXC_V_GPIO_OUT_MODE_OPEN_DRAIN);
 
     // Button Input
-    out_mode = MXC_GPIO->out_mode[PIN_RESET_IN_NO_FWRD_PORT];
-    out_mode &= ~(0xFU << (4 * PIN_RESET_IN_NO_FWRD_PIN));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_OPEN_DRAIN_WEAK_PULLUP << (4 * PIN_RESET_IN_NO_FWRD_PIN));
-    MXC_GPIO->out_mode[PIN_RESET_IN_NO_FWRD_PORT] = out_mode;
-    MXC_GPIO->out_val[PIN_RESET_IN_NO_FWRD_PORT] |= (0x1U << PIN_RESET_IN_NO_FWRD_PIN);
+    MXC_GPIO_SETMODE(PIN_RESET_IN_NO_FWRD_PORT, PIN_RESET_IN_NO_FWRD_PIN, MXC_V_GPIO_OUT_MODE_OPEN_DRAIN_WEAK_PULLUP);
+    MXC_GPIO_SETBIT(PIN_RESET_IN_NO_FWRD_PORT, PIN_RESET_IN_NO_FWRD_PIN); 
 
     // IOH_1W_EN (must be configured for strong drive)
-    MXC_SETBIT(&MXC_GPIO->out_val[IOH_OW_EN_PORT], IOH_OW_EN_PIN);
-    out_mode = MXC_GPIO->out_mode[IOH_OW_EN_PORT];
-    out_mode &= ~(0xFU << (4 * IOH_OW_EN_PIN));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_FAST_DRIVE << (4 * IOH_OW_EN_PIN));
-    MXC_GPIO->out_mode[IOH_OW_EN_PORT] = out_mode;
+    MXC_GPIO_SETBIT(IOH_OW_EN_PORT, IOH_OW_EN_PIN); 
+    MXC_GPIO_SETMODE(IOH_OW_EN_PORT, IOH_OW_EN_PIN, MXC_V_GPIO_OUT_MODE_FAST_DRIVE);
 
     // SWD_DIP_SEL (must be configured for strong drive)
-    MXC_CLRBIT(&MXC_GPIO->out_val[SWD_DIP_SEL_PORT], SWD_DIP_SEL_PIN);
-    out_mode = MXC_GPIO->out_mode[SWD_DIP_SEL_PORT];
-    out_mode &= ~(0xFU << (4 * SWD_DIP_SEL_PIN));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_FAST_DRIVE << (4 * SWD_DIP_SEL_PIN));
-    MXC_GPIO->out_mode[SWD_DIP_SEL_PORT] = out_mode;
+    MXC_GPIO_CLRBIT(SWD_DIP_SEL_PORT, SWD_DIP_SEL_PIN); 
+    MXC_GPIO_SETMODE(SWD_DIP_SEL_PORT, SWD_DIP_SEL_PIN, MXC_V_GPIO_OUT_MODE_FAST_DRIVE);
 
     // Strong pull-up disable
-    MXC_SETBIT(&MXC_GPIO->out_val[OWM_SUP_PORT], OWM_SUP_PIN);
-    out_mode = MXC_GPIO->out_mode[OWM_SUP_PORT];
-    out_mode &= ~(0xFU << (4 * OWM_SUP_PIN));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_NORMAL << (4 * OWM_SUP_PIN));
-    MXC_GPIO->out_mode[OWM_SUP_PORT] = out_mode;
+    MXC_GPIO_SETBIT(OWM_SUP_PORT, OWM_SUP_PIN); 
+    MXC_GPIO_SETMODE(OWM_SUP_PORT, OWM_SUP_PIN, MXC_V_GPIO_OUT_MODE_NORMAL);
 
     // VDDIOH driver isn't strong enough with the strong pull-up
     MXC_IOMAN->use_vddioh_1 &= ~(1U << (((OWM_PORT - 4) * 8) + OWM_PIN));
     // 1V8 VDDIO is not high enough to turn off the FET if VDDIOH is 3V3
     MXC_IOMAN->use_vddioh_1 |= (1U << (((OWM_PORT - 4) * 8) + OWM_SUP_PIN));
 
+#if defined(MAX32625_GPIO_USE_VDDIO)
+    // Use VDDIO
+    MXC_IOMAN->use_vddioh_0 = 0;
+    MXC_IOMAN->use_vddioh_1 = 0;
+#else
+	// Use VDDIOH
     use_vddioh(PIN_nRESET_PORT, PIN_nRESET_PIN);
     use_vddioh(PIN_DIP_nRESET_PORT, PIN_DIP_nRESET_PIN);
     use_vddioh(PIN_SWCLK_PORT, PIN_SWCLK_PIN);
@@ -217,11 +198,21 @@ void gpio_init(void)
     use_vddioh(PIN_RX_PORT, PIN_RX_PIN);
     use_vddioh(PIN_DIP_TX_PORT, PIN_DIP_TX_PIN);
     use_vddioh(PIN_DIP_RX_PORT, PIN_DIP_RX_PIN);
-
+#endif
+	// LEDs use VDDIOH
+    use_vddioh(PIN_DAP_LED_PORT, PIN_DAP_LED_PIN);
+    use_vddioh(PIN_MSD_LED_PORT, PIN_MSD_LED_PIN);
+    use_vddioh(PIN_CDC_LED_PORT, PIN_CDC_LED_PIN);
+	
     // Setup the ADC; read the ADC to set IO interface
     MXC_PWRMAN->pwr_rst_ctrl |= MXC_F_PWRMAN_PWR_RST_CTRL_AFE_POWERED;
     MXC_CLKMAN->clk_ctrl |= MXC_F_CLKMAN_CLK_CTRL_ADC_CLOCK_ENABLE;
 
+#if defined(MAX32625_FORCE_IO_SWD_EXT)
+    target_set_interface(IO_SWD_EXT);
+#elif defined(MAX32625_FORCE_IO_DIP_EXT)
+    target_set_interface(IO_DIP_EXT);
+#else
     MXC_ADC->ctrl = (MXC_F_ADC_CTRL_ADC_PU |
                      MXC_F_ADC_CTRL_ADC_CLK_EN |
                      MXC_F_ADC_CTRL_BUF_PU |
@@ -229,10 +220,10 @@ void gpio_init(void)
                      MXC_F_ADC_CTRL_ADC_CHGPUMP_PU);
 
     // Change the MUX to other pins before measuring the voltage to avoid false reading
-    MXC_SETBIT(&MXC_GPIO->out_val[SWD_DIP_SEL_PORT], SWD_DIP_SEL_PIN);  // High to connect Bn <-> Cn
+    MXC_GPIO_SETBIT(SWD_DIP_SEL_PORT, SWD_DIP_SEL_PIN);  // High to connect Bn <-> Cn
     uint16_t tmp_hdr_vio = readADC(HDR_VIO_CH);
 
-    MXC_CLRBIT(&MXC_GPIO->out_val[SWD_DIP_SEL_PORT], SWD_DIP_SEL_PIN);  // Low to connect Bn <-> An
+    MXC_GPIO_CLRBIT(SWD_DIP_SEL_PORT, SWD_DIP_SEL_PIN);  // Low to connect Bn <-> An
     uint16_t tmp_swd_vio = readADC(SWD_VIO_CH);
 
     // Set IO interface
@@ -244,15 +235,20 @@ void gpio_init(void)
         // Default to SWD interface
         target_set_interface(IO_SWD_EXT);
     }
+#endif
+	
+	// Disable Reset pin interrupt - Fix for old bootloader firmware
+    MXC_GPIO->inten[PIN_RESET_IN_NO_FWRD_PORT] &= ~(1 << PIN_RESET_IN_NO_FWRD_PIN);
+    NVIC_DisableIRQ(GPIO_P2_IRQn);
 }
 
 /******************************************************************************/
 void gpio_set_hid_led(gpio_led_state_t state)
 {
     if (state == GPIO_LED_ON) {
-        MXC_CLRBIT(&MXC_GPIO->out_val[PIN_DAP_LED_PORT], PIN_DAP_LED_PIN);
+        MXC_GPIO_CLRBIT(PIN_DAP_LED_PORT, PIN_DAP_LED_PIN);
     } else {
-        MXC_SETBIT(&MXC_GPIO->out_val[PIN_DAP_LED_PORT], PIN_DAP_LED_PIN);
+        MXC_GPIO_SETBIT(PIN_DAP_LED_PORT, PIN_DAP_LED_PIN);
     }
 }
 
@@ -260,9 +256,9 @@ void gpio_set_hid_led(gpio_led_state_t state)
 void gpio_set_msc_led(gpio_led_state_t state)
 {
     if (state == GPIO_LED_ON) {
-        MXC_CLRBIT(&MXC_GPIO->out_val[PIN_MSD_LED_PORT], PIN_MSD_LED_PIN);
+        MXC_GPIO_CLRBIT(PIN_MSD_LED_PORT, PIN_MSD_LED_PIN);
     } else {
-        MXC_SETBIT(&MXC_GPIO->out_val[PIN_MSD_LED_PORT], PIN_MSD_LED_PIN);
+        MXC_GPIO_SETBIT(PIN_MSD_LED_PORT, PIN_MSD_LED_PIN);
     }
 }
 
@@ -270,16 +266,16 @@ void gpio_set_msc_led(gpio_led_state_t state)
 void gpio_set_cdc_led(gpio_led_state_t state)
 {
     if (state == GPIO_LED_ON) {
-        MXC_CLRBIT(&MXC_GPIO->out_val[PIN_CDC_LED_PORT], PIN_CDC_LED_PIN);
+        MXC_GPIO_CLRBIT(PIN_CDC_LED_PORT, PIN_CDC_LED_PIN);
     } else {
-        MXC_SETBIT(&MXC_GPIO->out_val[PIN_CDC_LED_PORT], PIN_CDC_LED_PIN);
+        MXC_GPIO_SETBIT(PIN_CDC_LED_PORT, PIN_CDC_LED_PIN);
     }
 }
 
 /******************************************************************************/
 uint8_t gpio_get_reset_btn_no_fwrd(void)
 {
-    return !MXC_GETBIT(&MXC_GPIO->in_val[PIN_RESET_IN_NO_FWRD_PORT], PIN_RESET_IN_NO_FWRD_PIN);
+    return !MXC_GPIO_GETBIT(PIN_RESET_IN_NO_FWRD_PORT, PIN_RESET_IN_NO_FWRD_PIN);
 }
 
 /******************************************************************************/

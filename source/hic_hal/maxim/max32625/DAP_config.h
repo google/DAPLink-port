@@ -3,7 +3,7 @@
  * @brief
  *
  * DAPLink Interface Firmware
- * Copyright (c) 2009-2016, ARM Limited, All Rights Reserved
+ * Copyright (c) 2009-2021, ARM Limited, All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -27,10 +27,13 @@
 \defgroup DAP_Config_Debug_gr CMSIS-DAP Debug Unit Information
 \ingroup DAP_ConfigIO_gr
 @{
-Provides definitions about:
+Provides definitions about the hardware and configuration of the Debug Unit.
+
+This information includes:
  - Definition of Cortex-M processor parameters used in CMSIS-DAP Debug Unit.
+ - Debug Unit Identification strings (Vendor, Product, Serial Number).
  - Debug Unit communication packet size.
- - Debug Access Port communication mode (JTAG or SWD).
+ - Debug Access Port supported modes and settings (JTAG/SWD and SWO).
  - Optional information about a connected Target Device (for Evaluation Boards).
 */
 
@@ -50,7 +53,7 @@ Provides definitions about:
 /// require 2 processor cycles for a I/O Port Write operation.  If the Debug Unit uses
 /// a Cortex-M0+ processor with high-speed peripheral I/O only 1 processor cycle might be
 /// required.
-#define IO_PORT_WRITE_CYCLES    2               ///< I/O Cycles: 2=default, 1=Cortex-M0+ fast I/0
+#define IO_PORT_WRITE_CYCLES    2U              ///< I/O Cycles: 2=default, 1=Cortex-M0+ fast I/0
 
 /// Indicate that Serial Wire Debug (SWD) communication mode is available at the Debug Access Port.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
@@ -74,12 +77,17 @@ Provides definitions about:
 #define DAP_DEFAULT_SWJ_CLOCK   5000000         ///< Default SWD/JTAG clock frequency in Hz.
 
 /// Maximum Package Size for Command and Response data.
-/// This configuration settings is used to optimized the communication performance with the
-/// debugger and depends on the USB peripheral. Change setting to 1024 for High-Speed USB.
-#define DAP_PACKET_SIZE         64              ///< USB: 64 = Full-Speed, 1024 = High-Speed.
+/// This configuration settings is used to optimize the communication performance with the
+/// debugger and depends on the USB peripheral. Typical vales are 64 for Full-speed USB HID or WinUSB,
+/// 1024 for High-speed USB HID and 512 for High-speed USB WinUSB.
+#ifndef HID_ENDPOINT            //HID end points currently set limits to 64
+#define DAP_PACKET_SIZE         512              ///< Specifies Packet Size in bytes.
+#else
+#define DAP_PACKET_SIZE         64              ///< Specifies Packet Size in bytes.
+#endif
 
 /// Maximum Package Buffers for Command and Response data.
-/// This configuration settings is used to optimized the communication performance with the
+/// This configuration settings is used to optimize the communication performance with the
 /// debugger and depends on the USB peripheral. For devices with limited RAM or USB buffer the
 /// setting can be reduced (valid range is 1 .. 255). Change setting to 4 for High-Speed USB.
 #define DAP_PACKET_COUNT        4              ///< Buffers: 64 = Full-Speed, 4 = High-Speed.
@@ -88,15 +96,18 @@ Provides definitions about:
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
 #define SWO_UART                0               ///< SWO UART:  1 = available, 0 = not available
 
+/// USART Driver instance number for the UART SWO.
+#define SWO_UART_DRIVER         0               ///< USART Driver instance number (Driver_USART#).
+
 /// Maximum SWO UART Baudrate
 #define SWO_UART_MAX_BAUDRATE   10000000U       ///< SWO UART Maximum Baudrate in Hz
 
 /// Indicate that Manchester Serial Wire Output (SWO) trace is available.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
-#define SWO_MANCHESTER          0               ///< SWO Manchester:  1 = available, 0 = not available
+#define SWO_MANCHESTER          0               ///< SWO Manchester:  1 = available, 0 = not available.
 
 /// SWO Trace Buffer Size.
-#define SWO_BUFFER_SIZE         4096U           ///< SWO Trace Buffer Size in bytes (must be 2^n)
+#define SWO_BUFFER_SIZE         4096U           ///< SWO Trace Buffer Size in bytes (must be 2^n).
 
 /// SWO Streaming Trace.
 #define SWO_STREAM              0               ///< SWO Streaming Trace: 1 = available, 0 = not available.
@@ -104,16 +115,28 @@ Provides definitions about:
 /// Clock frequency of the Test Domain Timer. Timer value is returned with \ref TIMESTAMP_GET.
 #define TIMESTAMP_CLOCK         1000000U      ///< Timestamp clock in Hz (0 = timestamps not supported).
 
+/// Indicate that UART Communication Port is available.
+/// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
+#define DAP_UART                0               ///< DAP UART:  1 = available, 0 = not available.
+
+/// USART Driver instance number for the UART Communication Port.
+#define DAP_UART_DRIVER         1               ///< USART Driver instance number (Driver_USART#).
+
+/// UART Receive Buffer Size.
+#define DAP_UART_RX_BUFFER_SIZE 1024U           ///< Uart Receive Buffer Size in bytes (must be 2^n).
+
+/// UART Transmit Buffer Size.
+#define DAP_UART_TX_BUFFER_SIZE 1024U           ///< Uart Transmit Buffer Size in bytes (must be 2^n).
+
+/// Indicate that UART Communication via USB COM Port is available.
+/// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
+#define DAP_UART_USB_COM_PORT   1               ///< USB COM Port:  1 = available, 0 = not available.
+
 /// Debug Unit is connected to fixed Target Device.
 /// The Debug Unit may be part of an evaluation board and always connected to a fixed
-/// known device.  In this case a Device Vendor and Device Name string is stored which
-/// may be used by the debugger or IDE to configure device parameters.
-#define TARGET_DEVICE_FIXED     0               ///< Target Device: 1 = known, 0 = unknown;
-
-#if TARGET_DEVICE_FIXED
-#define TARGET_DEVICE_VENDOR    ""              ///< String indicating the Silicon Vendor
-#define TARGET_DEVICE_NAME      ""              ///< String indicating the Target Device
-#endif
+/// known device. In this case a Device Vendor, Device Name, Board Vendor and Board Name strings
+/// are stored and may be used by the debugger or IDE to configure device parameters.
+#define TARGET_FIXED            0               ///< Target: 1 = known, 0 = unknown;
 
 ///@}
 
@@ -184,33 +207,20 @@ Configures the DAP Hardware I/O pins for Serial Wire Debug (SWD) mode:
 */
 __STATIC_INLINE void PORT_SWD_SETUP (void)
 {
-    uint32_t out_mode;
-
     // Ensure that the GPIO clock is enabled
     if (MXC_CLKMAN->sys_clk_ctrl_6_gpio == MXC_V_CLKMAN_CLK_SCALE_DISABLED) {
         MXC_CLKMAN->sys_clk_ctrl_6_gpio = MXC_V_CLKMAN_CLK_SCALE_DIV_1;
     }
 
     // Initial state
-    MXC_GPIO->out_val[swclk_port] |= (1 << swclk_pin);
-    MXC_GPIO->out_val[swdio_port] |= (1 << swdio_pin);
-    MXC_GPIO->out_val[nreset_port] |= (1 << nreset_pin);
+    MXC_GPIO_SETBIT(swclk_port, swclk_pin);
+    MXC_GPIO_SETBIT(swdio_port, swdio_pin);
+    MXC_GPIO_SETBIT(nreset_port, nreset_pin);
 
     // Output mode
-    out_mode = MXC_GPIO->out_mode[swclk_port];
-    out_mode &= ~(0xFU << (4 * swclk_pin));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_NORMAL << (4 * swclk_pin));
-    MXC_GPIO->out_mode[swclk_port] = out_mode;
-
-    out_mode = MXC_GPIO->out_mode[swdio_port];
-    out_mode &= ~(0xFU << (4 * swdio_pin));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_NORMAL << (4 * swdio_pin));
-    MXC_GPIO->out_mode[swdio_port] = out_mode;
-
-    out_mode = MXC_GPIO->out_mode[nreset_port];
-    out_mode &= ~(0xFU << (4 * nreset_pin));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_OPEN_DRAIN_WEAK_PULLUP << (4 * nreset_pin));
-    MXC_GPIO->out_mode[nreset_port] = out_mode;
+    MXC_GPIO_SETMODE(swclk_port, swclk_pin, MXC_V_GPIO_OUT_MODE_NORMAL);
+    MXC_GPIO_SETMODE(swdio_port, swdio_pin, MXC_V_GPIO_OUT_MODE_NORMAL);
+    MXC_GPIO_SETMODE(nreset_port, nreset_pin, MXC_V_GPIO_OUT_MODE_OPEN_DRAIN_WEAK_PULLUP);
 
     tck_in = (volatile uint32_t *)BITBAND(&MXC_GPIO->in_val[swclk_port], swclk_pin);
     tck_out = (volatile uint32_t *)BITBAND(&MXC_GPIO->out_val[swclk_port], swclk_pin);
@@ -226,28 +236,15 @@ Disables the DAP Hardware I/O pins which configures:
 */
 __STATIC_INLINE void PORT_OFF (void)
 {
-    uint32_t out_mode;
-
     // Disable weak pullup in high-z output mode
-    MXC_GPIO->out_val[swclk_port] &= ~(1 << swclk_pin);
-    MXC_GPIO->out_val[swdio_port] &= ~(1 << swdio_pin);
-    MXC_GPIO->out_val[nreset_port] &= ~(1 << nreset_pin);
+    MXC_GPIO_CLRBIT(swclk_port, swclk_pin);
+    MXC_GPIO_CLRBIT(swdio_port, swdio_pin);
+    MXC_GPIO_CLRBIT(nreset_port, nreset_pin);
 
     // High-z output mode
-    out_mode = MXC_GPIO->out_mode[swclk_port];
-    out_mode &= ~(0xFU << (4 * swclk_pin));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_HIGH_Z_WEAK_PULLUP << (4 * swclk_pin));
-    MXC_GPIO->out_mode[swclk_port] = out_mode;
-
-    out_mode = MXC_GPIO->out_mode[swdio_port];
-    out_mode &= ~(0xFU << (4 * swdio_pin));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_HIGH_Z_WEAK_PULLUP << (4 * swdio_pin));
-    MXC_GPIO->out_mode[swdio_port] = out_mode;
-
-    out_mode = MXC_GPIO->out_mode[nreset_port];
-    out_mode &= ~(0xFU << (4 * nreset_pin));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_HIGH_Z_WEAK_PULLUP << (4 * nreset_pin));
-    MXC_GPIO->out_mode[nreset_port] = out_mode;
+    MXC_GPIO_SETMODE(swclk_port, swclk_pin, MXC_V_GPIO_OUT_MODE_HIGH_Z_WEAK_PULLUP);
+    MXC_GPIO_SETMODE(swdio_port, swdio_pin, MXC_V_GPIO_OUT_MODE_HIGH_Z_WEAK_PULLUP);
+    MXC_GPIO_SETMODE(nreset_port, nreset_pin, MXC_V_GPIO_OUT_MODE_HIGH_Z_WEAK_PULLUP);
 }
 
 // SWCLK/TCK I/O pin -------------------------------------
@@ -324,12 +321,7 @@ called prior \ref PIN_SWDIO_OUT function calls.
 */
 __STATIC_FORCEINLINE void     PIN_SWDIO_OUT_ENABLE  (void)
 {
-    uint32_t out_mode;
-
-    out_mode = MXC_GPIO->out_mode[swdio_port];
-    out_mode &= ~(0xFU << (4 * swdio_pin));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_NORMAL << (4 * swdio_pin));
-    MXC_GPIO->out_mode[swdio_port] = out_mode;
+    MXC_GPIO_SETMODE(swdio_port, swdio_pin, MXC_V_GPIO_OUT_MODE_NORMAL);
 }
 
 /** SWDIO I/O pin: Switch to Input mode (used in SWD mode only).
@@ -338,12 +330,8 @@ called prior \ref PIN_SWDIO_IN function calls.
 */
 __STATIC_FORCEINLINE void     PIN_SWDIO_OUT_DISABLE (void)
 {
-    uint32_t out_mode;
-
-    out_mode = MXC_GPIO->out_mode[swdio_port];
-    out_mode &= ~(0xFU << (4 * swdio_pin));
-    MXC_GPIO->out_mode[swdio_port] = out_mode;
-    MXC_GPIO->out_val[swdio_port] &= ~(1 << swdio_pin);
+    MXC_GPIO_SETMODE(swdio_port, swdio_pin, MXC_V_GPIO_OUT_MODE_NORMAL_HIGH_Z);
+    MXC_GPIO_CLRBIT(swdio_port, swdio_pin);
 }
 
 // TDI Pin I/O ---------------------------------------------
@@ -489,29 +477,16 @@ Status LEDs. In detail the operation of Hardware I/O and LED pins are enabled an
 */
 __STATIC_INLINE void DAP_SETUP (void)
 {
-    uint32_t out_mode;
-
     // Weak pull-up disabled
-    MXC_GPIO->out_val[swclk_port] &= ~(1 << swclk_pin);
-    MXC_GPIO->out_val[swdio_port] &= ~(1 << swdio_pin);
+    MXC_GPIO_CLRBIT(swclk_port, swclk_pin);
+    MXC_GPIO_CLRBIT(swdio_port, swdio_pin);
     // Weak pull-up enabled
-    MXC_GPIO->out_val[nreset_port] |= (1 << nreset_pin);
+    MXC_GPIO_SETBIT(nreset_port, nreset_pin);
 
     // High-Z output mode
-    out_mode = MXC_GPIO->out_mode[swclk_port];
-    out_mode &= ~(0xFU << (4 * swclk_pin));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_HIGH_Z_WEAK_PULLUP << (4 * swclk_pin));
-    MXC_GPIO->out_mode[swclk_port] = out_mode;
-
-    out_mode = MXC_GPIO->out_mode[swdio_port];
-    out_mode &= ~(0xFU << (4 * swdio_pin));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_HIGH_Z_WEAK_PULLUP << (4 * swdio_pin));
-    MXC_GPIO->out_mode[swdio_port] = out_mode;
-
-    out_mode = MXC_GPIO->out_mode[nreset_port];
-    out_mode &= ~(0xFU << (4 * nreset_pin));
-    out_mode |= (MXC_V_GPIO_OUT_MODE_HIGH_Z_WEAK_PULLUP << (4 * nreset_pin));
-    MXC_GPIO->out_mode[nreset_port] = out_mode;
+    MXC_GPIO_SETMODE(swclk_port, swclk_pin, MXC_V_GPIO_OUT_MODE_HIGH_Z_WEAK_PULLUP);
+    MXC_GPIO_SETMODE(swdio_port, swdio_pin, MXC_V_GPIO_OUT_MODE_HIGH_Z_WEAK_PULLUP);
+    MXC_GPIO_SETMODE(nreset_port, nreset_pin, MXC_V_GPIO_OUT_MODE_HIGH_Z_WEAK_PULLUP);
 }
 
 /** Reset Target Device with custom specific I/O pin or command sequence.

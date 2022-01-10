@@ -25,7 +25,11 @@
 const board_info_t g_board_info = {
     .info_version = kBoardInfoVersion,
     .board_id = "0418",
-    .family_id = kMaxim_MAX32620_FamilyID,
+    .family_id = kMaxim_MAX3262X_FamilyID,
     .flags = kEnablePageErase,
     .target_cfg = &target_device,
+    .daplink_url_name = "MAX32620HTM",
+    .daplink_target_url = "http://www.maximintegrated.com/max32620fthr",
+    .board_vendor = "Maxim Integrated",
+    .board_name = "MAX32620FTHR",
 };
