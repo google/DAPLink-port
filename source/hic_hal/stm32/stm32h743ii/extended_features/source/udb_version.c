@@ -1,11 +1,3 @@
-/*
- * udb_version.c
- * Yang-te Chen
- * yangtechen@google.com
- * September 7, 2021
- *
- */
-
 #include <string.h>
 #include <stdio.h>
 #include "udb_version.h"
@@ -38,7 +30,7 @@
 #define UDB_BOOTLOADER_VERSION                  UDB_BUILD_VERSION
 #define UDB_BOOTLOADER_VERSION_SECTION_ADDR     DAPLINK_ROM_CONFIG_ADMIN_START
 #define BOOTLOADER_CFG_MAGIC_KEY                (0x5a5a5a5a)
-#define BOOTLOADER_MAX_VERSION_LENGTH           (64)
+#define BOOTLOADER_MAX_VERSION_LENGTH           UDB_VERSION_MAX_LENGTH
 
 typedef enum
 {
@@ -64,7 +56,7 @@ static volatile bootloader_version_t config_rom_bl __attribute__((section("cfgro
 };
 #endif
 
-static char s_bootloader_version_str[BOOTLOADER_MAX_VERSION_LENGTH] = "unknown";
+static char s_bootloader_version_str[BOOTLOADER_MAX_VERSION_LENGTH] = "unknown, note: bootloader ver are introduced after ver 0.11";
 
 static const char s_build_version_str[] = "udb_" UDB_BUILD_VERSION "_" GIT_DESCRIPTION "_hw:";
 static hw_version_t s_hw_version = HW_VERSION_UNKNOWN;
