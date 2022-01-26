@@ -49,6 +49,12 @@ static const uint8_t k_udb_power_measurement_current_reg[] =
     [UDB_POWER_MEASUREMENT_TARGET_DUT] = PAC193X_VSENSE2_REG
 };
 
+static const char* k_udb_power_measurement_target_name[] =
+{
+    [UDB_POWER_MEASUREMENT_TARGET_UDB] = "UDB",
+    [UDB_POWER_MEASUREMENT_TARGET_DUT] = "DUT",
+};
+
 #define UDB_POWER_MEASUREMENT_DENOMINATOR       (1<<16)
 
 int udb_power_measurement_read_voltage_mV(udb_power_measurement_target_t target, uint16_t *voltage_mV)
@@ -93,3 +99,9 @@ int udb_power_measurement_read_current_uA(udb_power_measurement_target_t target,
 
     return ret;
 }
+
+const char* udb_power_measurement_get_target_name(udb_power_measurement_target_t target)
+{
+    return k_udb_power_measurement_target_name[target];
+}
+
