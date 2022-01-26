@@ -6,6 +6,7 @@ common:
     includes:
         - source/hic_hal/stm32/stm32h743ii/extended_features/include
         - source/hic_hal/stm32/stm32h743ii/extended_features/lib/nlutilities/include
+        - source/hic_hal/stm32/stm32h743ii/extended_features/shell_commands/include
     sources:
         board:
             - source/board/stm32h743ii.c
@@ -14,3 +15,4 @@ common:
         hic_hal:
             - source/hic_hal/stm32/stm32h743ii/extended_features/source
             - source/hic_hal/stm32/stm32h743ii/extended_features/lib/nlutilities/source
+            - source/hic_hal/stm32/stm32h743ii/extended_features/shell_commands/source
