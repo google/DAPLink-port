@@ -335,10 +335,11 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
         pin_readback |= (read_gpio(UDC1_BOOT_PORT, UDC1_BOOT_PIN, UDC1_BOOT_DIR_PORT, UDC1_BOOT_DIR_PIN) << 5);
         pin_readback |= (read_gpio(UDC1_BUTTON_PORT, UDC1_BUTTON_PIN, UDC1_BUTTON_DIR_PORT, UDC1_BUTTON_DIR_PIN) << 6);
 
+        *response++ = DAP_OK;
         *response++ = ((pin_readback >> 8) & 0xFF); //Get MSByte (DIRECTION)
         *response++ = (pin_readback & 0xFF);        //Get LSByte (PIN_VALUES)
 
-        num += (3U << 16) | 2U; // 3 bytes read, 2 byte written
+        num += (3U << 16) | 3U; // 3 bytes read, 2 byte written and 1 byte DAP_OK
         break;
     }
     case ID_DAP_VendorEx35_DUT_PWR_CTRL: {
@@ -385,14 +386,18 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
         readback_byte |= (UDC_DUT_USB_EN_L_PORT->IDR & UDC_DUT_USB_EN_L_PIN) ? 0x01 : 0x00;
         readback_byte |= (UDC_EXT_RELAY_PORT->IDR & UDC_EXT_RELAY_PIN) ? 0x02 : 0x00;
 
+        *response++ = DAP_OK;
         *response++ = readback_byte;
 
-        num += (2U << 16) | 1U; // 2 bytes read, 1 byte written
+        num += (2U << 16) | 2U; // 2 bytes read, 1 byte written and 1 byte DAP_OK
         break;
     }
     case ID_DAP_VendorEx36_INTERFACE_VERSION_DETAILS: {
         // Add a more specific internal version string.
-        num += udb_get_interface_version(response, DAP_PACKET_SIZE - 1);
+        *response++ = DAP_OK;
+        num += 1;
+        // -2 because we have already filled 2 bytes of the response with Command ID and DAP_OK
+        num += udb_get_interface_version(response, DAP_PACKET_SIZE - 2);
         break;
     }
     case ID_DAP_VendorEx37_HOLD_IN_BL:
@@ -413,9 +418,10 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
     }
     case ID_DAP_VendorEx39_READ_UDC_ADAPTER_TYPE_ADC:
     {
+        *response++ = DAP_OK;
         adapter_type_t adapter = adapter_detector_get_adapter_type_adc();
         memcpy(response, &adapter, sizeof(adapter));
-        num += sizeof(adapter);
+        num += sizeof(adapter) + 1;
         break;
     }
     case ID_DAP_VendorEx40_MEASURE_POWER:
@@ -425,7 +431,10 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
     }
     case ID_DAP_VendorEx41_BOOTLOADER_VERSION_DETAILS: {
         // Add a more specific internal version string.
-        num += udb_get_bootloader_version(response, DAP_PACKET_SIZE - 1);
+        *response++ = DAP_OK;
+        num += 1;
+        // -2 because we have already filled 2 bytes of the response with Command ID and DAP_OK
+        num += udb_get_bootloader_version(response, DAP_PACKET_SIZE - 2);
         break;
     }
     default:
