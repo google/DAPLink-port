@@ -42,6 +42,28 @@ static const uint16_t k_adapter_type_adc_map[] =
     [ADAPTER_NONE]          = 0,
 };
 
+static const char* k_adapter_type_name[] =
+{
+    [ADAPTER_UDB_13_FLEX]   = "UDB_13_FLEX",
+    [ADAPTER_JOKER_FLEX]    = "JOKER_FLEX",
+    [ADAPTER_UDB_6_FLEX]    = "UDB_6_FLEX",
+    [ADAPTER_UDB_17_FLEX]   = "UDB_17_FLEX",
+    [ADAPTER_UDB_12_FLEX]   = "UDB_12_FLEX",
+    [ADAPTER_TYPE_5]        = "TYPE_5",
+    [ADAPTER_TYPE_6]        = "TYPE_6",
+    [ADAPTER_TYPE_7]        = "TYPE_7",
+    [ADAPTER_TYPE_8]        = "TYPE_8",
+    [ADAPTER_TYPE_9]        = "TYPE_9",
+    [ADAPTER_TYPE_10]       = "TYPE_10",
+    [ADAPTER_TYPE_11]       = "TYPE_11",
+    [ADAPTER_TYPE_12]       = "TYPE_12",
+    [ADAPTER_TYPE_13]       = "TYPE_13",
+    [ADAPTER_TYPE_14]       = "TYPE_14",
+    [ADAPTER_TYPE_15]       = "TYPE_15",
+    [ADAPTER_UNKNOWN]       = "UNKNOWN",
+    [ADAPTER_NONE]          = "NONE",
+};
+
 static adapter_type_t s_adapter_type_adc;
 
 void adapter_detector_update_adapter_type_adc(void)
@@ -62,4 +84,9 @@ void adapter_detector_update_adapter_type_adc(void)
 adapter_type_t adapter_detector_get_adapter_type_adc(void)
 {
     return s_adapter_type_adc;
+}
+
+const char* adapter_detector_get_adapter_type_name(adapter_type_t type)
+{
+    return k_adapter_type_name[type];
 }

@@ -27,6 +27,7 @@ typedef enum
 
 void adapter_detector_update_adapter_type_adc(void);
 adapter_type_t adapter_detector_get_adapter_type_adc(void);
+const char* adapter_detector_get_adapter_type_name(adapter_type_t type);
 
 #endif
 

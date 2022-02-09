@@ -3,6 +3,10 @@
 #include "shell_cmd_pwm.h"
 #include "shell_cmd_version.h"
 #include "shell_cmd_fault.h"
+#include "shell_cmd_reset.h"
+#include "shell_cmd_adapter_type.h"
+#include "shell_cmd_measure_power.h"
+#include "shell_cmd_reset_into_swu_mode.h"
 
 const UIF_CMD UIF_CMDTAB[] = {
     UIF_CMD_HELP,
@@ -10,6 +14,10 @@ const UIF_CMD UIF_CMDTAB[] = {
     UIF_CMD_PWM,
     UIF_CMD_VERSION,
     UIF_CMD_FAULT,
+    UIF_CMD_RESET,
+    UIF_CMD_ADAPTER_TYPE,
+    UIF_CMD_MEASURE_POWER,
+    UIF_CMD_RESET_INTO_SWU_MODE,
 };
 
 const int UIF_NUM_CMD = sizeof (UIF_CMDTAB) / sizeof (UIF_CMDTAB[0]);
