@@ -58,6 +58,13 @@ int _write(int file, char *ptr, int len_to_write)
 
     for (int idx = 0; idx < len_to_write; idx++)
     {
+        if (write_free < 2)
+        {
+            // No more space to write a \r\n in the worst case
+            USBD_CDC_B_ACM_DataSend(error_msg, error_len);
+            break;
+        }
+
         if (ptr[idx] == '\n')
         {
             USBD_CDC_B_ACM_DataSend("\r", 1);
@@ -65,13 +72,6 @@ int _write(int file, char *ptr, int len_to_write)
         }
         USBD_CDC_B_ACM_DataSend(ptr + idx, 1);
         write_free--;
-
-        if (write_free < 2)
-        {
-            // No more space to write a \r\n in the worst case
-            USBD_CDC_B_ACM_DataSend(error_msg, error_len);
-            break;
-        }
     }
 
     // force USB to process the data
