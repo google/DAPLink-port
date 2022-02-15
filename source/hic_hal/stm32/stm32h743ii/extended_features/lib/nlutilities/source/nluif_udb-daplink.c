@@ -44,9 +44,6 @@
 #endif
 
 #ifdef UDB
-extern int32_t USBD_CDC_B_ACM_PutChar(const uint8_t ch);
-#undef putchar
-#define putchar(...) USBD_CDC_B_ACM_PutChar(__VA_ARGS__)
 #define UIF_PRINT(...) printf(__VA_ARGS__)
 #endif
 
