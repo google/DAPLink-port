@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "util.h"
+#include "udb_fault_info.h"
 
 #define UDB_BT_BUFFER_SIZE  (32)
 
@@ -52,12 +53,10 @@ static void udb_backtrace(const char *file, uint16_t line)
 
     for (int i = 0; i < UDB_BT_BUFFER_SIZE && s_udb_bt_buffer[i]; ++i)
     {
-        // if the cdc b is connected, print to the console directly
-        printf("%lx\n", s_udb_bt_buffer[i] & (~1U));
-
         config_ram_add_hexdump(s_udb_bt_buffer[i] & (~1U));
     }
-    printf("\n");
+
+    udb_print_fault_info();
 }
 
 // overwrite the functions in backtrace.c
