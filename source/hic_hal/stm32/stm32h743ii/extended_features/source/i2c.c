@@ -209,6 +209,7 @@ void I2C_DAP_Initialize(void)
 
 bool I2C_DAP_MasterTransfer(uint16_t device_addr, const uint8_t* reg_addr, const uint8_t* data, uint32_t len)
 {
+    bool ret;
     uint8_t transfer_data[len+1];
     transfer_data[0] = *reg_addr;
 
@@ -223,11 +224,15 @@ bool I2C_DAP_MasterTransfer(uint16_t device_addr, const uint8_t* reg_addr, const
     /* Wait until transfer completed */
     while (I2Cdrv->GetStatus().busy);
 
-    return I2C_Event;  //0x01 = done, other bits set indicate an error.
+    ret = (I2C_Event == ARM_I2C_EVENT_TRANSFER_DONE);
+    I2C_Event = 0;
+
+    return ret;
 }
 
 bool I2C_DAP_MasterRead(uint16_t device_addr, const uint8_t* reg_addr, uint8_t* buf, uint32_t len)
 {
+    bool ret;
     /* Send slave address and device address without stop command at end */
     I2Cdrv->MasterTransmit(device_addr, reg_addr, 1, true);
 
@@ -235,16 +240,22 @@ bool I2C_DAP_MasterRead(uint16_t device_addr, const uint8_t* reg_addr, uint8_t* 
     while (I2Cdrv->GetStatus().busy);
 
     /* Check if all data transferred */
-    if ((I2C_Event & ARM_I2C_EVENT_TRANSFER_INCOMPLETE) != 0U)
-        return false;
+    ret = (I2C_Event == ARM_I2C_EVENT_TRANSFER_DONE);
+    I2C_Event = 0;
 
-    /* Send slave address and read from register address with stop command at end */
-    I2Cdrv->MasterReceive(device_addr, buf, len, false);
+    if (ret == true)
+    {
+        /* Send slave address and read from register address with stop command at end */
+        I2Cdrv->MasterReceive(device_addr, buf, len, false);
 
-    /* Wait until transfer completed */
-    while (I2Cdrv->GetStatus().busy);
+        /* Wait until transfer completed */
+        while (I2Cdrv->GetStatus().busy);
 
-    return I2C_Event;  //0x01 = done, other bits set indicate an error.
+        ret = (I2C_Event == ARM_I2C_EVENT_TRANSFER_DONE);
+        I2C_Event = 0;
+    }
+
+    return ret;
 }
 
 
