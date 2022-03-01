@@ -21,14 +21,15 @@
 #define USBx_BASE       USB1_OTG_HS_PERIPH_BASE
 #define USBx_DEVICE     ((USB_OTG_DeviceTypeDef *)(USBx_BASE + USB_OTG_DEVICE_BASE))
 
-
+// If a change to the FIFO sizes is required, first investigate the max packet size
+// and the driver for the respective endpoints.
 #define RX_FIFO_SIZE    1024
 #define TX0_FIFO_SIZE   64
 #define TX1_FIFO_SIZE   512
-#define TX2_FIFO_SIZE   448
+#define TX2_FIFO_SIZE   512
 #define TX3_FIFO_SIZE   512
 #define TX4_FIFO_SIZE   512
-#define TX5_FIFO_SIZE   512
+#define TX5_FIFO_SIZE   448
 #define TX6_FIFO_SIZE   512
 // This chip has 4kB shared RAM for the FIFOs. Check if the FIFOs combined are within this limit.
 COMPILER_ASSERT((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE + TX3_FIFO_SIZE +
