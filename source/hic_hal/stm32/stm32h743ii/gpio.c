@@ -161,6 +161,19 @@ void gpio_set_msc_led(gpio_led_state_t state)
     HAL_GPIO_WritePin(PIN_MSC_LED_PORT, PIN_MSC_LED, state ? GPIO_PIN_RESET : GPIO_PIN_SET);
 }
 
+/*
+ * The UDC0_RST_L line in hardware build P3 would bring UDB
+ * into bootloader mode when the target is connected to DUT0
+ * and the target is not powered or powered from the adapter USB.
+ *
+ * Disable the button and let users use reset_into_swu_mode debug
+ * console command to go into bootloader mode.
+ */
+bool reset_button_pressed(void)
+{
+    return false;
+}
+
 uint8_t gpio_get_reset_btn_no_fwrd(void)
 {
     return (nRESET_PIN_PORT->IDR & nRESET_PIN) ? 0 : 1;
