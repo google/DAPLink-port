@@ -7,6 +7,7 @@
 #include "shell_cmd_adapter_type.h"
 #include "shell_cmd_measure_power.h"
 #include "shell_cmd_reset_into_swu_mode.h"
+#include "shell_cmd_i2c.h"
 
 const UIF_CMD UIF_CMDTAB[] = {
     UIF_CMD_HELP,
@@ -18,6 +19,7 @@ const UIF_CMD UIF_CMDTAB[] = {
     UIF_CMD_ADAPTER_TYPE,
     UIF_CMD_MEASURE_POWER,
     UIF_CMD_RESET_INTO_SWU_MODE,
+    UIF_CMD_I2C,
 };
 
 const int UIF_NUM_CMD = sizeof (UIF_CMDTAB) / sizeof (UIF_CMDTAB[0]);
