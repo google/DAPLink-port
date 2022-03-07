@@ -40,7 +40,6 @@ static uint32_t get_SP()
 
 void udb_backtrace(const char *file, uint16_t line)
 {
-    int i = 0;
     uint32_t pc = get_PC();
     uint32_t sp = get_SP();
     memset(s_udb_bt_buffer, 0, sizeof(s_udb_bt_buffer));
@@ -53,7 +52,7 @@ void udb_backtrace(const char *file, uint16_t line)
     for (int i = 0; i < UDB_BT_BUFFER_SIZE && s_udb_bt_buffer[i]; ++i)
     {
         // if the cdc b is connected, print to the console directly
-        printf("%x\n", s_udb_bt_buffer[i] & (~1U));
+        printf("%lx\n", s_udb_bt_buffer[i] & (~1U));
 
         config_ram_add_hexdump(s_udb_bt_buffer[i] & (~1U));
     }

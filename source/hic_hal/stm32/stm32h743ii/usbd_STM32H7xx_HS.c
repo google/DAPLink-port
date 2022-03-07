@@ -507,7 +507,7 @@ void USBD_EnableEP(U32 EPNum)
 
 void USBD_DisableEP(U32 EPNum)
 {
-    uint32_t num, wcnt;
+    uint32_t wcnt;
 
     // Disable IN Endpoint
     if (EPNum & USB_ENDPOINT_DIRECTION_MASK)
