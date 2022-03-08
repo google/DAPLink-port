@@ -315,7 +315,7 @@ void gpio_write_dut_pin(dut_pin_group_id_t dut_pin_group_id, GPIO_PinState pin_s
 {
     util_assert(IS_DUT_PIN_GROUP_ID(dut_pin_group_id));
     util_assert(IS_GPIO_PIN_ACTION(pin_state));
-    util_assert(gpio_read_dut_io_pin(dut_pin_group_id) == GPIO_PIN_SET);
+    util_assert(gpio_read_dut_dir_pin(dut_pin_group_id) == GPIO_PIN_SET);
 
     uint32_t pupd_reg = s_dut_pin_group[dut_pin_group_id].io_port->PUPDR;
     pupd_reg &= ~(3UL << (s_dut_pin_group[dut_pin_group_id].io_pin_bit * 2U));
