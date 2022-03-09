@@ -39,23 +39,26 @@ COMPILER_ASSERT((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE + 
 #define EP_IN_TYPE(num)     ((USBx_INEP(num)->DIEPCTL & USB_OTG_DIEPCTL_EPTYP) >> USB_OTG_DIEPCTL_EPTYP_Pos)
 #define EP_OUT_TYPE(num)    ((USBx_OUTEP(num)->DOEPCTL & USB_OTG_DOEPCTL_EPTYP) >> USB_OTG_DOEPCTL_EPTYP_Pos)
 
-uint32_t OutMaxPacketSize[7] = {USBD_MAX_PACKET0, 0, 0, 0, 0, 0, 0};
-uint8_t OutPacketCnt[7] = {1, 0, 0, 0, 0, 0, 0};
-uint8_t InPacketCnt[7] = {1, 0, 0, 0, 0, 0, 0};
+static uint32_t OutMaxPacketSize[USBD_EP_NUM];
+static uint8_t  OutPacketCnt[USBD_EP_NUM];
+static uint8_t  InPacketCnt[USBD_EP_NUM];
+static uint32_t InPacketDataCnt[USBD_EP_NUM];
+static uint32_t InPacketDataReady;
+static uint32_t SyncWriteEP;
 
 #if (USBD_HID_ENABLE == 1)
-uint32_t HID_IntInPacketData[(USBD_HID_MAX_PACKET + 3) / 4];
+static uint32_t HID_IntInPacketData[(USBD_HID_MAX_PACKET + 3) / 4];
 #endif
 
 #if (USBD_CDC_ACM_ENABLE == 1)
-uint32_t CDC_ACM_IntInPacketData[(USBD_CDC_ACM_MAX_PACKET + 3) / 4];
+static uint32_t CDC_ACM_IntInPacketData[(USBD_CDC_ACM_MAX_PACKET + 3) / 4];
 #endif
 
 #if (USBD_CDC_B_ACM_ENABLE == 1)
-uint32_t CDC_B_ACM_IntInPacketData[(USBD_CDC_B_ACM_MAX_PACKET + 3) / 4];
+static uint32_t CDC_B_ACM_IntInPacketData[(USBD_CDC_B_ACM_MAX_PACKET + 3) / 4];
 #endif
 
-uint32_t *InPacketDataPtr[7] =
+static uint32_t *InPacketDataPtr[USBD_EP_NUM] =
 {
 /* endpoint 0 */
     0,
@@ -64,7 +67,7 @@ uint32_t *InPacketDataPtr[7] =
     HID_IntInPacketData,
 #elif ((USBD_CDC_ACM_ENABLE == 1) && (USBD_CDC_ACM_EP_INTIN == 1))
     CDC_ACM_IntInPacketData,
-#else
+#elif (USBD_EP_NUM > 1)
     0,
 #endif
 /* endpoint 2 */
@@ -72,7 +75,7 @@ uint32_t *InPacketDataPtr[7] =
     HID_IntInPacketData,
 #elif ((USBD_CDC_ACM_ENABLE == 1) && (USBD_CDC_ACM_EP_INTIN == 2))
     CDC_ACM_IntInPacketData,
-#else
+#elif (USBD_EP_NUM > 2)
     0,
 #endif
 /* endpoint 3 */
@@ -80,7 +83,7 @@ uint32_t *InPacketDataPtr[7] =
     HID_IntInPacketData,
 #elif ((USBD_CDC_ACM_ENABLE == 1) && (USBD_CDC_ACM_EP_INTIN == 3))
     CDC_ACM_IntInPacketData,
-#else
+#elif (USBD_EP_NUM > 3)
     0,
 #endif
 /* endpoint 4 */
@@ -88,7 +91,7 @@ uint32_t *InPacketDataPtr[7] =
     HID_IntInPacketData,
 #elif ((USBD_CDC_ACM_ENABLE == 1) && (USBD_CDC_ACM_EP_INTIN == 4))
     CDC_ACM_IntInPacketData,
-#else
+#elif (USBD_EP_NUM > 4)
     0,
 #endif
 /* endpoint 5 */
@@ -96,7 +99,7 @@ uint32_t *InPacketDataPtr[7] =
     HID_IntInPacketData,
 #elif ((USBD_CDC_B_ACM_ENABLE == 1) && (USBD_CDC_B_ACM_EP_INTIN == 5))
     CDC_B_ACM_IntInPacketData,
-#else
+#elif (USBD_EP_NUM > 5)
     0,
 #endif
 /* endpoint 6 */
@@ -104,14 +107,10 @@ uint32_t *InPacketDataPtr[7] =
     HID_IntInPacketData,
 #elif ((USBD_CDC_B_ACM_ENABLE == 1) && (USBD_CDC_B_ACM_EP_INTIN == 6))
     CDC_B_ACM_IntInPacketData,
-#else
+#elif (USBD_EP_NUM > 6)
     0,
 #endif
 };
-
-uint32_t InPacketDataCnt[7] = {0};
-uint32_t InPacketDataReady = 0;
-uint32_t SyncWriteEP = 0;
 
 /*
  *  USB Device Interrupt enable
@@ -119,7 +118,7 @@ uint32_t SyncWriteEP = 0;
  *    Return Value:    None
  */
 
-void USBD_IntrEna(void)
+static void USBD_IntrEna(void)
 {
     NVIC_EnableIRQ(OTG_HS_IRQn); /* Enable OTG_HS interrupt */
 }
@@ -343,6 +342,10 @@ void USBD_Reset(void)
     USBx_OUTEP(0)->DOEPTSIZ = (1 << USB_OTG_DOEPTSIZ_STUPCNT_Pos) | // setup count = 1
                               (1 << USB_OTG_DOEPTSIZ_PKTCNT_Pos) |  // packet count
                               USBD_MAX_PACKET0;
+
+    OutMaxPacketSize[0] = USBD_MAX_PACKET0;
+    OutPacketCnt[0] = 1;
+    InPacketCnt[0] = 1;
 }
 
 /*
