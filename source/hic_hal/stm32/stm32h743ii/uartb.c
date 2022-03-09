@@ -39,9 +39,6 @@
 #define CDC_UART_IRQn                UART4_IRQn
 #define CDC_UART_IRQn_Handler        UART4_IRQHandler
 
-#define UART_PINS_PORT_ENABLE()      __HAL_RCC_GPIOD_CLK_ENABLE()
-#define UART_PINS_PORT_DISABLE()     __HAL_RCC_GPIOD_CLK_DISABLE()
-
 #define UART_ALTFUNC                 GPIO_AF8_UART4  //Select the correct alt func
 
 #define UART_TX_PORT                 GPIOD
@@ -58,9 +55,6 @@
 #define CDC_UARTB_DISABLE()         __HAL_RCC_USART2_CLK_DISABLE()
 #define CDC_UARTB_IRQn              USART2_IRQn
 #define CDC_UARTB_IRQn_Handler      USART2_IRQHandler
-
-#define UARTB_PINS_PORT_ENABLE()    __HAL_RCC_GPIOD_CLK_ENABLE()
-#define UARTB_PINS_PORT_DISABLE()   __HAL_RCC_GPIOD_CLK_DISABLE()
 
 #define UARTB_ALTFUNC               GPIO_AF7_USART2 //Select the correct alt func
 
@@ -117,7 +111,6 @@ int32_t uartb_initialize(void)
     clear_buffers();
 
     CDC_UARTB_ENABLE();
-    UARTB_PINS_PORT_ENABLE();
 
     //TX pin
     GPIO_InitStructure.Pin = UARTB_TX_PIN;
@@ -294,8 +287,8 @@ void CDC_UARTB_IRQn_Handler(void)
         }
     }
 
-    if (sr & USART_ISR_ORE) { 
-        //Overrun (can be seen when closing cdc_uart and lots of traffic from 
+    if (sr & USART_ISR_ORE) {
+        //Overrun (can be seen when closing cdc_uart and lots of traffic from
         // DUT.  Clear the interrupt here to avoid getting stuck in a loop.
         //ToDo: Potentially count overruns/flag errors and report to host.
         CDC_UARTB->ICR |= USART_ICR_ORECF;

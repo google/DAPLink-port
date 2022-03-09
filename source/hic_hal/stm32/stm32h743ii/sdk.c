@@ -255,7 +255,6 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* hpcd)
     */
         HAL_PWREx_EnableUSBVoltageDetector();
 
-        __HAL_RCC_GPIOA_CLK_ENABLE();
         /**USB_OTG_FS GPIO Configuration
         PA12     ------> USB_OTG_FS_DP
         PA11     ------> USB_OTG_FS_DM
@@ -284,10 +283,6 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* hpcd)
     */
         HAL_PWREx_EnableUSBVoltageDetector();
 
-        __HAL_RCC_GPIOB_CLK_ENABLE();
-        __HAL_RCC_GPIOI_CLK_ENABLE();
-        __HAL_RCC_GPIOC_CLK_ENABLE();
-        __HAL_RCC_GPIOA_CLK_ENABLE();
         /**USB_OTG_HS GPIO Configuration
         PB5     ------> USB_OTG_HS_ULPI_D7
         PI11     ------> USB_OTG_HS_ULPI_DIR

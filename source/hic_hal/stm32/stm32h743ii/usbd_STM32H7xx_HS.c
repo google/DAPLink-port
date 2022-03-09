@@ -134,12 +134,6 @@ void USBD_Init(void)
     int32_t tout;
     GPIO_InitTypeDef gpio_init_struct;
 
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-    __HAL_RCC_GPIOH_CLK_ENABLE();
-    __HAL_RCC_GPIOI_CLK_ENABLE();
-
     // PA5 (OTG_HS_ULPI alternate function, CLOCK)
     gpio_init_struct.Pin = GPIO_PIN_5;
     gpio_init_struct.Mode = GPIO_MODE_AF_PP;

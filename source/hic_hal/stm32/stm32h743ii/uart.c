@@ -37,9 +37,6 @@
 
 #define CDC_UART_RXFIFO_THRESHOLD   UART_RXFIFO_THRESHOLD_3_4
 
-#define UART_PINS_PORT_ENABLE()     __HAL_RCC_GPIOD_CLK_ENABLE()
-#define UART_PINS_PORT_DISABLE()    __HAL_RCC_GPIOD_CLK_DISABLE()
-
 #define UART_ALTFUNC                GPIO_AF7_USART3  //Select the correct alt func
 
 #define UART_TX_PORT                GPIOD
@@ -123,7 +120,6 @@ int32_t uart_initialize(void)
     GPIO_InitTypeDef GPIO_InitStructure;
 
     CDC_UART_ENABLE();
-    UART_PINS_PORT_ENABLE();
 
     //TX pin
     GPIO_InitStructure.Pin = UART_TX_PIN;
@@ -158,7 +154,6 @@ int32_t uart_uninitialize(void)
     HAL_GPIO_DeInit(UART_RX_PORT, UART_RX_PIN);
     HAL_GPIO_DeInit(UART_TX_PORT, UART_TX_PIN);
 
-    UART_PINS_PORT_DISABLE();
     CDC_UART_DISABLE();
 
     return 1;
