@@ -61,16 +61,16 @@ int _write(int file, char *ptr, int len_to_write)
         if (write_free < 2)
         {
             // No more space to write a \r\n in the worst case
-            USBD_CDC_B_ACM_DataSend(error_msg, error_len);
+            USBD_CDC_B_ACM_DataSend((uint8_t*)error_msg, error_len);
             break;
         }
 
         if (ptr[idx] == '\n')
         {
-            USBD_CDC_B_ACM_DataSend("\r", 1);
+            USBD_CDC_B_ACM_DataSend((uint8_t*)"\r", 1);
             write_free--;
         }
-        USBD_CDC_B_ACM_DataSend(ptr + idx, 1);
+        USBD_CDC_B_ACM_DataSend((uint8_t*)(ptr + idx), 1);
         write_free--;
     }
 

@@ -77,7 +77,6 @@ static void pwm_stop(void)
 
 static void pwm_start(uint16_t freq, uint16_t duty_cycle)
 {
-    HAL_StatusTypeDef ret = {0};
     RCC_ClkInitTypeDef clk_init = {0};
     TIM_OC_InitTypeDef pwm_config = {0};
     GPIO_InitTypeDef GPIO_InitStruct = {0};

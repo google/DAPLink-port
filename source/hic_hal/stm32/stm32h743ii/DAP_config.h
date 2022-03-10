@@ -175,18 +175,25 @@ __STATIC_INLINE void pin_in_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit, uint8_t m
 
     uint8_t config = 0;
     if(mode == 1)
+    {
         config = 0x01; //pull-up
+    }
     else if(mode == 2)
+    {
         config = 0x02; //pull-down
+    }
 
-		if( mode == 0) //analog input
-				GPIOx->MODER |= ( 0x00000003 << ((pin_bit) << 1) );  // 0b11 = analog mode
-		else // gpio in (mode >0)
-				GPIOx->MODER &= ~(0x00000003 << ((pin_bit) << 1));  // clear (input mode)
+    if( mode == 0) //analog input
+    {
+        GPIOx->MODER |= ( 0x00000003 << ((pin_bit) << 1) );  // 0b11 = analog mode
+    }
+    else // gpio in (mode >0)
+    {
+        GPIOx->MODER &= ~(0x00000003 << ((pin_bit) << 1));  // clear (input mode)
+    }
 
-				GPIOx->PUPDR &= ~(0x00000003 << ((pin_bit) << 1));  // clear
-				GPIOx->PUPDR |= ( ((uint32_t)(config) & 0x03) << ((pin_bit) << 1));  // set pullup/down
-
+    GPIOx->PUPDR &= ~(0x00000003 << ((pin_bit) << 1));  // clear
+    GPIOx->PUPDR |= ( ((uint32_t)(config) & 0x03) << ((pin_bit) << 1));  // set pullup/down
 }
 //**************************************************************************************************
 /**

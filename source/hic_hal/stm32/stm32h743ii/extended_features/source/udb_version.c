@@ -113,7 +113,6 @@ static const hw_version_pin_type_t s_hw_version_pins[HW_VERSION_PIN_COUNT] =
 
 static bool is_hw_version_p1(void)
 {
-    uint8_t len;
     GPIO_InitTypeDef GPIO_InitStructure;
     GPIO_PinState bitstatus;
     GPIO_InitStructure.Pin = PIN_UDB_HW_VERSION;
@@ -243,10 +242,10 @@ void udb_read_hw_version(void)
 
 int udb_get_interface_version(uint8_t *buffer, unsigned size)
 {
-    return snprintf(buffer, size, "%s%d", s_build_version_str, s_hw_version);
+    return snprintf((char*)buffer, size, "%s%d", s_build_version_str, s_hw_version);
 }
 
 int udb_get_bootloader_version(uint8_t *buffer, unsigned size)
 {
-    return snprintf(buffer, size, "%s", s_bootloader_version_str);
+    return snprintf((char*)buffer, size, "%s", s_bootloader_version_str);
 }
