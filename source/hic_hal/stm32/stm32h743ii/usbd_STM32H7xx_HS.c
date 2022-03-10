@@ -26,30 +26,31 @@
 #define USBx_BASE       USB1_OTG_HS_PERIPH_BASE
 #define USBx_DEVICE     ((USB_OTG_DeviceTypeDef *)(USBx_BASE + USB_OTG_DEVICE_BASE))
 
-// If a change to the FIFO sizes is required, first investigate the max packet size
-// and the driver for the respective endpoints.
-#define RX_FIFO_SIZE    1024
-#define TX0_FIFO_SIZE   64
+// 00: Control, 01: Isochronous, 10: Bulk, 11: Interrupt
+#define EP_IN_TYPE(num)     ((USBx_INEP(num)->DIEPCTL & USB_OTG_DIEPCTL_EPTYP) >> USB_OTG_DIEPCTL_EPTYP_Pos)
+#define EP_OUT_TYPE(num)    ((USBx_OUTEP(num)->DOEPCTL & USB_OTG_DOEPCTL_EPTYP) >> USB_OTG_DOEPCTL_EPTYP_Pos)
+
+#define RX_FIFO_SIZE    1024    // RX MAX
+#define TX0_FIFO_SIZE   64      // EP0 MAX
 #define TX1_FIFO_SIZE   512
 #define TX2_FIFO_SIZE   512
-#define TX3_FIFO_SIZE   512
+#define TX3_FIFO_SIZE   512     // Interrupt EP
 #define TX4_FIFO_SIZE   512
-#define TX5_FIFO_SIZE   448
+#define TX5_FIFO_SIZE   448     // Interrupt EP, reduced to meet the 4kB total size limit
 #define TX6_FIFO_SIZE   512
 // This chip has 4kB shared RAM for the FIFOs. Check if the FIFOs combined are within this limit.
 COMPILER_ASSERT((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE + TX3_FIFO_SIZE +
                  TX4_FIFO_SIZE + TX5_FIFO_SIZE + TX6_FIFO_SIZE) <= 4096);
 
-// 00: Control, 01: Isochronous, 10: Bulk, 11: Interrupt
-#define EP_IN_TYPE(num)     ((USBx_INEP(num)->DIEPCTL & USB_OTG_DIEPCTL_EPTYP) >> USB_OTG_DIEPCTL_EPTYP_Pos)
-#define EP_OUT_TYPE(num)    ((USBx_OUTEP(num)->DOEPCTL & USB_OTG_DOEPCTL_EPTYP) >> USB_OTG_DOEPCTL_EPTYP_Pos)
-
-static uint32_t OutMaxPacketSize[USBD_EP_NUM];
-static uint8_t  OutPacketCnt[USBD_EP_NUM];
-static uint8_t  InPacketCnt[USBD_EP_NUM];
-static uint32_t InPacketDataCnt[USBD_EP_NUM];
-static uint32_t InPacketDataReady;
-static uint32_t SyncWriteEP;
+// If a change to the FIFO sizes is required, first investigate the max packet size
+// and the driver for the respective endpoints.
+// If the EP definitions change, update the TX FIFO sizes and InPacketDataPtr respectively
+COMPILER_ASSERT((USBD_BULK_EP_BULKIN == 1) && (USBD_BULK_HS_WMAXPACKETSIZE <= TX1_FIFO_SIZE));
+COMPILER_ASSERT((USBD_MSC_HS_ENABLE == 1) && (USBD_MSC_EP_BULKIN == 2) && (USBD_MSC_HS_WMAXPACKETSIZE <= TX2_FIFO_SIZE));
+COMPILER_ASSERT(USBD_CDC_ACM_EP_INTIN == 3);
+COMPILER_ASSERT((USBD_CDC_ACM_HS_ENABLE == 1) && (USBD_CDC_ACM_EP_BULKIN == 4) && (USBD_CDC_ACM_HS_WMAXPACKETSIZE <= TX4_FIFO_SIZE));
+COMPILER_ASSERT(USBD_CDC_B_ACM_EP_INTIN == 5);
+COMPILER_ASSERT((USBD_CDC_B_ACM_HS_ENABLE == 1) && (USBD_CDC_B_ACM_EP_BULKIN == 6) && (USBD_CDC_B_ACM_HS_WMAXPACKETSIZE <= TX6_FIFO_SIZE));
 
 #if (USBD_HID_ENABLE == 1)
 static uint32_t HID_IntInPacketData[(USBD_HID_MAX_PACKET + 3) / 4];
@@ -70,52 +71,41 @@ static uint32_t *InPacketDataPtr[USBD_EP_NUM] =
 /* endpoint 1 */
 #if ((USBD_HID_ENABLE == 1) && (USBD_HID_EP_INTIN == 1))
     HID_IntInPacketData,
-#elif ((USBD_CDC_ACM_ENABLE == 1) && (USBD_CDC_ACM_EP_INTIN == 1))
-    CDC_ACM_IntInPacketData,
 #elif (USBD_EP_NUM > 1)
     0,
 #endif
 /* endpoint 2 */
-#if ((USBD_HID_ENABLE == 1) && (USBD_HID_EP_INTIN == 2))
-    HID_IntInPacketData,
-#elif ((USBD_CDC_ACM_ENABLE == 1) && (USBD_CDC_ACM_EP_INTIN == 2))
-    CDC_ACM_IntInPacketData,
-#elif (USBD_EP_NUM > 2)
+#if (USBD_EP_NUM > 2)
     0,
 #endif
 /* endpoint 3 */
-#if ((USBD_HID_ENABLE == 1) && (USBD_HID_EP_INTIN == 3))
-    HID_IntInPacketData,
-#elif ((USBD_CDC_ACM_ENABLE == 1) && (USBD_CDC_ACM_EP_INTIN == 3))
+#if ((USBD_CDC_ACM_ENABLE == 1) && (USBD_CDC_ACM_EP_INTIN == 3))
     CDC_ACM_IntInPacketData,
 #elif (USBD_EP_NUM > 3)
     0,
 #endif
 /* endpoint 4 */
-#if ((USBD_HID_ENABLE == 1) && (USBD_HID_EP_INTIN == 4))
-    HID_IntInPacketData,
-#elif ((USBD_CDC_ACM_ENABLE == 1) && (USBD_CDC_ACM_EP_INTIN == 4))
-    CDC_ACM_IntInPacketData,
-#elif (USBD_EP_NUM > 4)
+#if (USBD_EP_NUM > 4)
     0,
 #endif
 /* endpoint 5 */
-#if ((USBD_HID_ENABLE == 1) && (USBD_HID_EP_INTIN == 5))
-    HID_IntInPacketData,
-#elif ((USBD_CDC_B_ACM_ENABLE == 1) && (USBD_CDC_B_ACM_EP_INTIN == 5))
+#if ((USBD_CDC_B_ACM_ENABLE == 1) && (USBD_CDC_B_ACM_EP_INTIN == 5))
     CDC_B_ACM_IntInPacketData,
 #elif (USBD_EP_NUM > 5)
     0,
 #endif
 /* endpoint 6 */
-#if ((USBD_HID_ENABLE == 1) && (USBD_HID_EP_INTIN == 6))
-    HID_IntInPacketData,
-#elif ((USBD_CDC_B_ACM_ENABLE == 1) && (USBD_CDC_B_ACM_EP_INTIN == 6))
-    CDC_B_ACM_IntInPacketData,
-#elif (USBD_EP_NUM > 6)
+#if (USBD_EP_NUM > 6)
     0,
 #endif
 };
+
+static uint32_t OutMaxPacketSize[USBD_EP_NUM];
+static uint8_t  OutPacketCnt[USBD_EP_NUM];
+static uint8_t  InPacketCnt[USBD_EP_NUM];
+static uint32_t InPacketDataCnt[USBD_EP_NUM];
+static uint32_t InPacketDataReady;
+static uint32_t SyncWriteEP;
 
 /*
  *  USB Device Interrupt enable
@@ -315,12 +305,12 @@ void USBD_Reset(void)
                       ((TX6_FIFO_SIZE/4) << 16);
 
     USBx_OUTEP(0)->DOEPTSIZ = USB_OTG_DOEPTSIZ_STUPCNT_0 | // setup count = 1
-                              (1 << USB_OTG_DOEPTSIZ_PKTCNT_Pos) |  // packet count
+                              (USBD_OUT_PACKET_CNT0 << USB_OTG_DOEPTSIZ_PKTCNT_Pos) |  // packet count
                               USBD_MAX_PACKET0;
 
     OutMaxPacketSize[0] = USBD_MAX_PACKET0;
-    OutPacketCnt[0] = 1;
-    InPacketCnt[0] = 1;
+    OutPacketCnt[0] = USBD_OUT_PACKET_CNT0;
+    InPacketCnt[0] = USBD_IN_PACKET_CNT0;
 }
 
 /*
