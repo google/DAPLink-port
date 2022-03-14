@@ -44,10 +44,6 @@ This information includes:
 /// This value is used to calculate the SWD/JTAG clock speed.
 #define CPU_CLOCK               SystemCoreClock        ///< Specifies the CPU Clock in Hz
 
-
-// ToDo(elee): Review, is this 6 for H743?
-// https://stackoverflow.com/questions/51736591/stm32h7xx-toggle-io-as-fast-as-possible
-
 /// Number of processor cycles for I/O Port write operations.
 /// This value is used to calculate the SWD/JTAG clock speed that is generated with I/O
 /// Port write operations in the Debug Unit by a Cortex-M MCU. Most Cortex-M processors
@@ -77,8 +73,6 @@ This information includes:
 /// The command \ref DAP_SWJ_Clock can be used to overwrite this default setting.
 #define DAP_DEFAULT_SWJ_CLOCK   5000000         ///< Default SWD/JTAG clock frequency in Hz.
 
-//ToDo(elee): 512 for WinUSB?  https://arm-software.github.io/CMSIS_5/DAP/html/group__DAP__Config__Debug__gr.html#gaa28bb1da2661291634c4a8fb3e227404
-
 /// Maximum Package Size for Command and Response data.
 /// This configuration settings is used to optimize the communication performance with the
 /// debugger and depends on the USB peripheral. Typical vales are 64 for Full-speed USB HID or WinUSB,
@@ -95,9 +89,6 @@ This information includes:
 /// setting can be reduced (valid range is 1 .. 255). Change setting to 4 for High-Speed USB.
 #define DAP_PACKET_COUNT       4              ///< Buffers: 64 = Full-Speed, 4 = High-Speed.
 
-
-// ToDo(elee): enable SWO_UART
-
 /// Indicate that UART Serial Wire Output (SWO) trace is available.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
 #define SWO_UART                0               ///< SWO UART:  1 = available, 0 = not available
@@ -108,18 +99,12 @@ This information includes:
 /// Maximum SWO UART Baudrate
 #define SWO_UART_MAX_BAUDRATE   10000000U       ///< SWO UART Maximum Baudrate in Hz
 
-
-// ToDo(elee): Supported?  How common?
-
 /// Indicate that Manchester Serial Wire Output (SWO) trace is available.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
 #define SWO_MANCHESTER          0               ///< SWO Manchester:  1 = available, 0 = not available.
 
 /// SWO Trace Buffer Size.
 #define SWO_BUFFER_SIZE         4096U           ///< SWO Trace Buffer Size in bytes (must be 2^n).
-
-
-// Todo(elee): Looks like is 0 for all DAPLink probes.
 
 /// SWO Streaming Trace.
 #define SWO_STREAM              0               ///< SWO Streaming Trace: 1 = available, 0 = not available.
@@ -152,49 +137,6 @@ This information includes:
 
 ///@}
 
-
-__STATIC_INLINE void pin_out_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit)
-{
-    GPIOx->MODER &= ~(0x00000003 << ((pin_bit) << 1)); //shift in 2 bit increments.
-    GPIOx->MODER |= ( 0x00000001 << ((pin_bit) << 1) );  // 0b01 = gpio out
-    GPIOx->OTYPER &= ~(0x00000001 << (pin_bit));  //  0b0 = push-pull mode
-	  GPIOx->OSPEEDR |= (0x0000003 << ((pin_bit) << 1));  // set "very high speed"
-}
-
-__STATIC_INLINE void pin_out_od_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit)
-{
-    GPIOx->MODER &= ~(0x00000003 << ((pin_bit) << 1));
-    GPIOx->MODER |= ( 0x00000001 << ((pin_bit) << 1) );  // 0b01 = gpio out
-    GPIOx->OTYPER |= (0x00000001 << (pin_bit));  // 0b1 = open drain mode
-	  GPIOx->OSPEEDR |= (0x0000003 << ((pin_bit) << 1));  // set "very high speed"
-}
-
-__STATIC_INLINE void pin_in_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit, uint8_t mode)
-{
-	  // mode = 0 -> analog input, 1->pullup, 2->pulldown, 3->input-no-pullups
-
-    uint8_t config = 0;
-    if(mode == 1)
-    {
-        config = 0x01; //pull-up
-    }
-    else if(mode == 2)
-    {
-        config = 0x02; //pull-down
-    }
-
-    if( mode == 0) //analog input
-    {
-        GPIOx->MODER |= ( 0x00000003 << ((pin_bit) << 1) );  // 0b11 = analog mode
-    }
-    else // gpio in (mode >0)
-    {
-        GPIOx->MODER &= ~(0x00000003 << ((pin_bit) << 1));  // clear (input mode)
-    }
-
-    GPIOx->PUPDR &= ~(0x00000003 << ((pin_bit) << 1));  // clear
-    GPIOx->PUPDR |= ( ((uint32_t)(config) & 0x03) << ((pin_bit) << 1));  // set pullup/down
-}
 //**************************************************************************************************
 /**
 \defgroup DAP_Config_PortIO_gr CMSIS-DAP Hardware I/O Pin Access
@@ -252,21 +194,31 @@ Configures the DAP Hardware I/O pins for Serial Wire Debug (SWD) mode:
 */
 __STATIC_INLINE void PORT_SWD_SETUP(void)
 {
-    // Set SWCLK HIGH
-    pin_out_init(SWCLK_TCK_PIN_PORT, SWCLK_TCK_PIN_Bit);
-    SWCLK_TCK_PIN_PORT->BSRR = SWCLK_TCK_PIN;
-    // Set SWDIO HIGH
-    pin_out_init(SWDIO_PIN_PORT, SWDIO_PIN_Bit);
-    SWDIO_PIN_PORT->BSRR = SWDIO_PIN;
+    GPIO_InitTypeDef gpio_init =
+    {
+        .Mode = GPIO_MODE_OUTPUT_PP,
+        .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
+    };
 
-    //pin_in_init(SWDIO_IN_PIN_PORT, SWDIO_IN_PIN_Bit, 1);  //Only a single SWDIO pin is used
+    // Set SWCLK HIGH
+    gpio_init.Pin = SWCLK_TCK_PIN;
+    HAL_GPIO_Init(SWCLK_TCK_PIN_PORT, &gpio_init);
+    HAL_GPIO_WritePin(SWCLK_TCK_PIN_PORT, SWCLK_TCK_PIN, GPIO_PIN_SET);
+
+    // Set SWDIO HIGH
+    gpio_init.Pin = SWDIO_PIN;
+    HAL_GPIO_Init(SWDIO_PIN_PORT, &gpio_init);
+    HAL_GPIO_WritePin(SWDIO_PIN_PORT, SWDIO_PIN, GPIO_PIN_SET);
 
     // Set RESET HIGH
-    pin_in_init(nRESET_PIN_PORT, nRESET_PIN_Bit, 2); // input, with pulldown
-    nRESET_DIR_PIN_PORT->BSRR = (nRESET_DIR_PIN << 16); // DIR low -> nRST high
+    gpio_init.Pin = nRESET_PIN;
+    gpio_init.Mode = GPIO_MODE_INPUT;
+    gpio_init.Pull = GPIO_PULLDOWN;
+    HAL_GPIO_Init(nRESET_PIN_PORT, &gpio_init);
+    HAL_GPIO_WritePin(nRESET_DIR_PIN_PORT, nRESET_DIR_PIN, GPIO_PIN_RESET);
 
     // Enable bidir buffer chip (OE_L_CTRL0)
-    SWD_BUFFER_EN_PORT->BSRR = SWD_BUFFER_EN_PIN;
+    HAL_GPIO_WritePin(SWD_BUFFER_EN_PORT, SWD_BUFFER_EN_PIN, GPIO_PIN_SET);
 }
 
 /** Disable JTAG/SWD I/O Pins.
@@ -275,9 +227,19 @@ Disables the DAP Hardware I/O pins which configures:
 */
 __STATIC_INLINE void PORT_OFF(void)
 {
-    pin_in_init(SWCLK_TCK_PIN_PORT, SWCLK_TCK_PIN_Bit, 0);
-    pin_in_init(SWDIO_PIN_PORT, SWDIO_PIN_Bit, 0);
-    SWD_BUFFER_EN_PORT->BSRR = (SWD_BUFFER_EN_PIN << 16);
+    GPIO_InitTypeDef gpio_init =
+    {
+        .Mode = GPIO_MODE_INPUT,
+        .Pull = GPIO_NOPULL,
+    };
+
+    gpio_init.Pin = SWCLK_TCK_PIN;
+    HAL_GPIO_Init(SWCLK_TCK_PIN_PORT, &gpio_init);
+
+    gpio_init.Pin = SWDIO_PIN;
+    HAL_GPIO_Init(SWDIO_PIN_PORT, &gpio_init);
+
+    HAL_GPIO_WritePin(SWD_BUFFER_EN_PORT, SWD_BUFFER_EN_PIN, GPIO_PIN_RESET);
 }
 
 // SWCLK/TCK I/O pin -------------------------------------
@@ -346,9 +308,13 @@ __STATIC_FORCEINLINE uint32_t PIN_SWDIO_IN(void)
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT(uint32_t bit)
 {
     if (bit & 1)
+    {
         SWDIO_PIN_PORT->BSRR = SWDIO_PIN;
+    }
     else
+    {
         SWDIO_PIN_PORT->BSRR = (SWDIO_PIN << 16);
+    }
 }
 
 /** SWDIO I/O pin: Switch to Output mode (used in SWD mode only).
@@ -357,7 +323,13 @@ called prior \ref PIN_SWDIO_OUT function calls.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT_ENABLE(void)
 {
-    pin_out_init(SWDIO_PIN_PORT, SWDIO_PIN_Bit);
+    GPIO_InitTypeDef gpio_init =
+    {
+        .Pin = SWDIO_PIN,
+        .Mode = GPIO_MODE_OUTPUT_PP,
+        .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
+    };
+    HAL_GPIO_Init(SWDIO_PIN_PORT, &gpio_init);
     SWDIO_PIN_PORT->BSRR = (SWDIO_PIN << 16);
 }
 
@@ -367,7 +339,13 @@ called prior \ref PIN_SWDIO_IN function calls.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
 {
-    pin_in_init(SWDIO_PIN_PORT, SWDIO_PIN_Bit, 1);  //mode=1, so is an input (w pullup)
+    GPIO_InitTypeDef gpio_init =
+    {
+        .Pin = SWDIO_PIN,
+        .Mode = GPIO_MODE_INPUT,
+        .Pull = GPIO_PULLUP,
+    };
+    HAL_GPIO_Init(SWDIO_PIN_PORT, &gpio_init);
     SWDIO_PIN_PORT->BSRR = SWDIO_PIN;
 }
 
@@ -442,9 +420,13 @@ __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN(void)
 __STATIC_FORCEINLINE void     PIN_nRESET_OUT(uint32_t bit)
 {
     if (bit & 1)
+    {
         nRESET_DIR_PIN_PORT->BSRR = (nRESET_DIR_PIN << 16); // DIR pin low -> nRST goes high
+    }
     else
+    {
         nRESET_DIR_PIN_PORT->BSRR = nRESET_DIR_PIN; // DIR pin high -> nRST goes low
+    }
 }
 
 //**************************************************************************************************
@@ -468,9 +450,13 @@ It is recommended to provide the following LEDs for status indication:
 __STATIC_INLINE void LED_CONNECTED_OUT(uint32_t bit)
 {
     if (bit & 1)
-        CONNECTED_LED_PORT->BSRR = (CONNECTED_LED_PIN << 16); // LED on
+    {
+        HAL_GPIO_WritePin(CONNECTED_LED_PORT, CONNECTED_LED_PIN, GPIO_PIN_RESET);
+    }
     else
-        CONNECTED_LED_PORT->BSRR = CONNECTED_LED_PIN;// LED off
+    {
+        HAL_GPIO_WritePin(CONNECTED_LED_PORT, CONNECTED_LED_PIN, GPIO_PIN_SET);
+    }
 }
 
 /** Debug Unit: Set status Target Running LED.
@@ -481,9 +467,13 @@ __STATIC_INLINE void LED_CONNECTED_OUT(uint32_t bit)
 __STATIC_INLINE void LED_RUNNING_OUT(uint32_t bit)
 {
     if (bit & 1)
-        RUNNING_LED_PORT->BSRR = (RUNNING_LED_PIN << 16); // LED on
+    {
+        HAL_GPIO_WritePin(RUNNING_LED_PORT, RUNNING_LED_PIN, GPIO_PIN_RESET); // LED on
+    }
     else
-        RUNNING_LED_PORT->BSRR = RUNNING_LED_PIN;// LED off
+    {
+        HAL_GPIO_WritePin(RUNNING_LED_PORT, RUNNING_LED_PIN, GPIO_PIN_SET); // LED off
+    }
 }
 
 ///@}
@@ -505,7 +495,7 @@ default, the DWT timer is used.  The frequency of this timer is configured with 
 \return Current timestamp value.
 */
 __STATIC_INLINE uint32_t TIMESTAMP_GET (void) {
-  return (DWT->CYCCNT) / (CPU_CLOCK / TIMESTAMP_CLOCK);
+    return (DWT->CYCCNT) / (CPU_CLOCK / TIMESTAMP_CLOCK);
 }
 
 ///@}
@@ -530,24 +520,17 @@ Status LEDs. In detail the operation of Hardware I/O and LED pins are enabled an
 */
 __STATIC_INLINE void DAP_SETUP(void)
 {
-    //ToDo(elee): Can it just call PORT_SWD_SETUP() instead?
-    /* Configure I/O pin SWCLK */
-    pin_out_init(SWCLK_TCK_PIN_PORT, SWCLK_TCK_PIN_Bit);
-    SWCLK_TCK_PIN_PORT->BSRR = SWCLK_TCK_PIN;
+    GPIO_InitTypeDef gpio_init =
+    {
+        .Pin = CONNECTED_LED_PIN,
+        .Mode = GPIO_MODE_OUTPUT_PP,
+        .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
+    };
 
-    pin_out_init(SWDIO_PIN_PORT, SWDIO_PIN_Bit);
-    SWDIO_PIN_PORT->BSRR = SWDIO_PIN;
+    PORT_SWD_SETUP();
 
-    //pin_in_init(SWDIO_IN_PIN_PORT, SWDIO_IN_PIN_Bit, 1);  //Only a single SWDIO pin is used
-
-    pin_in_init(nRESET_PIN_PORT, nRESET_PIN_Bit, 2); // input, with pulldown
-    nRESET_DIR_PIN_PORT->BSRR = (nRESET_DIR_PIN << 16); // nRST high (not pulled low)
-
-    // Enable bidir buffer chip (OE_L_CTRL0)
-    SWD_BUFFER_EN_PORT->BSRR = SWD_BUFFER_EN_PIN;
-
-    pin_out_init(CONNECTED_LED_PORT, CONNECTED_LED_PIN_Bit);
-    CONNECTED_LED_PORT->BSRR = CONNECTED_LED_PIN;
+    HAL_GPIO_Init(CONNECTED_LED_PORT, &gpio_init);
+    HAL_GPIO_WritePin(CONNECTED_LED_PORT, CONNECTED_LED_PIN, GPIO_PIN_SET);
 }
 
 /** Reset Target Device with custom specific I/O pin or command sequence.

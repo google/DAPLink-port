@@ -15,79 +15,11 @@
 
 #define UDB_RESET_TIMER_MS   (500)
 
-
-/** Read back the output value and direction of a UDB DUT gpio pin.
- * External buffers are used, so there is one MCU pin to set the buffer
- * direction, and a separate MCU pin to set the gpio value.
- * The return value is formatted so that up to 8 gpio's can be left shifted and OR'ed
- * together.
-\param GPIO_io_port   PORT for the "gpio value" pin
-\param GPIO_io_pin    PIN for the "gpio value" pin
-\param GPIO_dir_port  PORT for the "direction" pin
-\param GPIO_dir_pin   PIN for the "direction" pin
-
-\return          a 16 bit value formatted as 0b0000000<dir>0000000<value>
-*/
-static uint16_t read_gpio(GPIO_TypeDef* GPIO_io_port, uint16_t GPIO_io_pin,
-                  GPIO_TypeDef* GPIO_dir_port, uint16_t GPIO_dir_pin)
+typedef struct
 {
-    uint16_t pin_value = 0;
-    // ToDo: port to "HAL_GPIO_xxx" functions, like
-    // pin_value |= HAL_GPIO_ReadPin(GPIO_io_port, GPIO_io_pin) ? 0x1 : 0x0;
-    pin_value |= (GPIO_io_port->IDR & GPIO_io_pin) ? 0x1 : 0x0;
-    pin_value |= (GPIO_dir_port->IDR & GPIO_dir_pin) ? 0x0100 : 0x0000;
-    return pin_value;
-}
-
-
-/** Set one of the DUT GPIO pins.
- * External buffers are used, so there is one MCU pin to set the buffer
- * direction, and a separate MCU pin to set the gpio value.
- * To set the output value we actually set a weak pullup/pulldown on the MCU
- * gpio, then there is no issue if the external buffer drives a value into the
- * MCU pin.
-\param GPIO_io_PORT   PORT for the "gpio value" pin
-\param GPIO_io_PIN_Bit   PIN_Bit for the "gpio value" pin.
-                          Note: this is a decimal (0-15), NOT a bit-mask.
-\param GPIO_dir_PORT  PORT for the "direction" pin
-\param GPIO_dir_PIN   PIN for the "direction" pin.  This is a bit-mask.
-\param pin_direction   bitmask of all the gpio directions
-\param pin_values   bitmask of all the gpio values
-\param which_bit    Which bit to extract from the pin_direction/pin_values.
-\return          NA
-*/
-static void write_gpio(GPIO_TypeDef* GPIO_io_PORT, uint16_t GPIO_io_PIN_Bit,
-                  GPIO_TypeDef* GPIO_dir_PORT, uint16_t GPIO_dir_PIN,
-                  uint8_t pin_direction,
-                  uint8_t pin_values,
-                  uint8_t which_bit)
-{
-  uint32_t temp = 0;
-
-  //Only update pullup/down if we are driving the DUT.
-  if(pin_direction & which_bit)
-  {
-    // ToDo: port to "HAL_xxx" functions
-    // The pullups have 2bits per pin.  01: Pull-up, 10: Pull-down
-    temp = GPIO_io_PORT->PUPDR;
-    temp &= ~(3UL << (GPIO_io_PIN_Bit * 2U)); //Clear 2 bits in register
-
-    if(pin_values & which_bit)  // If pull-high...
-      temp |= (1U << (GPIO_io_PIN_Bit * 2U));  //01: Pull-up
-    else
-      temp |= (2U << (GPIO_io_PIN_Bit * 2U));  //10: Pull-down
-
-    GPIO_io_PORT->PUPDR = temp;
-    GPIO_dir_PORT->BSRR = GPIO_dir_PIN; //Set input or output.
-  }
-  else
-  {
-    // If is an input, just set the direction pin.
-    GPIO_dir_PORT->BSRR = (uint32_t)GPIO_dir_PIN << 16;
-  }
-}
-
-
+    int query_bit;
+    dut_pin_group_id_t dut_pin_group_id;
+} dut_pin_group_query_t;
 
 static uint32_t DAP_ProcessVendorCommandEx40_MeasurePower(const uint8_t *request, uint8_t *response)
 {
@@ -248,14 +180,11 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
         num += ((3 + len) << 16) | (3);
         break;
     }
-    case ID_DAP_VendorEx34_GPIO: {
-        //  Write GPIO pins (as OpenDrain or PushPull) and also read back values.
-        //
-        //  There are several gpio pins used to drive DUT signals.  They can be
-        //  "open-drain" (for many products), or "push-pull" for some adaptor boards.
+    case ID_DAP_VendorEx34_DUT_PIN_GROUP_WRITE: {
+        //  Write DUT group pins and also read back values.
         //
         //  This command has the following bytes:
-        //    OUTPUT_VALUE, DIRECTION, MASK (optional), DURATION(future):
+        //    OUTPUT_VALUE, DIRECTION, MASK (optional)
         //
         //  OUTPUT_VALUE byte:
         //    bit 0 : 0_RST_L.  0 = pull low, 1 = pull high
@@ -272,10 +201,6 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
         //
         //  MASK byte:
         //    Same bit mapping as OUTPUT_VALUE. 0 = MASKED (don't write to that pin), 1 = write to that pin.
-        //  DURATION (future)
-        //    0.1 sec increments, 0 = no pulse (stay at that level).  1-255 = 0.1 to 25.5 sec pulse duration.
-        //    TBD: blocking or non-blocking?  Blocking is simplest, might need to increase timeout on host, though.
-        //    For a 0.1 sec pulse it is probably fine.
         //
         //  This command also reads the values from all the gpios (even if writing is masked)
         //  It returns 2 bytes, the first byte is the DIRECTION, the 2nd byte is the PIN_VALUE
@@ -284,56 +209,72 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
         uint8_t pin_values = *request++;            // When is an output, should it pull HIGH (1) or LOW (0)?  For
                                                     //  "open-drain" operation it should be 0 to pull low.  For
                                                     //  "push-pull" toggle between 1 and 0.
-        uint8_t pin_direction = *request++;         // Should the buffer drive the DUT (1), or be an input (0) from DUT?
+        uint8_t pin_direction = *request++;         // Should the level shifter drive the DUT (1), or be an input (0) from DUT?
         uint8_t pin_mask = *request;                // Masking byte, to allow indiviual pins to be set.  1=set,
                                                     //  0=don't change that pin.
 
         uint16_t pin_readback = 0;
+        uint16_t dut_pin_query_bit;
+        uint16_t dut_pin_query_mask;
+        dut_pin_group_id_t dut_pin_group_id;
 
-        //Port0 WRITE
-        if (pin_mask & 0x01)
-            write_gpio(UDC0_RST_L_PORT, UDC0_RST_L_PIN_Bit,
-                       UDC0_RST_L_DIR_PORT, UDC0_RST_L_DIR_PIN,
-                       pin_direction, pin_values,
-                       0x01);
+        const dut_pin_group_query_t k_dut_pin_group_queries[] =
+        {
+           {
+              .query_bit = 0,
+              .dut_pin_group_id = DUT_PIN_GROUP_ID_UDC0_RST_L,
+           },
+           {
+              .query_bit = 1,
+              .dut_pin_group_id = DUT_PIN_GROUP_ID_UDC0_BOOT_L,
+           },
+           {
+              .query_bit = 2,
+              .dut_pin_group_id = DUT_PIN_GROUP_ID_UDC0_BUTTON_L,
+           },
+           {
+              .query_bit = 4,
+              .dut_pin_group_id = DUT_PIN_GROUP_ID_UDC1_RST,
+           },
+           {
+              .query_bit = 5,
+              .dut_pin_group_id = DUT_PIN_GROUP_ID_UDC1_BOOT,
+           },
+           {
+              .query_bit = 6,
+              .dut_pin_group_id = DUT_PIN_GROUP_ID_UDC1_BUTTON,
+           },
+        };
 
-        if (pin_mask & 0x02)
-            write_gpio(UDC0_BOOT_L_PORT, UDC0_BOOT_L_PIN_Bit,
-                       UDC0_BOOT_L_DIR_PORT, UDC0_BOOT_L_DIR_PIN,
-                       pin_direction, pin_values,
-                       0x02);
-        if (pin_mask & 0x04)
-            write_gpio(UDC0_BUTTON_L_PORT, UDC0_BUTTON_L_PIN_Bit,
-                       UDC0_BUTTON_L_DIR_PORT, UDC0_BUTTON_L_DIR_PIN,
-                       pin_direction, pin_values,
-                       0x04);
+        uint8_t query_count = sizeof(k_dut_pin_group_queries) / sizeof(k_dut_pin_group_queries[0]);
 
-        //Port1 WRITE
-        if (pin_mask & 0x10)
-            write_gpio(UDC1_RST_PORT, UDC1_RST_PIN_Bit,
-                       UDC1_RST_DIR_PORT, UDC1_RST_DIR_PIN,
-                       pin_direction, pin_values,
-                       0x10);
-        if (pin_mask & 0x20)
-            write_gpio(UDC1_BOOT_PORT, UDC1_BOOT_PIN_Bit,
-                       UDC1_BOOT_DIR_PORT, UDC1_BOOT_DIR_PIN,
-                       pin_direction, pin_values,
-                       0x20);
-        if (pin_mask & 0x40)
-            write_gpio(UDC1_BUTTON_PORT, UDC1_BUTTON_PIN_Bit,
-                       UDC1_BUTTON_DIR_PORT, UDC1_BUTTON_DIR_PIN,
-                       pin_direction, pin_values,
-                       0x40);
+        for (uint8_t query_id = 0; query_id < query_count; ++query_id)
+        {
+            dut_pin_query_bit = k_dut_pin_group_queries[query_id].query_bit;
+            dut_pin_query_mask = (1 << dut_pin_query_bit);
+            dut_pin_group_id = k_dut_pin_group_queries[query_id].dut_pin_group_id;
+            if (pin_mask & dut_pin_query_mask)
+            {
+                if (pin_direction & dut_pin_query_mask)
+                {
+                    if (pin_values & dut_pin_query_mask)
+                    {
+                        gpio_config_dut_pin_group(dut_pin_group_id, DUT_PIN_GROUP_STATE_OUTPUT, GPIO_PULLUP);
+                    }
+                    else
+                    {
+                        gpio_config_dut_pin_group(dut_pin_group_id, DUT_PIN_GROUP_STATE_OUTPUT, GPIO_PULLDOWN);
+                    }
+                }
+                else
+                {
+                    gpio_config_dut_pin_group(dut_pin_group_id, DUT_PIN_GROUP_STATE_INPUT, GPIO_NOPULL);
+                }
 
-        //Port0 READ
-        pin_readback = read_gpio(UDC0_RST_L_PORT, UDC0_RST_L_PIN, UDC0_RST_L_DIR_PORT, UDC0_RST_L_DIR_PIN);
-        pin_readback |= (read_gpio(UDC0_BOOT_L_PORT, UDC0_BOOT_L_PIN, UDC0_BOOT_L_DIR_PORT, UDC0_BOOT_L_DIR_PIN) << 1);
-        pin_readback |= (read_gpio(UDC0_BUTTON_L_PORT, UDC0_BUTTON_L_PIN, UDC0_BUTTON_L_DIR_PORT, UDC0_BUTTON_L_DIR_PIN) << 2);
-
-        //Port1 READ
-        pin_readback |= (read_gpio(UDC1_RST_PORT, UDC1_RST_PIN, UDC1_RST_DIR_PORT, UDC1_RST_DIR_PIN) << 4);
-        pin_readback |= (read_gpio(UDC1_BOOT_PORT, UDC1_BOOT_PIN, UDC1_BOOT_DIR_PORT, UDC1_BOOT_DIR_PIN) << 5);
-        pin_readback |= (read_gpio(UDC1_BUTTON_PORT, UDC1_BUTTON_PIN, UDC1_BUTTON_DIR_PORT, UDC1_BUTTON_DIR_PIN) << 6);
+                pin_readback |= (gpio_read_dut_io_pin(dut_pin_group_id) << dut_pin_query_bit);
+                pin_readback |= (gpio_read_dut_dir_pin(dut_pin_group_id) << (dut_pin_query_bit + 8));
+            }
+        }
 
         *response++ = DAP_OK;
         *response++ = ((pin_readback >> 8) & 0xFF); //Get MSByte (DIRECTION)
@@ -367,24 +308,33 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
 
         uint8_t readback_byte = 0;
 
-        if(mask & 0x1) {
-            if(pins & 0x1)
-              // ToDo: port to "HAL_xxx" functions
-              // Set low to enable USB power
-              UDC_DUT_USB_EN_L_PORT->BSRR = (uint32_t)UDC_DUT_USB_EN_L_PIN << 16;
+        if (mask & 0x1)
+        {
+            if (pins & 0x1)
+            {
+                HAL_GPIO_WritePin(UDC_DUT_USB_EN_L_PORT, UDC_DUT_USB_EN_L_PIN, GPIO_PIN_RESET);
+            }
             else
-              UDC_DUT_USB_EN_L_PORT->BSRR = UDC_DUT_USB_EN_L_PIN;
-          }
-        if(mask & 0x2) {
-            if(pins & 0x2)
-              UDC_EXT_RELAY_PORT->BSRR = UDC_EXT_RELAY_PIN;
+            {
+                HAL_GPIO_WritePin(UDC_DUT_USB_EN_L_PORT, UDC_DUT_USB_EN_L_PIN, GPIO_PIN_SET);
+            }
+        }
+
+        if (mask & 0x2)
+        {
+            if (pins & 0x2)
+            {
+                HAL_GPIO_WritePin(UDC_EXT_RELAY_PORT, UDC_EXT_RELAY_PIN, GPIO_PIN_SET);
+            }
             else
-              UDC_EXT_RELAY_PORT->BSRR = UDC_EXT_RELAY_PIN << 16;
-          }
+            {
+                HAL_GPIO_WritePin(UDC_EXT_RELAY_PORT, UDC_EXT_RELAY_PIN, GPIO_PIN_RESET);
+            }
+        }
 
         //Readback actual values (even if write is masked out)
-        readback_byte |= (UDC_DUT_USB_EN_L_PORT->IDR & UDC_DUT_USB_EN_L_PIN) ? 0x01 : 0x00;
-        readback_byte |= (UDC_EXT_RELAY_PORT->IDR & UDC_EXT_RELAY_PIN) ? 0x02 : 0x00;
+        readback_byte |= HAL_GPIO_ReadPin(UDC_DUT_USB_EN_L_PORT, UDC_DUT_USB_EN_L_PIN);
+        readback_byte |= (HAL_GPIO_ReadPin(UDC_EXT_RELAY_PORT, UDC_EXT_RELAY_PIN) << 1);
 
         *response++ = DAP_OK;
         *response++ = readback_byte;

@@ -221,4 +221,51 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 #define MX_I2C2_SDA_GPIO_FM7            __NULL
 #define MX_I2C2_SDA_GPIO_Mode           GPIO_MODE_AF_OD
 
+typedef enum
+{
+    DUT_PIN_GROUP_ID_UDC0_RST_L,
+    DUT_PIN_GROUP_ID_UDC0_BOOT_L,
+    DUT_PIN_GROUP_ID_UDC0_BUTTON_L,
+    DUT_PIN_GROUP_ID_UDC1_RST,
+    DUT_PIN_GROUP_ID_UDC1_BOOT,
+    DUT_PIN_GROUP_ID_UDC1_BUTTON,
+    DUT_PIN_GROUP_ID_COUNT,
+} dut_pin_group_id_t;
+
+typedef enum
+{
+    DUT_PIN_GROUP_STATE_INPUT,
+    DUT_PIN_GROUP_STATE_OUTPUT,
+    DUT_PIN_GROUP_STATE_COUNT,
+} dut_pin_group_state_t;
+
+#define IS_DUT_PIN_GROUP_ID(id)           ((id) < DUT_PIN_GROUP_ID_COUNT)
+#define IS_DUT_PIN_GROUP_STATE(state)     ((state) < DUT_PIN_GROUP_STATE_COUNT)
+#define GPIO_CONFIG_DUT_DELAY_MS          (100)
+#define GPIO_WRITE_DUT_DELAY_MS           (50)
+
+typedef struct
+{
+    // io pin
+    GPIO_TypeDef* io_port;
+    uint16_t io_pin;
+    uint16_t io_pin_bit;
+
+    // direction pin
+    GPIO_TypeDef* dir_port;
+    uint16_t dir_pin;
+    uint16_t dir_pin_bit;
+} dut_pin_group_t;
+
+void gpio_config_dut_pin_group(dut_pin_group_id_t dut_pin_group_id, dut_pin_group_state_t dut_pin_group_state, uint16_t pull);
+
+dut_pin_group_t gpio_get_dut_pin_group(dut_pin_group_id_t dut_pin_group_id);
+
+GPIO_PinState gpio_read_dut_dir_pin(dut_pin_group_id_t dut_pin_group_id);
+
+GPIO_PinState gpio_read_dut_io_pin(dut_pin_group_id_t dut_pin_group_id);
+
+void gpio_write_dut_pin(dut_pin_group_id_t dut_pin_group_id, GPIO_PinState pin_state);
+
+
 #endif
