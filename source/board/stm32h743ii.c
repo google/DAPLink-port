@@ -31,6 +31,7 @@
 #include "udb_log.h"
 #include "udb_version.h"
 #include "nluif_udb-daplink.h"
+#include "util.h"
 
 static uint32_t s_count_blink = 0;
 
@@ -60,10 +61,17 @@ static void udb_welcome_message(void)
 
 static void prerun_board_config(void)
 {
-    I2C_DAP_Initialize();
+    int status;
+
+    status = i2c_init();
+    util_assert(status == UDB_SUCCESS);
+
     udb_read_hw_version();
     udb_extended_features_task_create();
-    udb_power_measurement_init();
+
+    status = udb_power_measurement_init();
+    util_assert(status == UDB_SUCCESS);
+
     udb_welcome_message();
 }
 

@@ -1,338 +1,350 @@
-/*
- * i2c.c
- *
- * Evan Hassman
- * ehassman@google.com
- *
- * Eric Lee
- * eleenest@google.com
- * August 14, 2020
- *
- * Note that the code within I2C1_DAP_PinInit and I2C2_DAP_PinInit come from STM
- * Need to double check licensing and usesage of that code
- */
-
 #include "i2c.h"
 #include "util.h"
 
-#if defined(MX_I2C1)
-extern ARM_DRIVER_I2C            Driver_I2C1;
-static ARM_DRIVER_I2C *I2Cdrv = &Driver_I2C1;
-#endif
+#include <string.h>
+#include "cmsis_os2.h"
+#include "rtx_os.h"
+#include "util.h"
 
-#if defined(MX_I2C2)
-extern ARM_DRIVER_I2C            Driver_I2C2;
-static ARM_DRIVER_I2C *I2Cdrv = &Driver_I2C2;
-#endif
+#define XFER_PENDING        (true)
+#define XFER_NOT_PENDING    (false)
 
-// I2C_SignalEvent from CMSIS I2C Sample code
-static volatile uint32_t I2C_Event;
+typedef struct
+{
+    ARM_DRIVER_I2C*       driver;
+    ARM_I2C_SignalEvent_t event_cb;
+    IRQn_Type             irq_n;
+} i2c_arm_driver_context_t;
 
-volatile bool completionFlag = false;
-volatile bool nakFlag        = false;
+typedef struct
+{
+    const i2c_arm_driver_context_t driver_context;
 
+    I2C_HandleTypeDef*    handle;
+    uint32_t              event;
+    osMutexId_t           mutex_id;
+    osMutexAttr_t         mutex_attr;
+    uint32_t              mutex_cb[WORDS(sizeof(osRtxMutex_t))];
+} i2c_context_t;
+
+// Define handles for ARM I2C driver
 I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c2;
+I2C_HandleTypeDef hi2c3;
 
+static void i2c1_event_cb (uint32_t event);
+static void i2c2_event_cb (uint32_t event);
+static void i2c3_event_cb (uint32_t event);
+
+static i2c_context_t s_i2c_context[I2C_BUS_COUNT] =
+{
+    [I2C_BUS_0] =
+    {
+        .driver_context =
+        {
+            .driver = &Driver_I2C1,
+            .event_cb = i2c1_event_cb,
+            .irq_n = I2C1_EV_IRQn,
+        },
+        .handle = &hi2c1,
+        .event = 0,
+        .mutex_attr =
+        {
+            .name = "i2c0_mutex",
+            .attr_bits = osMutexRobust,
+            .cb_mem = s_i2c_context[I2C_BUS_0].mutex_cb,
+            .cb_size = sizeof(s_i2c_context[I2C_BUS_0].mutex_cb),
+        },
+    },
+    [I2C_BUS_1] =
+    {
+        .driver_context =
+        {
+            .driver = &Driver_I2C3,
+            .event_cb = i2c3_event_cb,
+            .irq_n = I2C3_EV_IRQn,
+        },
+        .handle = &hi2c3,
+        .event = 0,
+        .mutex_attr =
+        {
+            .name = "i2c1_mutex",
+            .attr_bits = osMutexRobust,
+            .cb_mem = s_i2c_context[I2C_BUS_1].mutex_cb,
+            .cb_size = sizeof(s_i2c_context[I2C_BUS_1].mutex_cb),
+        },
+    },
+    [I2C_BUS_2] =
+    {
+        .driver_context =
+        {
+            .driver = &Driver_I2C2,
+            .event_cb = i2c2_event_cb,
+            .irq_n = I2C2_EV_IRQn,
+        },
+        .handle = &hi2c2,
+        .event = 0,
+        .mutex_attr =
+        {
+            .name = "i2c2_mutex",
+            .attr_bits = osMutexRobust,
+            .cb_mem = s_i2c_context[I2C_BUS_2].mutex_cb,
+            .cb_size = sizeof(s_i2c_context[I2C_BUS_2].mutex_cb),
+        },
+    },
+};
+
+/*
+ * Callback for ARM's I2C driver
+ */
+static void i2c1_event_cb (uint32_t event)
+{
+    if (event != ARM_I2C_EVENT_BUS_CLEAR)
+    {
+        s_i2c_context[I2C_BUS_0].event |= event;
+    }
+}
+
+static void i2c3_event_cb (uint32_t event)
+{
+    if (event != ARM_I2C_EVENT_BUS_CLEAR)
+    {
+        s_i2c_context[I2C_BUS_1].event |= event;
+    }
+}
+
+static void i2c2_event_cb (uint32_t event)
+{
+    if (event != ARM_I2C_EVENT_BUS_CLEAR)
+    {
+        s_i2c_context[I2C_BUS_2].event |= event;
+    }
+}
+
+/*
+ * IRQHandler: interrupt handler, which calls the HAL_I2C interrupt handler
+ */
 void I2C1_EV_IRQHandler(void)
 {
-    HAL_I2C_EV_IRQHandler(&hi2c1);
+    HAL_I2C_EV_IRQHandler(s_i2c_context[I2C_BUS_0].handle);
 }
 
 void I2C2_EV_IRQHandler(void)
 {
-    HAL_I2C_EV_IRQHandler(&hi2c2);
-}
-/**
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
-static void I2C1_DAP_PinInit(void)
-{
-    hi2c1.Instance = I2C1;
-    hi2c1.Init.Timing = 0x00606092;
-    hi2c1.Init.OwnAddress1 = 0;
-    hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-    hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-    hi2c1.Init.OwnAddress2 = 0;
-    hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-    hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-    hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-    if (HAL_I2C_Init(&hi2c1) != HAL_OK)
-    {
-        util_assert(false);
-    }
-    /** Configure Analogue filter
-    */
-    if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-    {
-        util_assert(false);
-    }
-    /** Configure Digital filter
-    */
-    if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
-    {
-        util_assert(false);
-    }
+    HAL_I2C_EV_IRQHandler(s_i2c_context[I2C_BUS_2].handle);
 }
 
-/**
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
-static void I2C2_DAP_PinInit(void)
+void I2C3_EV_IRQHandler(void)
 {
-    hi2c2.Instance = I2C2;
-    hi2c2.Init.Timing = 0x00606092;
-    hi2c2.Init.OwnAddress1 = 0;
-    hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-    hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-    hi2c2.Init.OwnAddress2 = 0;
-    hi2c2.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-    hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-    hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-    if (HAL_I2C_Init(&hi2c2) != HAL_OK)
+    HAL_I2C_EV_IRQHandler(s_i2c_context[I2C_BUS_1].handle);
+}
+
+int i2c_init(void)
+{
+    int ret = UDB_SUCCESS;
+    ARM_DRIVER_I2C* i2c_drv;
+
+    for (i2c_bus_t bus_id = 0; bus_id < I2C_BUS_COUNT; ++bus_id)
     {
-        util_assert(false);
+        s_i2c_context[bus_id].mutex_id = osMutexNew(&s_i2c_context[bus_id].mutex_attr);
+        if (s_i2c_context[bus_id].mutex_id  == NULL)
+        {
+            util_assert(false);
+        }
+        i2c_drv = s_i2c_context[bus_id].driver_context.driver;
+
+        i2c_drv->Initialize(s_i2c_context[bus_id].driver_context.event_cb);
+
+        if (i2c_drv->PowerControl(ARM_POWER_FULL) != ARM_DRIVER_OK)
+        {
+            ret = -UDB_ERROR;
+            break;
+        }
+
+        if (i2c_drv->Control(ARM_I2C_BUS_SPEED, ARM_I2C_BUS_SPEED_STANDARD) != ARM_DRIVER_OK)
+        {
+            ret = -UDB_ERROR;
+            break;
+        }
+
+        if (i2c_drv->Control(ARM_I2C_BUS_CLEAR, 0) != ARM_DRIVER_OK)
+        {
+            ret = -UDB_ERROR;
+            break;
+        }
+
+        NVIC_SetPriority(s_i2c_context[bus_id].driver_context.irq_n, 1);
+        NVIC_EnableIRQ(s_i2c_context[bus_id].driver_context.irq_n);
     }
-    /** Configure Analogue filter
-    */
-    if (HAL_I2CEx_ConfigAnalogFilter(&hi2c2, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-    {
-        util_assert(false);
-    }
-    /** Configure Digital filter
-    */
-    if (HAL_I2CEx_ConfigDigitalFilter(&hi2c2, 0) != HAL_OK)
+
+    return ret;
+}
+
+void i2c_request(const i2c_slave_t *i2c_slave)
+{
+    util_assert(i2c_slave != NULL);
+    util_assert(i2c_slave->bus_id < I2C_BUS_COUNT);
+
+    if (osMutexAcquire(s_i2c_context[i2c_slave->bus_id].mutex_id, osWaitForever) != osOK)
     {
         util_assert(false);
     }
 }
 
-static void I2C_DAP_PinInit(void)
+void i2c_release(const i2c_slave_t *i2c_slave)
 {
-    #if defined(MX_I2C1)
-    I2C1_DAP_PinInit1();
-    #endif
+    util_assert(i2c_slave != NULL);
+    util_assert(i2c_slave->bus_id < I2C_BUS_COUNT);
 
-    #if defined(MX_I2C2)
-    I2C2_DAP_PinInit();
-    #endif
-}
-
-/* I2C Signal Event function callback */
-void I2C_DAP_SignalEvent (uint32_t event)
-{
-    /* Save received events */
-    I2C_Event |= event;
-
-    if (event & ARM_I2C_EVENT_TRANSFER_INCOMPLETE) {
-        /* Less data was transferred than requested */
-        completionFlag = false;
-    }
-
-    if (event & ARM_I2C_EVENT_TRANSFER_DONE) {
-        /* Transfer or receive is finished */
-        completionFlag = true;
-    }
-
-    if (event & ARM_I2C_EVENT_ADDRESS_NACK) {
-        /* Slave address was not acknowledged */
-        nakFlag = true;
-    }
-
-    if (event & ARM_I2C_EVENT_ARBITRATION_LOST) {
-        /* Master lost bus arbitration */
-    }
-
-    if (event & ARM_I2C_EVENT_BUS_ERROR) {
-        /* Invalid start/stop position detected */
-    }
-
-    if (event & ARM_I2C_EVENT_BUS_CLEAR) {
-        /* Bus clear operation completed */
-    }
-
-    if (event & ARM_I2C_EVENT_GENERAL_CALL) {
-        /* Slave was addressed with a general call address */
-    }
-
-    if (event & ARM_I2C_EVENT_SLAVE_RECEIVE) {
-        /* Slave addressed as receiver but SlaveReceive operation is not started */
-    }
-
-    if (event & ARM_I2C_EVENT_SLAVE_TRANSMIT) {
-        /* Slave addressed as transmitter but SlaveTransmit operation is not started */
+    if (osMutexRelease(s_i2c_context[i2c_slave->bus_id].mutex_id) != osOK)
+    {
+        util_assert(false);
     }
 }
 
-
-void I2C_DAP_Initialize(void)
+int i2c_write(const i2c_slave_t *i2c_slave, uint8_t reg_addr, const uint8_t* in_buf, uint32_t len)
 {
-    /* I2C driver instance and pin initialization*/
-    I2C_DAP_PinInit();
+    util_assert(i2c_slave != NULL);
+    util_assert(i2c_slave->bus_id < I2C_BUS_COUNT);
 
-    I2Cdrv->Initialize(I2C_DAP_SignalEvent);
-    I2Cdrv->PowerControl(ARM_POWER_FULL);
-    I2Cdrv->Control(ARM_I2C_BUS_SPEED, ARM_I2C_BUS_SPEED_FAST_PLUS);
-    I2Cdrv->Control(ARM_I2C_BUS_CLEAR, 0);
+    int             ret = UDB_SUCCESS;
+    int32_t         arm_driver_status;
+    i2c_bus_t       bus_id = i2c_slave->bus_id;
+    uint16_t        slave_addr = i2c_slave->slave_addr;
+    ARM_DRIVER_I2C* i2c_drv = s_i2c_context[i2c_slave->bus_id].driver_context.driver;
+    uint8_t         transfer_data[len+1];
 
-    /* Setup Interrupt, CMSIS I2C uses non-blocking */
-    NVIC_SetPriority(I2C2_EV_IRQn, 1);
-    NVIC_EnableIRQ(I2C2_EV_IRQn);
-}
-
-bool I2C_DAP_MasterTransfer(uint16_t device_addr, const uint8_t* reg_addr, const uint8_t* data, uint32_t len)
-{
-    bool ret;
-    uint8_t transfer_data[len+1];
-    transfer_data[0] = *reg_addr;
-
-    for (int i = 1; i < len+1; i++) {
-        transfer_data[i] = *data++;
-    }
-    len++;
+    transfer_data[0] = reg_addr;
+    memcpy(transfer_data + 1, in_buf, len);
 
     /* Single write transfer of slave address, register address and data to be written */
-    I2Cdrv->MasterTransmit(device_addr, transfer_data, len, false);
 
-    /* Wait until transfer completed */
-    while (I2Cdrv->GetStatus().busy);
+    arm_driver_status = i2c_drv->MasterTransmit(slave_addr, transfer_data, len + 1, XFER_NOT_PENDING);
 
-    ret = (I2C_Event == ARM_I2C_EVENT_TRANSFER_DONE);
-    I2C_Event = 0;
-
-    return ret;
-}
-
-bool I2C_DAP_MasterRead(uint16_t device_addr, const uint8_t* reg_addr, uint8_t* buf, uint32_t len)
-{
-    bool ret;
-    /* Send slave address and device address without stop command at end */
-    I2Cdrv->MasterTransmit(device_addr, reg_addr, 1, true);
-
-    /* Wait until transfer completed */
-    while (I2Cdrv->GetStatus().busy);
-
-    /* Check if all data transferred */
-    ret = (I2C_Event == ARM_I2C_EVENT_TRANSFER_DONE);
-    I2C_Event = 0;
-
-    if (ret == true)
+    if (arm_driver_status == ARM_DRIVER_ERROR_BUSY)
     {
-        /* Send slave address and read from register address with stop command at end */
-        I2Cdrv->MasterReceive(device_addr, buf, len, false);
-
-        /* Wait until transfer completed */
-        while (I2Cdrv->GetStatus().busy);
-
-        ret = (I2C_Event == ARM_I2C_EVENT_TRANSFER_DONE);
-        I2C_Event = 0;
+        ret = -UDB_BUSY;
+        goto done;
+    }
+    else if (arm_driver_status != ARM_DRIVER_OK)
+    {
+        ret = -UDB_ERROR;
+        goto done;
     }
 
+    /* Wait until transfer completed */
+    while (i2c_drv->GetStatus().busy) { }
+
+    if (s_i2c_context[bus_id].event != ARM_I2C_EVENT_TRANSFER_DONE)
+    {
+        ret = -UDB_ERROR;
+    }
+
+done:
+    s_i2c_context[bus_id].event = 0;
+
     return ret;
 }
 
+int i2c_read(const i2c_slave_t *i2c_slave, uint8_t reg_addr, uint8_t* out_buf, uint32_t len)
+{
+    util_assert(i2c_slave != NULL);
+    util_assert(i2c_slave->bus_id < I2C_BUS_COUNT);
 
-/* MSP stands for MCU support package and comes from STCube. The MSP layer is responsible
- * for initializing low level hardware like GPIOs and clocks for some peripherals.
- * This function is called by the HAL, but we could also make our driver handle these functions.
- * It would require refactoring most of the I2C code, however.
- */
+    int             ret = UDB_SUCCESS;
+    int32_t         arm_driver_status;
+    i2c_bus_t       bus_id = i2c_slave->bus_id;
+    uint16_t        slave_addr = i2c_slave->slave_addr;
+    ARM_DRIVER_I2C* i2c_drv = s_i2c_context[bus_id].driver_context.driver;
 
-/**
-* @brief I2C MSP Initialization
-* This function configures the hardware resources used in this example
-* @param hi2c: I2C handle pointer
-* @retval None
-*/
+
+    /* Send slave address and device address without stop command at end */
+    arm_driver_status = i2c_drv->MasterTransmit(slave_addr, &reg_addr, 1, XFER_PENDING);
+
+    if (arm_driver_status == ARM_DRIVER_ERROR_BUSY)
+    {
+        ret = -UDB_BUSY;
+        goto done;
+    }
+    else if (arm_driver_status != ARM_DRIVER_OK)
+    {
+        ret = -UDB_ERROR;
+        goto done;
+    }
+
+    /* Wait until transfer completed */
+    while (i2c_drv->GetStatus().busy) { }
+
+    /* Check if all data transferred */
+    if (s_i2c_context[bus_id].event != ARM_I2C_EVENT_TRANSFER_DONE)
+    {
+        ret = -UDB_ERROR;
+        goto done;
+    }
+
+    s_i2c_context[bus_id].event = 0;
+
+    /* Send slave address and read from register address with stop command at end */
+    arm_driver_status = i2c_drv->MasterReceive(slave_addr, out_buf, len, XFER_NOT_PENDING);
+
+    if (arm_driver_status == ARM_DRIVER_ERROR_BUSY)
+    {
+        ret = -UDB_BUSY;
+        goto done;
+    }
+    else if (arm_driver_status != ARM_DRIVER_OK)
+    {
+        ret = -UDB_ERROR;
+        goto done;
+    }
+
+    /* Wait until transfer completed */
+    while (i2c_drv->GetStatus().busy) { }
+
+    if (s_i2c_context[bus_id].event != ARM_I2C_EVENT_TRANSFER_DONE)
+    {
+        ret = -UDB_ERROR;
+    }
+
+
+done:
+    s_i2c_context[bus_id].event = 0;
+
+    return ret;
+}
+
 void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
 {
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    if(hi2c->Instance==I2C1)
+    if (hi2c->Instance == I2C1)
     {
-        /**I2C1 GPIO Configuration
-        PB6     ------> I2C1_SCL
-        PB7     ------> I2C1_SDA
-        */
-        GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
-        GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-        GPIO_InitStruct.Pull = GPIO_NOPULL;
-        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-        GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
-        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-        /* Peripheral clock enable */
         __HAL_RCC_I2C1_CLK_ENABLE();
     }
 
-    if(hi2c->Instance==I2C2)
+    if (hi2c->Instance == I2C2)
     {
-        /**I2C2 GPIO Configuration
-        PF0     ------> I2C2_SDA
-        PF1     ------> I2C2_SCL
-        */
-        GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
-        GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-        GPIO_InitStruct.Pull = GPIO_NOPULL;
-        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-        GPIO_InitStruct.Alternate = GPIO_AF4_I2C2;
-        HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
-
-        /* Peripheral clock enable */
         __HAL_RCC_I2C2_CLK_ENABLE();
+    }
+
+    if (hi2c->Instance == I2C3)
+    {
+        __HAL_RCC_I2C3_CLK_ENABLE();
     }
 }
 
-/**
-* @brief I2C MSP De-Initialization
-* This function frees the hardware resources used in this example
-* @param hi2c: I2C handle pointer
-* @retval None
-*/
 void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
 {
-    if(hi2c->Instance==I2C1)
+    if (hi2c->Instance == I2C1)
     {
-        /* Peripheral clock disable */
         __HAL_RCC_I2C1_CLK_DISABLE();
-
-        /**I2C1 GPIO Configuration
-        PB6     ------> I2C1_SCL
-        PB7     ------> I2C1_SDA
-        */
-        HAL_GPIO_DeInit(GPIOB, GPIO_PIN_6|GPIO_PIN_7);
     }
 
-    if(hi2c->Instance==I2C2)
+    if (hi2c->Instance == I2C2)
     {
-        /* Peripheral clock disable */
         __HAL_RCC_I2C2_CLK_DISABLE();
+    }
 
-        /**I2C2 GPIO Configuration
-        PF0     ------> I2C2_SDA
-        PF1     ------> I2C2_SCL
-        */
-        HAL_GPIO_DeInit(GPIOF, GPIO_PIN_0|GPIO_PIN_1);
+    if (hi2c->Instance == I2C3)
+    {
+        __HAL_RCC_I2C3_CLK_DISABLE();
     }
 }
