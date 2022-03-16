@@ -69,6 +69,7 @@ void cmd_gpio(int argc, char * argv[])
 
     if (!skip_request)
     {
+        GPIO_InitStructure.Pin = pin;
         GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
         HAL_GPIO_Init(port, &GPIO_InitStructure);
     }
