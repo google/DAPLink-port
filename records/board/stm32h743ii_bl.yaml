@@ -1,8 +1,4 @@
 common:
-    includes:
-        - source/hic_hal/stm32/stm32h743ii/extended_features/include/udb_version.h
     sources:
         board:
             - source/board/stm32h743ii_bl.c
-        hic_hal:
-            - source/hic_hal/stm32/stm32h743ii/extended_features/source/udb_version.c

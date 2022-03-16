@@ -1,5 +1,6 @@
 common:
     macros:
+        - UDB
         - CDC_B_ENDPOINT
         - UDB_DEBUG
         - MAIN_TASK_STACK=2048
