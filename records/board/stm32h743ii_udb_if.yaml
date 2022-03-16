@@ -3,6 +3,7 @@ common:
         - UDB
         - CDC_B_ENDPOINT
         - UDB_DEBUG
+        - SUPPORT_CMD_HISTORY
         - MAIN_TASK_STACK=2048
     includes:
         - source/hic_hal/stm32/stm32h743ii/extended_features/include
