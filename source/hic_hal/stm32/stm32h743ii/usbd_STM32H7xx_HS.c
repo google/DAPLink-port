@@ -10,9 +10,14 @@
  *---------------------------------------------------------------------------*/
 
 #include <rl_usb.h>
+#include <stdio.h>
 #include "stm32h7xx.h"
 #include "cmsis_gcc.h"
 #include "usb_def.h"
+
+#if defined(DAPLINK_IF) && defined(UDB)
+#include "udb_assert.h"
+#endif
 
 #define __NO_USB_LIB_C
 #include "usb_config.c"
@@ -21,97 +26,86 @@
 #define USBx_BASE       USB1_OTG_HS_PERIPH_BASE
 #define USBx_DEVICE     ((USB_OTG_DeviceTypeDef *)(USBx_BASE + USB_OTG_DEVICE_BASE))
 
-// If a change to the FIFO sizes is required, first investigate the max packet size
-// and the driver for the respective endpoints.
-#define RX_FIFO_SIZE    1024
-#define TX0_FIFO_SIZE   64
+// 00: Control, 01: Isochronous, 10: Bulk, 11: Interrupt
+#define EP_IN_TYPE(num)     ((USBx_INEP(num)->DIEPCTL & USB_OTG_DIEPCTL_EPTYP) >> USB_OTG_DIEPCTL_EPTYP_Pos)
+#define EP_OUT_TYPE(num)    ((USBx_OUTEP(num)->DOEPCTL & USB_OTG_DOEPCTL_EPTYP) >> USB_OTG_DOEPCTL_EPTYP_Pos)
+
+#define RX_FIFO_SIZE    1024    // RX MAX
+#define TX0_FIFO_SIZE   64      // EP0 MAX
 #define TX1_FIFO_SIZE   512
 #define TX2_FIFO_SIZE   512
-#define TX3_FIFO_SIZE   512
+#define TX3_FIFO_SIZE   512     // Interrupt EP
 #define TX4_FIFO_SIZE   512
-#define TX5_FIFO_SIZE   448
+#define TX5_FIFO_SIZE   448     // Interrupt EP, reduced to meet the 4kB total size limit
 #define TX6_FIFO_SIZE   512
 // This chip has 4kB shared RAM for the FIFOs. Check if the FIFOs combined are within this limit.
 COMPILER_ASSERT((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE + TX3_FIFO_SIZE +
                  TX4_FIFO_SIZE + TX5_FIFO_SIZE + TX6_FIFO_SIZE) <= 4096);
 
-// 00: Control, 01: Isochronous, 10: Bulk, 11: Interrupt
-#define EP_IN_TYPE(num)     ((USBx_INEP(num)->DIEPCTL & USB_OTG_DIEPCTL_EPTYP) >> USB_OTG_DIEPCTL_EPTYP_Pos)
-#define EP_OUT_TYPE(num)    ((USBx_OUTEP(num)->DOEPCTL & USB_OTG_DOEPCTL_EPTYP) >> USB_OTG_DOEPCTL_EPTYP_Pos)
-
-uint32_t OutMaxPacketSize[7] = {USBD_MAX_PACKET0, 0, 0, 0, 0, 0, 0};
-uint8_t OutPacketCnt[7] = {1, 0, 0, 0, 0, 0, 0};
-uint8_t InPacketCnt[7] = {1, 0, 0, 0, 0, 0, 0};
+// If a change to the FIFO sizes is required, first investigate the max packet size
+// and the driver for the respective endpoints.
+// If the EP definitions change, update the TX FIFO sizes and InPacketDataPtr respectively
+COMPILER_ASSERT((USBD_BULK_EP_BULKIN == 1) && (USBD_BULK_HS_WMAXPACKETSIZE <= TX1_FIFO_SIZE));
+COMPILER_ASSERT((USBD_MSC_HS_ENABLE == 1) && (USBD_MSC_EP_BULKIN == 2) && (USBD_MSC_HS_WMAXPACKETSIZE <= TX2_FIFO_SIZE));
+COMPILER_ASSERT(USBD_CDC_ACM_EP_INTIN == 3);
+COMPILER_ASSERT((USBD_CDC_ACM_HS_ENABLE == 1) && (USBD_CDC_ACM_EP_BULKIN == 4) && (USBD_CDC_ACM_HS_WMAXPACKETSIZE <= TX4_FIFO_SIZE));
+COMPILER_ASSERT(USBD_CDC_B_ACM_EP_INTIN == 5);
+COMPILER_ASSERT((USBD_CDC_B_ACM_HS_ENABLE == 1) && (USBD_CDC_B_ACM_EP_BULKIN == 6) && (USBD_CDC_B_ACM_HS_WMAXPACKETSIZE <= TX6_FIFO_SIZE));
 
 #if (USBD_HID_ENABLE == 1)
-uint32_t HID_IntInPacketData[(USBD_HID_MAX_PACKET + 3) / 4];
+static uint32_t HID_IntInPacketData[(USBD_HID_MAX_PACKET + 3) / 4];
 #endif
 
 #if (USBD_CDC_ACM_ENABLE == 1)
-uint32_t CDC_ACM_IntInPacketData[(USBD_CDC_ACM_MAX_PACKET + 3) / 4];
+static uint32_t CDC_ACM_IntInPacketData[(USBD_CDC_ACM_MAX_PACKET + 3) / 4];
 #endif
 
 #if (USBD_CDC_B_ACM_ENABLE == 1)
-uint32_t CDC_B_ACM_IntInPacketData[(USBD_CDC_B_ACM_MAX_PACKET + 3) / 4];
+static uint32_t CDC_B_ACM_IntInPacketData[(USBD_CDC_B_ACM_MAX_PACKET + 3) / 4];
 #endif
 
-uint32_t *InPacketDataPtr[7] =
+static uint32_t *InPacketDataPtr[USBD_EP_NUM] =
 {
 /* endpoint 0 */
     0,
 /* endpoint 1 */
 #if ((USBD_HID_ENABLE == 1) && (USBD_HID_EP_INTIN == 1))
     HID_IntInPacketData,
-#elif ((USBD_CDC_ACM_ENABLE == 1) && (USBD_CDC_ACM_EP_INTIN == 1))
-    CDC_ACM_IntInPacketData,
-#else
+#elif (USBD_EP_NUM > 1)
     0,
 #endif
 /* endpoint 2 */
-#if ((USBD_HID_ENABLE == 1) && (USBD_HID_EP_INTIN == 2))
-    HID_IntInPacketData,
-#elif ((USBD_CDC_ACM_ENABLE == 1) && (USBD_CDC_ACM_EP_INTIN == 2))
-    CDC_ACM_IntInPacketData,
-#else
+#if (USBD_EP_NUM > 2)
     0,
 #endif
 /* endpoint 3 */
-#if ((USBD_HID_ENABLE == 1) && (USBD_HID_EP_INTIN == 3))
-    HID_IntInPacketData,
-#elif ((USBD_CDC_ACM_ENABLE == 1) && (USBD_CDC_ACM_EP_INTIN == 3))
+#if ((USBD_CDC_ACM_ENABLE == 1) && (USBD_CDC_ACM_EP_INTIN == 3))
     CDC_ACM_IntInPacketData,
-#else
+#elif (USBD_EP_NUM > 3)
     0,
 #endif
 /* endpoint 4 */
-#if ((USBD_HID_ENABLE == 1) && (USBD_HID_EP_INTIN == 4))
-    HID_IntInPacketData,
-#elif ((USBD_CDC_ACM_ENABLE == 1) && (USBD_CDC_ACM_EP_INTIN == 4))
-    CDC_ACM_IntInPacketData,
-#else
+#if (USBD_EP_NUM > 4)
     0,
 #endif
 /* endpoint 5 */
-#if ((USBD_HID_ENABLE == 1) && (USBD_HID_EP_INTIN == 5))
-    HID_IntInPacketData,
-#elif ((USBD_CDC_B_ACM_ENABLE == 1) && (USBD_CDC_B_ACM_EP_INTIN == 5))
+#if ((USBD_CDC_B_ACM_ENABLE == 1) && (USBD_CDC_B_ACM_EP_INTIN == 5))
     CDC_B_ACM_IntInPacketData,
-#else
+#elif (USBD_EP_NUM > 5)
     0,
 #endif
 /* endpoint 6 */
-#if ((USBD_HID_ENABLE == 1) && (USBD_HID_EP_INTIN == 6))
-    HID_IntInPacketData,
-#elif ((USBD_CDC_B_ACM_ENABLE == 1) && (USBD_CDC_B_ACM_EP_INTIN == 6))
-    CDC_B_ACM_IntInPacketData,
-#else
+#if (USBD_EP_NUM > 6)
     0,
 #endif
 };
 
-uint32_t InPacketDataCnt[7] = {0};
-uint32_t InPacketDataReady = 0;
-uint32_t SyncWriteEP = 0;
+static uint32_t OutMaxPacketSize[USBD_EP_NUM];
+static uint8_t  OutPacketCnt[USBD_EP_NUM];
+static uint8_t  InPacketCnt[USBD_EP_NUM];
+static uint32_t InPacketDataCnt[USBD_EP_NUM];
+static uint32_t InPacketDataReady;
+static uint32_t SyncWriteEP;
 
 /*
  *  USB Device Interrupt enable
@@ -119,7 +113,7 @@ uint32_t SyncWriteEP = 0;
  *    Return Value:    None
  */
 
-void USBD_IntrEna(void)
+static void USBD_IntrEna(void)
 {
     NVIC_EnableIRQ(OTG_HS_IRQn); /* Enable OTG_HS interrupt */
 }
@@ -132,14 +126,8 @@ void USBD_IntrEna(void)
 
 void USBD_Init(void)
 {
-    int32_t tout;
+    int32_t timeout_cntr;
     GPIO_InitTypeDef gpio_init_struct;
-
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-    __HAL_RCC_GPIOH_CLK_ENABLE();
-    __HAL_RCC_GPIOI_CLK_ENABLE();
 
     // PA5 (OTG_HS_ULPI alternate function, CLOCK)
     gpio_init_struct.Pin = GPIO_PIN_5;
@@ -198,41 +186,34 @@ void USBD_Init(void)
     __HAL_RCC_USB1_OTG_HS_CLK_ENABLE();
 
     HAL_Delay(20);
-    tout = 1000;           // Wait max 1 s for AHBIDL = 0
+    timeout_cntr = 1000;
     while (!(OTG->GRSTCTL & USB_OTG_GRSTCTL_AHBIDL))
     {
-        if (!tout)
+        if (!timeout_cntr)
         {
             break;
         }
-        tout--;
+        timeout_cntr--;
         HAL_Delay(1);
     }
     OTG->GRSTCTL |= USB_OTG_GRSTCTL_CSRST;
     // reset otg core
-    tout = 1000; // Wait max 1 s for CRST = 0
+    timeout_cntr = 1000;
     while (OTG->GRSTCTL & USB_OTG_GRSTCTL_CSRST)
     {
-        if (!tout)
+        if (!timeout_cntr)
         {
             break;
         }
-        tout--;
+        timeout_cntr--;
         HAL_Delay(1);
     }
     HAL_Delay(3);
 
-    OTG->GAHBCFG &= ~USB_OTG_GAHBCFG_GINT; // Disable interrupts
-    // No VBUS sensing
-    // ToDo(elee): do we want this disabled?
-    OTG->GCCFG &= ~USB_OTG_GCCFG_VBDEN;
-    USBx_DEVICE->DCTL |= USB_OTG_DCTL_SDIS; // soft disconnect enabled
-
-    // Force device mode
-    OTG->GUSBCFG |= USB_OTG_GUSBCFG_FDMOD;
-    HAL_Delay(100);
-
-    USBx_DEVICE->DCFG &= ~USB_OTG_DCFG_DSPD; // High speed phy
+    /* Keeping all the settings in the default reset state, except the below
+     */
+    USB_SetCurrentMode(OTG, USB_DEVICE_MODE);
+    USB_SetDevSpeed(OTG, USB_OTG_SPEED_HIGH);
 
     OTG->GINTMSK =
         USB_OTG_GINTMSK_USBSUSPM |  // suspend int unmask
@@ -241,11 +222,11 @@ void USBD_Init(void)
         USB_OTG_GINTMSK_RXFLVLM |   // receive fifo non-empty int  unmask
         USB_OTG_GINTMSK_IEPINT |    // IN EP int unmask
         USB_OTG_GINTMSK_OEPINT |    // OUT EP int unmask
-        USB_OTG_GINTMSK_WUIM_Msk |  // resume int unmask
+        USB_OTG_GINTMSK_WUIM |      // resume int unmask
         ((USBD_P_SOF_Event != 0) ? USB_OTG_GINTMSK_SOFM : 0); // SOF int unmask
 
     USBD_IntrEna(); // Enable OTG interrupt
-    OTG->GAHBCFG |= USB_OTG_GAHBCFG_GINT | USB_OTG_GAHBCFG_TXFELVL;
+    USB_EnableGlobalInt(OTG);
 }
 
 /*
@@ -275,14 +256,12 @@ void USBD_Connect(BOOL con)
 
 void USBD_Reset(void)
 {
-    uint32_t i;
-
     SyncWriteEP = 0;
     InPacketDataReady = 0;
-    USBx_DEVICE->DOEPMSK = 0;
-    USBx_DEVICE->DIEPMSK = 0;
 
-    for (i = 0; i < (USBD_EP_NUM + 1); i++)
+    USB_StopDevice(OTG);
+
+    for (uint32_t i = 0; i < (USBD_EP_NUM + 1); i++)
     {
         if (USBx_OUTEP(i)->DOEPCTL & USB_OTG_DOEPCTL_EPENA)
         {
@@ -292,57 +271,46 @@ void USBD_Reset(void)
         if (USBx_INEP(i)->DIEPCTL & USB_OTG_DIEPCTL_EPENA)
         {
             // IN EP disable, Set NAK
-            USBx_INEP(i)->DIEPCTL =
-                USB_OTG_DIEPCTL_EPDIS | USB_OTG_DIEPCTL_SNAK;
+            USBx_INEP(i)->DIEPCTL = USB_OTG_DIEPCTL_EPDIS | USB_OTG_DIEPCTL_SNAK;
         }
-
-        USBx_INEP(i)->DIEPINT = 0x1B;
-        // clear IN Ep interrupts
-        // Todo(elee): confirm no other interrupts matter
-        USBx_OUTEP(i)->DOEPINT = 0x1B; // clear OUT Ep interrupts
     }
 
     USBD_SetAddress(0, 1);
 
-    USBx_DEVICE->DAINTMSK = (1 << USB_OTG_DAINTMSK_OEPM_Pos) | // unmask IN&OUT EP0 interruts
+    USBx_DEVICE->DAINTMSK = (1 << USB_OTG_DAINTMSK_OEPM_Pos) | // unmask IN&OUT EP0 interrupts
                             (1 << USB_OTG_DAINTMSK_IEPM_Pos);
     USBx_DEVICE->DOEPMSK = USB_OTG_DOEPMSK_STUPM |  // setup phase done
                            USB_OTG_DOEPMSK_EPDM |   // endpoint disabled
                            USB_OTG_DOEPMSK_XFRCM;   // transfer complete
     USBx_DEVICE->DIEPMSK = USB_OTG_DIEPMSK_EPDM |   // endpoint disabled
                            USB_OTG_DIEPMSK_XFRCM;   // transfer completed
+                           // USB_OTG_DIEPMSK_TOM   // the ref man suggest turning this on, but we'll also have to handle it then
 
+    // Program the RX FIFO size
     OTG->GRXFSIZ = RX_FIFO_SIZE / 4;
-
+    // Program the TX FIFO size for endpoint 0
     OTG->DIEPTXF0_HNPTXFSIZ = (RX_FIFO_SIZE / 4) | ((TX0_FIFO_SIZE / 4) << 16);
-
-    OTG->DIEPTXF[0] =
-        ((RX_FIFO_SIZE + TX0_FIFO_SIZE) / 4) | ((TX1_FIFO_SIZE / 4) << 16);
-
-    // DIEPTXF2
+    // Program the TX FIFO size for all other endpoints
+    OTG->DIEPTXF[0] = ((RX_FIFO_SIZE + TX0_FIFO_SIZE) / 4) |
+                      ((TX1_FIFO_SIZE / 4) << 16);
     OTG->DIEPTXF[1] = ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE) / 4) |
                       ((TX2_FIFO_SIZE / 4) << 16);
-
-    // DIEPTXF3
-    OTG->DIEPTXF[2] =
-        ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE) / 4) |
-        ((TX3_FIFO_SIZE / 4) << 16);
-
-    // DIEPTXF4
-    OTG->DIEPTXF[3] = ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE +
-                        TX2_FIFO_SIZE + TX3_FIFO_SIZE) / 4) |
+    OTG->DIEPTXF[2] = ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE) / 4) |
+                      ((TX3_FIFO_SIZE / 4) << 16);
+    OTG->DIEPTXF[3] = ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE + TX3_FIFO_SIZE) / 4) |
                       ((TX4_FIFO_SIZE / 4) << 16);
-    // DIEPTXF5
-    OTG->DIEPTXF[4]  = ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE + TX3_FIFO_SIZE + TX4_FIFO_SIZE)/4) |
-                       ((TX5_FIFO_SIZE/4) << 16);
+    OTG->DIEPTXF[4] = ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE + TX3_FIFO_SIZE + TX4_FIFO_SIZE)/4) |
+                      ((TX5_FIFO_SIZE/4) << 16);
+    OTG->DIEPTXF[5] = ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE + TX3_FIFO_SIZE + TX4_FIFO_SIZE + TX5_FIFO_SIZE)/4) |
+                      ((TX6_FIFO_SIZE/4) << 16);
 
-    // DIEPTXF6
-    OTG->DIEPTXF[5]  = ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE + TX3_FIFO_SIZE + TX4_FIFO_SIZE + TX5_FIFO_SIZE)/4) |
-                       ((TX6_FIFO_SIZE/4) << 16);
-
-    USBx_OUTEP(0)->DOEPTSIZ = (1 << USB_OTG_DOEPTSIZ_STUPCNT_Pos) | // setup count = 1
-                              (1 << USB_OTG_DOEPTSIZ_PKTCNT_Pos) |  // packet count
+    USBx_OUTEP(0)->DOEPTSIZ = USB_OTG_DOEPTSIZ_STUPCNT_0 | // setup count = 1
+                              (USBD_OUT_PACKET_CNT0 << USB_OTG_DOEPTSIZ_PKTCNT_Pos) |  // packet count
                               USBD_MAX_PACKET0;
+
+    OutMaxPacketSize[0] = USBD_MAX_PACKET0;
+    OutPacketCnt[0] = USBD_OUT_PACKET_CNT0;
+    InPacketCnt[0] = USBD_IN_PACKET_CNT0;
 }
 
 /*
@@ -367,12 +335,7 @@ void USBD_Resume(void) {}
  *    Return Value:    None
  */
 
-void USBD_WakeUp(void)
-{
-    USBx_DEVICE->DCTL |= USB_OTG_DCTL_RWUSIG; // remote wakeup signaling
-    HAL_Delay(5);
-    USBx_DEVICE->DCTL &= ~USB_OTG_DCTL_RWUSIG;
-}
+void USBD_WakeUp(void){}
 
 /*
  *  USB Device Remote Wakeup Configuration Function
@@ -392,8 +355,7 @@ void USBD_SetAddress(U32 adr, U32 setup)
 {
     if (setup)
     {
-        USBx_DEVICE->DCFG = (USBx_DEVICE->DCFG & ~USB_OTG_DCFG_DAD) |
-                            (adr << USB_OTG_DCFG_DAD_Pos);
+        USB_SetDevAddress(OTG, (uint8_t)adr);
     }
 }
 
@@ -416,23 +378,20 @@ void USBD_Configure(BOOL cfg)
 
 void USBD_ConfigEP(USB_ENDPOINT_DESCRIPTOR *pEPD)
 {
-    uint32_t num, val, type;
-
-    num = pEPD->bEndpointAddress & ~USB_ENDPOINT_DIRECTION_MASK;
-    val = pEPD->wMaxPacketSize;
-    type = pEPD->bmAttributes & USB_ENDPOINT_TYPE_MASK;
+    uint32_t num = (pEPD->bEndpointAddress & ~USB_ENDPOINT_DIRECTION_MASK);
+    uint32_t val = pEPD->wMaxPacketSize;
+    uint32_t type = (pEPD->bmAttributes & USB_ENDPOINT_TYPE_MASK);
 
     if (pEPD->bEndpointAddress & USB_ENDPOINT_DIRECTION_MASK)
     {
         InPacketCnt[num] = 1;
 
         USBx_DEVICE->DAINTMSK |= (1 << num);     // unmask IN EP int
-        USBx_INEP(num)->DIEPCTL = (num << USB_OTG_DIEPCTL_TXFNUM_Pos) |  // fifo number
+        USBx_INEP(num)->DIEPCTL = (num << USB_OTG_DIEPCTL_TXFNUM_Pos) | // fifo number
                                   (type << USB_OTG_DIEPCTL_EPTYP_Pos) | // ep type
-                                  (val & USB_OTG_DIEPCTL_MPSIZ);   // max packet size
-        if ((type & 3) > 1)
+                                  (val & USB_OTG_DIEPCTL_MPSIZ);        // max packet size
+        if ((type == USB_ENDPOINT_TYPE_BULK) || (type == USB_ENDPOINT_TYPE_INTERRUPT))
         {
-            // if interrupt or bulk EP
             USBx_INEP(num)->DIEPCTL |= USB_OTG_DIEPCTL_SD0PID_SEVNFRM;
         }
     }
@@ -443,14 +402,13 @@ void USBD_ConfigEP(USB_ENDPOINT_DESCRIPTOR *pEPD)
 
         USBx_DEVICE->DAINTMSK |= (1 << (num + 16)); // unmask OUT EP int
 
-        USBx_OUTEP(num)->DOEPCTL = (type << USB_OTG_DOEPCTL_EPTYP_Pos) | // EP type
-                                   (val & USB_OTG_DOEPCTL_MPSIZ); // max packet size
+        USBx_OUTEP(num)->DOEPCTL = (type << USB_OTG_DOEPCTL_EPTYP_Pos) |    // EP type
+                                   (val & USB_OTG_DOEPCTL_MPSIZ);           // max packet size
 
         USBx_OUTEP(num)->DOEPTSIZ = (OutPacketCnt[num] << USB_OTG_DOEPTSIZ_PKTCNT_Pos) | // packet count
-                                    (val & USB_OTG_DOEPCTL_MPSIZ); // transfer size
-        if (type > 1)
+                                    (val & USB_OTG_DOEPCTL_MPSIZ);                       // transfer size
+        if ((type == USB_ENDPOINT_TYPE_BULK) || (type == USB_ENDPOINT_TYPE_INTERRUPT))
         {
-            // if int or bulk EP
             USBx_OUTEP(num)->DOEPCTL |= USB_OTG_DOEPCTL_SD0PID_SEVNFRM;
         }
     }
@@ -483,8 +441,7 @@ void USBD_EnableEP(U32 EPNum)
                                      USB_OTG_DIEPCTL_SNAK;    // set EP NAK
         if (USBx_INEP(EPNum)->DIEPCTL & USB_OTG_DIEPCTL_EPENA)
         {
-            // disable EP
-            USBx_INEP(EPNum)->DIEPCTL |= USB_OTG_DIEPCTL_EPDIS;
+            USBx_INEP(EPNum)->DIEPCTL |= USB_OTG_DIEPCTL_EPDIS; // disable EP
         }
 
         InPacketDataReady &= ~(1 << EPNum);
@@ -749,26 +706,34 @@ uint32_t USBD_ReadEP(U32 EPNum, U8 *pData, uint32_t bufsz)
 
     sz = (OTG->GRXSTSP & USB_OTG_GRXSTSP_BCNT) >> USB_OTG_GRXSTSP_BCNT_Pos; // get available data size
 
-    /* elee: copy from the f103 code, tbd, still required?
-      Commit 5ffac262f,  and 3d1a68b768c57cb403bab9d5598f3e9f1d3506a2 (for the
-      core) If smaller data is read here, is the rest of the data pulled in
-      later? */
     if (sz > bufsz)
     {
-        sz = bufsz;
+        // Read data from fifo. If there's not enough buffer space, still have to read the data
+        // otherwise we never get a OUT/Setup transfer completed data packet and GRXSTSP pops
+        // the wrong data and we might have lingering data in the RX FIFO. This shouldn't
+        // happen, but if does, the drivers need more checks before reading the EP. Just assert
+        // and reset in the interface before something else goes wrong.
+#if defined(DAPLINK_IF) && defined(UDB)
+        udb_assert(false);
+#endif
+        printf("ERR:buffer too small, dropping pkt\n");
+        for (val = 0; val < (uint32_t)((sz + 3) / 4); val++)
+        {
+            __UNALIGNED_UINT32_WRITE(pData, USBx_DFIFO(0U));
+        }
+        sz = 0;
+    }
+    else
+    {
+        for (val = 0; val < (uint32_t)((sz + 3) / 4); val++)
+        {
+            __UNALIGNED_UINT32_WRITE(pData, USBx_DFIFO(0U));
+            pData += 4;
+        }
     }
 
-    // copy data from fifo if Isochronous Ep: data is copied to intermediate buffer
-    for (val = 0; val < (uint32_t)((sz + 3) / 4); val++)
-    {
-        __UNALIGNED_UINT32_WRITE(pData, USBx_DFIFO(0U));
-        pData += 4;
-    }
-
-    // wait RxFIFO non-empty (OUT transfer completed or Setup trans. completed)
-    while ((OTG->GINTSTS & USB_OTG_GINTSTS_RXFLVL) == 0)
-    {
-    }
+    // wait for OUT/Setup transfer completed data packet from USB core
+    while ((OTG->GINTSTS & USB_OTG_GINTSTS_RXFLVL) == 0) {}
     OTG->GRXSTSP;                               // pop register
     OTG->GINTMSK |= USB_OTG_GINTMSK_RXFLVLM;    // unmask RxFIFO non-empty interrupt
 
@@ -824,7 +789,8 @@ uint32_t USBD_WriteEP(U32 EPNum, U8 *pData, U32 cnt)
             USBx_DEVICE->DIEPMSK |= USB_OTG_DIEPMSK_INEPNEM;
         }
         else
-        { /* If packet already loaded to buffer */
+        {
+            /* If packet already loaded to buffer */
             return 0;
         }
     }
@@ -923,7 +889,7 @@ void USBD_Handler(void)
     // speed enumeration completed
     if (istr & USB_OTG_GINTSTS_ENUMDNE)
     {
-        if (!((USBx_DEVICE->DSTS & USB_OTG_DSTS_ENUMSPD) >> USB_OTG_DSTS_ENUMSPD_Pos))
+        if ((USBx_DEVICE->DSTS & USB_OTG_DSTS_ENUMSPD) == DSTS_ENUMSPD_HS_PHY_30MHZ_OR_60MHZ)
         {
             USBD_HighSpeed = 1;
         }
@@ -952,32 +918,51 @@ void USBD_Handler(void)
 
         switch ((val & USB_OTG_GRXSTSP_PKTSTS) >> USB_OTG_GRXSTSP_PKTSTS_Pos)
         {
-        // setup packet
-        case STS_SETUP_UPDT:
-        {
-            if (USBD_P_EP[num])
+            // setup packet
+            case STS_SETUP_UPDT:
             {
-                USBD_P_EP[num](USBD_EVT_SETUP);
+                if (USBD_P_EP[num])
+                {
+                    USBD_P_EP[num](USBD_EVT_SETUP);
+                }
+                break;
             }
-            break;
-        }
 
-        // OUT packet
-        case STS_DATA_UPDT:
-        {
-            OTG->GINTMSK &= ~USB_OTG_GINTMSK_RXFLVLM;
-            if (USBD_P_EP[num])
+            // OUT packet
+            case STS_DATA_UPDT:
             {
-                USBD_P_EP[num](USBD_EVT_OUT);
+                OTG->GINTMSK &= ~USB_OTG_GINTMSK_RXFLVLM;
+                if (USBD_P_EP[num])
+                {
+                    USBD_P_EP[num](USBD_EVT_OUT);
+                }
+                break;
             }
-            break;
+            // other valid packet types
+            case STS_XFER_COMP:
+            case STS_SETUP_COMP:
+            {
+                OTG->GINTMSK |= USB_OTG_GINTMSK_RXFLVLM;
+                OTG->GRXSTSP;
+                break;
+            }
+            case STS_GOUT_NAK:
+            {
+                OTG->GRXSTSP;
+                break;
+            }
+            // We've seen bugs where we read non-valid packet info from the top of the FIFO,
+            // log it in case there are other similar bugs
+            default:
+            {
+#if defined(DAPLINK_IF) && defined(UDB)
+                udb_assert(false);
+#endif
+                OTG->GRXSTSP;
+                printf("ERR: garbage USB packet info\n");
+                break;
+            }
         }
-        default:
-        {
-            OTG->GRXSTSP;
-            break;
-        }
-        } // switch
     }
 
     // OUT Packet

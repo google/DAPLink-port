@@ -530,15 +530,6 @@ Status LEDs. In detail the operation of Hardware I/O and LED pins are enabled an
 */
 __STATIC_INLINE void DAP_SETUP(void)
 {
-    /* Enable port clock */
-    //__HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_GPIOC_CLK_ENABLE(); //buffer signals
-    __HAL_RCC_GPIOD_CLK_ENABLE();
-    __HAL_RCC_GPIOF_CLK_ENABLE(); //dir signals
-    __HAL_RCC_GPIOI_CLK_ENABLE(); //nRST signal
-
-
     //ToDo(elee): Can it just call PORT_SWD_SETUP() instead?
     /* Configure I/O pin SWCLK */
     pin_out_init(SWCLK_TCK_PIN_PORT, SWCLK_TCK_PIN_Bit);

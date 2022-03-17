@@ -1,5 +1,5 @@
 /**
- * @file    usb_config.h
+ * @file    usb_config.c
  * @brief
  *
  * DAPLink Interface Firmware
@@ -30,7 +30,7 @@
 
 //   <o0.0> High-speed
 //     <i> Enable high-speed functionality (if device supports it)
-#define USBD_HS_ENABLE              1	//elee: Beagle analyzer shows HS traffic, maybe set this to match?
+#define USBD_HS_ENABLE              1
 #if (defined(WEBUSB_INTERFACE) || defined(WINUSB_INTERFACE) || defined(BULK_ENDPOINT))
 #define USBD_BOS_ENABLE             1
 #else
@@ -54,6 +54,8 @@
 //   </h>
 #define USBD_POWER                  0
 #define USBD_MAX_PACKET0            64
+#define USBD_OUT_PACKET_CNT0        1
+#define USBD_IN_PACKET_CNT0         1
 #define USBD_DEVDESC_IDVENDOR       0x0D28
 #define USBD_DEVDESC_IDPRODUCT      0x0204
 #define USBD_DEVDESC_BCDDEVICE      0x0100 //was 0x0100
@@ -158,7 +160,7 @@
 #define USBD_HID_EP_INTIN_STACK     0
 #define USBD_HID_WMAXPACKETSIZE     64
 #define USBD_HID_BINTERVAL          1
-#define USBD_HID_HS_ENABLE          1	//elee: enable
+#define USBD_HID_HS_ENABLE          1
 #define USBD_HID_HS_WMAXPACKETSIZE  64
 #define USBD_HID_HS_BINTERVAL       6
 #define USBD_HID_STRDESC            L"CMSIS-DAP v1"
@@ -209,7 +211,7 @@
 #define USBD_MSC_EP_BULKOUT         2
 #define USBD_MSC_EP_BULKIN_STACK    0
 #define USBD_MSC_WMAXPACKETSIZE     64
-#define USBD_MSC_HS_ENABLE          1	//elee: enable
+#define USBD_MSC_HS_ENABLE          1
 #define USBD_MSC_HS_WMAXPACKETSIZE  512
 #define USBD_MSC_HS_BINTERVAL       0
 #define USBD_MSC_STRDESC            L"USB_MSC"
@@ -329,18 +331,18 @@
 #define USBD_CDC_ACM_EP_INTIN_STACK     0
 #define USBD_CDC_ACM_WMAXPACKETSIZE     64
 #define USBD_CDC_ACM_BINTERVAL          32
-#define USBD_CDC_ACM_HS_ENABLE          1	//elee: enable
+#define USBD_CDC_ACM_HS_ENABLE          1
 #define USBD_CDC_ACM_HS_WMAXPACKETSIZE  512
 #define USBD_CDC_ACM_HS_BINTERVAL       2
 #define USBD_CDC_ACM_EP_BULKIN          4
 #define USBD_CDC_ACM_EP_BULKOUT         4
 #define USBD_CDC_ACM_EP_BULKIN_STACK    0
 #define USBD_CDC_ACM_WMAXPACKETSIZE1    64
-#define USBD_CDC_ACM_HS_ENABLE1         1	//elee: enable
+#define USBD_CDC_ACM_HS_ENABLE1         1
 #define USBD_CDC_ACM_HS_WMAXPACKETSIZE1 512
 #define USBD_CDC_ACM_HS_BINTERVAL1      0
-#define USBD_CDC_ACM_CIF_STRDESC        L"mbed Serial Port"
-#define USBD_CDC_ACM_DIF_STRDESC        L"mbed Serial Port"
+#define USBD_CDC_ACM_CIF_STRDESC        L"DUT Serial Port"
+#define USBD_CDC_ACM_DIF_STRDESC        L"DUT Serial Port"
 #define USBD_CDC_ACM_SENDBUF_SIZE       512
 #define USBD_CDC_ACM_RECEIVEBUF_SIZE    512
 #if (((USBD_CDC_ACM_HS_ENABLE1) && (USBD_CDC_ACM_SENDBUF_SIZE    < USBD_CDC_ACM_HS_WMAXPACKETSIZE1)) || (USBD_CDC_ACM_SENDBUF_SIZE    < USBD_CDC_ACM_WMAXPACKETSIZE1))
@@ -360,14 +362,14 @@
 #define USBD_CDC_B_ACM_EP_INTIN_STACK     0
 #define USBD_CDC_B_ACM_WMAXPACKETSIZE     64
 #define USBD_CDC_B_ACM_BINTERVAL          32
-#define USBD_CDC_B_ACM_HS_ENABLE          1   //elee: enable
+#define USBD_CDC_B_ACM_HS_ENABLE          1
 #define USBD_CDC_B_ACM_HS_WMAXPACKETSIZE  512
 #define USBD_CDC_B_ACM_HS_BINTERVAL       2
 #define USBD_CDC_B_ACM_EP_BULKIN          6  // Mutually exclusive with MSC
 #define USBD_CDC_B_ACM_EP_BULKOUT         6  // Mutually exclusive with MSC
 #define USBD_CDC_B_ACM_EP_BULKIN_STACK    0
 #define USBD_CDC_B_ACM_WMAXPACKETSIZE1    64
-#define USBD_CDC_B_ACM_HS_ENABLE1         1   //elee: enable
+#define USBD_CDC_B_ACM_HS_ENABLE1         1
 #define USBD_CDC_B_ACM_HS_WMAXPACKETSIZE1 512
 #define USBD_CDC_B_ACM_HS_BINTERVAL1      0
 #define USBD_CDC_B_ACM_CIF_STRDESC        L"UDB debug UART"
@@ -417,11 +419,11 @@
 #define BULK_ENDPOINT 1
 #endif
 #define USBD_BULK_ENABLE             BULK_ENDPOINT
-#define USBD_BULK_EP_BULKIN          1 // fixme: both bulk and hid ep cannot be both enabled in a single build
+#define USBD_BULK_EP_BULKIN          1
 #define USBD_BULK_EP_BULKOUT         1
 #define USBD_BULK_EP_BULKIN_SWO      6
 #define USBD_BULK_WMAXPACKETSIZE     64
-#define USBD_BULK_HS_ENABLE          1	//elee: enable
+#define USBD_BULK_HS_ENABLE          1
 #define USBD_BULK_HS_WMAXPACKETSIZE  512
 #define USBD_BULK_STRDESC            L"CMSIS-DAP v2"
 
@@ -430,19 +432,18 @@
 #define USBD_IF_NUM_MAX             (USBD_BULK_ENABLE+USBD_WEBUSB_ENABLE+USBD_HID_ENABLE+USBD_MSC_ENABLE+(USBD_ADC_ENABLE*2)+(USBD_CDC_ACM_ENABLE*2)+(USBD_CDC_B_ACM_ENABLE*2)+USBD_CLS_ENABLE)
 #define USBD_MULTI_IF               (USBD_CDC_ACM_ENABLE*(USBD_CDC_B_ACM_ENABLE|USBD_HID_ENABLE|USBD_MSC_ENABLE|USBD_ADC_ENABLE|USBD_CLS_ENABLE|USBD_WEBUSB_ENABLE|USBD_BULK_ENABLE))
 // #define MAX(x, y)                   (((x) < (y)) ? (y) : (x))
-#define USBD_EP_NUM_CALC0           MAX((USBD_HID_ENABLE    *(USBD_HID_EP_INTIN     )), (USBD_HID_ENABLE    *(USBD_HID_EP_INTOUT)))
-#define USBD_EP_NUM_CALC1           MAX((USBD_MSC_ENABLE    *(USBD_MSC_EP_BULKIN    )), (USBD_MSC_ENABLE    *(USBD_MSC_EP_BULKOUT)))
-#define USBD_EP_NUM_CALC2           MAX((USBD_ADC_ENABLE    *(USBD_ADC_EP_ISOOUT    )), (USBD_CDC_ACM_ENABLE*(USBD_CDC_ACM_EP_INTIN)))
-#define USBD_EP_NUM_CALC3           MAX((USBD_CDC_ACM_ENABLE*(USBD_CDC_ACM_EP_BULKIN)), (USBD_CDC_ACM_ENABLE*(USBD_CDC_ACM_EP_BULKOUT)))
-#define USBD_EP_NUM_CALC4           MAX(USBD_EP_NUM_CALC0, USBD_EP_NUM_CALC1)
-#define USBD_EP_NUM_CALC5           MAX(USBD_EP_NUM_CALC2, USBD_EP_NUM_CALC3)
-#define USBD_EP_NUM_CALC6           MAX(USBD_EP_NUM_CALC4, USBD_EP_NUM_CALC5)
-#define USBD_EP_NUM_CALC7           MAX((USBD_BULK_ENABLE*(USBD_BULK_EP_BULKIN)), (USBD_BULK_ENABLE*(USBD_BULK_EP_BULKOUT)))
-#define USBD_EP_NUM_CALC8           MAX(USBD_EP_NUM_CALC6, USBD_EP_NUM_CALC7)
-#define USBD_EP_NUM_CALC9           MAX(USBD_EP_NUM_CALC8, (USBD_CDC_B_ACM_ENABLE*(USBD_CDC_B_ACM_EP_INTIN)))
-#define USBD_EP_NUM_CALC10          MAX((USBD_CDC_B_ACM_ENABLE*(USBD_CDC_B_ACM_EP_BULKIN)), (USBD_CDC_B_ACM_ENABLE*(USBD_CDC_B_ACM_EP_BULKOUT)))
-#define USBD_EP_NUM                 MAX(USBD_EP_NUM_CALC9, USBD_EP_NUM_CALC10)
-
+#define USBD_EP_NUM_CALC0           MAX((USBD_HID_ENABLE      *(USBD_HID_EP_INTIN       )), (USBD_HID_ENABLE      *(USBD_HID_EP_INTOUT      )))
+#define USBD_EP_NUM_CALC1           MAX((USBD_MSC_ENABLE      *(USBD_MSC_EP_BULKIN      )), (USBD_MSC_ENABLE      *(USBD_MSC_EP_BULKOUT     )))
+#define USBD_EP_NUM_CALC2           MAX((USBD_ADC_ENABLE      *(USBD_ADC_EP_ISOOUT      )), (USBD_CDC_ACM_ENABLE  *(USBD_CDC_ACM_EP_INTIN   )))
+#define USBD_EP_NUM_CALC3           MAX((USBD_CDC_ACM_ENABLE  *(USBD_CDC_ACM_EP_BULKIN  )), (USBD_CDC_ACM_ENABLE  *(USBD_CDC_ACM_EP_BULKOUT )))
+#define USBD_EP_NUM_CALC4           MAX((USBD_BULK_ENABLE     *(USBD_BULK_EP_BULKIN     )), (USBD_BULK_ENABLE     *(USBD_BULK_EP_BULKOUT    )))
+#define USBD_EP_NUM_CALC5           MAX((USBD_CDC_B_ACM_ENABLE*(USBD_CDC_B_ACM_EP_BULKIN)), (USBD_CDC_B_ACM_ENABLE*(USBD_CDC_B_ACM_EP_BULKOUT)))
+#define USBD_EP_NUM_CALC6           MAX((USBD_CDC_B_ACM_ENABLE*(USBD_CDC_B_ACM_EP_INTIN )), USBD_EP_NUM_CALC0)
+#define USBD_EP_NUM_CALC7           MAX(USBD_EP_NUM_CALC1, USBD_EP_NUM_CALC2)
+#define USBD_EP_NUM_CALC8           MAX(USBD_EP_NUM_CALC3, USBD_EP_NUM_CALC4)
+#define USBD_EP_NUM_CALC9           MAX(USBD_EP_NUM_CALC5, USBD_EP_NUM_CALC6)
+#define USBD_EP_NUM_CALC10          MAX(USBD_EP_NUM_CALC7, USBD_EP_NUM_CALC8)
+#define USBD_EP_NUM                 (MAX(USBD_EP_NUM_CALC9, USBD_EP_NUM_CALC10) + 1) // +1 for EP0
 
 #if    (USBD_HID_ENABLE)
 #if    (USBD_MSC_ENABLE)
@@ -633,7 +634,6 @@
 #define USBD_BULK_MAX_PACKET        (0)
 #endif
 
-// TODO(aiw): Simplify (and maybe reorder) for easier maintenance
 #define USBD_MAX_PACKET_CALC0     ((USBD_HID_MAX_PACKET   > USBD_CDC_B_ACM_MAX_PACKET ) ? (USBD_HID_MAX_PACKET  ) : (USBD_CDC_B_ACM_MAX_PACKET ))
 #define USBD_MAX_PACKET_CALC1     ((USBD_ADC_MAX_PACKET   > USBD_CDC_ACM_MAX_PACKET  ) ? (USBD_ADC_MAX_PACKET  ) : (USBD_CDC_ACM_MAX_PACKET  ))
 #define USBD_MAX_PACKET_CALC2     ((USBD_MAX_PACKET_CALC0 > USBD_MAX_PACKET_CALC1    ) ? (USBD_MAX_PACKET_CALC0) : (USBD_MAX_PACKET_CALC1    ))

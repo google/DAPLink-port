@@ -276,7 +276,6 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     if(hi2c->Instance==I2C1)
     {
-        __HAL_RCC_GPIOB_CLK_ENABLE();
         /**I2C1 GPIO Configuration
         PB6     ------> I2C1_SCL
         PB7     ------> I2C1_SDA
@@ -294,7 +293,6 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
 
     if(hi2c->Instance==I2C2)
     {
-        __HAL_RCC_GPIOF_CLK_ENABLE();
         /**I2C2 GPIO Configuration
         PF0     ------> I2C2_SDA
         PF1     ------> I2C2_SCL
