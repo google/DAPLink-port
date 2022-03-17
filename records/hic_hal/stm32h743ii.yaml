@@ -12,7 +12,6 @@ common:
         - DAPLINK_NO_ASSERT_FILENAMES
         - OS_CLOCK=240000000
         - OS_ROBIN_ENABLE=1
-        - UDB
     includes:
         - source/hic_hal/stm32/stm32h743ii
         - source/hic_hal/stm32/stm32h743ii/cmsis

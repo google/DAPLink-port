@@ -24,10 +24,6 @@
 #include "daplink_addr.h"
 #include "daplink_defaults.h"
 
-#ifdef UDB
-#include "udb.ld"
-#endif
-
 /* Entry Point */
 ENTRY(Reset_Handler)
 
