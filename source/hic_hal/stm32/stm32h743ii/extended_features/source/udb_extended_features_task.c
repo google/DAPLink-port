@@ -51,6 +51,11 @@ static void udb_extended_features_task(void *arg)
         {
             adapter_detector_update_adapter_type_adc();
         }
+
+        /* WARNING - Don't add code unless it's mutually exclusive with the DAPLink task
+         * THe STHAL drivers don't implement locking, so it could cause a number of issues.
+         * Please refer to b/198547046 for more info.
+         */
     }
 }
 
