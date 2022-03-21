@@ -1,7 +1,7 @@
 #include "udb_extended_features_task.h"
 #include "util.h"
 #include "adc.h"
-#include "adapter_detector.h"
+#include "udb_adapter_detector.h"
 #include "rtx_os.h"
 
 #define UDB_EXTENDED_FEATURES_TASK_STACK          (800)
@@ -49,7 +49,7 @@ static void udb_extended_features_task(void *arg)
 
         if (flags & UDB_EXTENDED_FEATURES_TASK_FLAGS_3S)
         {
-            adapter_detector_update_adapter_type_adc();
+            udb_adapter_detector_update_adapter_type_adc();
         }
 
         /* WARNING - Don't add code unless it's mutually exclusive with the DAPLink task

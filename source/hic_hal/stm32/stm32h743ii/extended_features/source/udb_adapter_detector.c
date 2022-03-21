@@ -9,7 +9,7 @@
  *      5: Unknown
  *      6: None
  */
-#include "adapter_detector.h"
+#include "udb_adapter_detector.h"
 #include "stm32h743xx.h"
 #include "stm32h7xx_hal.h"
 #include "adc.h"
@@ -64,9 +64,9 @@ static const char* k_adapter_type_name[] =
     [ADAPTER_NONE]          = "NONE",
 };
 
-static adapter_type_t s_adapter_type_adc;
+static udb_adapter_type_t s_adapter_type_adc;
 
-void adapter_detector_update_adapter_type_adc(void)
+void udb_adapter_detector_update_adapter_type_adc(void)
 {
     uint32_t adc = adc_read_channel(0, ADAPTER_DETECTOR_ADC_CHANNEL, 0);
 
@@ -81,12 +81,12 @@ void adapter_detector_update_adapter_type_adc(void)
     }
 }
 
-adapter_type_t adapter_detector_get_adapter_type_adc(void)
+udb_adapter_type_t udb_adapter_detector_get_adapter_type_adc(void)
 {
     return s_adapter_type_adc;
 }
 
-const char* adapter_detector_get_adapter_type_name(adapter_type_t type)
+const char* udb_adapter_detector_get_adapter_type_name(udb_adapter_type_t type)
 {
     return k_adapter_type_name[type];
 }

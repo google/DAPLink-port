@@ -1,5 +1,5 @@
-#ifndef _ADAPTER_DETECTOR_H_INCLUDED_
-#define _ADAPTER_DETECTOR_H_INCLUDED_
+#ifndef _UDB_ADAPTER_DETECTOR_H_INCLUDED_
+#define _UDB_ADAPTER_DETECTOR_H_INCLUDED_
 
 #include <stdint.h>
 
@@ -23,11 +23,11 @@ typedef enum
     ADAPTER_TYPE_15         = 15,
     ADAPTER_UNKNOWN         = 16,
     ADAPTER_NONE            = 17
-} adapter_type_t;
+} udb_adapter_type_t;
 
-void adapter_detector_update_adapter_type_adc(void);
-adapter_type_t adapter_detector_get_adapter_type_adc(void);
-const char* adapter_detector_get_adapter_type_name(adapter_type_t type);
+void udb_adapter_detector_update_adapter_type_adc(void);
+udb_adapter_type_t udb_adapter_detector_get_adapter_type_adc(void);
+const char* udb_adapter_detector_get_adapter_type_name(udb_adapter_type_t type);
 
 #endif
 

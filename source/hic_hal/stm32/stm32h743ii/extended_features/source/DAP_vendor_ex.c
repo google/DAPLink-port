@@ -7,7 +7,7 @@
 #include "DAP_vendor_ex.h"
 #include "DAP_config.h"
 #include "udb_version.h"
-#include "adapter_detector.h"
+#include "udb_adapter_detector.h"
 #include "udb_reset.h"
 #include "util.h"
 #include "udb_power_measurement.h"
@@ -419,7 +419,7 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
     case ID_DAP_VendorEx39_READ_UDC_ADAPTER_TYPE_ADC:
     {
         *response++ = DAP_OK;
-        adapter_type_t adapter = adapter_detector_get_adapter_type_adc();
+        udb_adapter_type_t adapter = udb_adapter_detector_get_adapter_type_adc();
         memcpy(response, &adapter, sizeof(adapter));
         num += sizeof(adapter) + 1;
         break;
