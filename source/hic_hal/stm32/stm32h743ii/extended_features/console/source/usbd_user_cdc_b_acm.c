@@ -1,3 +1,5 @@
+#if defined(CDC_B_ENDPOINT)
+
 #include "rl_usb.h"
 #include "util.h"
 #include <string.h>
@@ -6,8 +8,6 @@
 #include "nluif_udb-daplink.h"
 #include "daplink.h"
 #include DAPLINK_MAIN_HEADER
-
-#if defined(UDB_DEBUG) && defined(CDC_B_ENDPOINT)
 
 static const char error_msg[] = "\r\n<OVERFLOW>\r\n";
 
@@ -78,4 +78,4 @@ int _write(int file, char *ptr, int len_to_write)
     USBD_Handler();
     return len_to_write;
 }
-#endif // UDB_DEBUG && CDC_B_ENDPOINT
+#endif // CDC_B_ENDPOINT
