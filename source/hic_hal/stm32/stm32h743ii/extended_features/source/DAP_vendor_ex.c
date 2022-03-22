@@ -7,9 +7,9 @@
 #include "DAP_vendor_ex.h"
 #include "DAP_config.h"
 #include "udb_version.h"
+#include "util.h"
 #include "udb_adapter_detector.h"
 #include "udb_reset.h"
-#include "util.h"
 #include "udb_power_measurement.h"
 #include "udb_errno.h"
 
@@ -92,7 +92,7 @@ static void write_gpio(GPIO_TypeDef* GPIO_io_PORT, uint16_t GPIO_io_PIN_Bit,
 static uint32_t DAP_ProcessVendorCommandEx40_MeasurePower(const uint8_t *request, uint8_t *response)
 {
     // 2 bytes for voltage and 4 bytes for current
-    util_assert(6 * UDB_POWER_MEASUREMENT_TARGET_COUNT <= DAP_PACKET_SIZE);
+    util_assert((6 * UDB_POWER_MEASUREMENT_TARGET_COUNT) <= DAP_PACKET_SIZE);
 
     uint32_t num = 0;
     int ret = udb_power_measurement_measure();

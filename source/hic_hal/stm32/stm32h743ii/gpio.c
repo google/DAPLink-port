@@ -23,7 +23,6 @@
 #include "DAP_config.h"
 #include "gpio.h"
 #include "daplink.h"
-#include "util.h"
 
 void gpio_init_buffered_dut_pin(GPIO_TypeDef *dir_port, uint16_t dir_pin, GPIO_TypeDef *input_port, uint16_t input_pin, bool activeHigh)
 {
@@ -72,30 +71,35 @@ void gpio_init(void)
     GPIO_InitStructure.Pin = RUNNING_LED_PIN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(RUNNING_LED_PORT, &GPIO_InitStructure);
 
     HAL_GPIO_WritePin(CONNECTED_LED_PORT, CONNECTED_LED_PIN, GPIO_PIN_SET);
     GPIO_InitStructure.Pin = CONNECTED_LED_PIN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(CONNECTED_LED_PORT, &GPIO_InitStructure);
 
     HAL_GPIO_WritePin(PIN_CDC_LED_PORT, PIN_CDC_LED, GPIO_PIN_SET);
     GPIO_InitStructure.Pin = PIN_CDC_LED;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(PIN_CDC_LED_PORT, &GPIO_InitStructure);
 
     HAL_GPIO_WritePin(PIN_MSC_LED_PORT, PIN_MSC_LED, GPIO_PIN_SET);
     GPIO_InitStructure.Pin = PIN_MSC_LED;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(PIN_MSC_LED_PORT, &GPIO_InitStructure);
 
     // Setup the USB Hub to be "self powered" (very common setting, even if not strictly compliant).
     GPIO_InitStructure.Pin = USBHUB_SELFPWR_PIN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(USBHUB_SELFPWR_PORT, &GPIO_InitStructure);
     HAL_GPIO_WritePin(USBHUB_SELFPWR_PORT, USBHUB_SELFPWR_PIN, GPIO_PIN_RESET);
 
@@ -103,6 +107,7 @@ void gpio_init(void)
     GPIO_InitStructure.Pin = SWD_BUFFER_EN_PIN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
     HAL_GPIO_WritePin(SWD_BUFFER_EN_PORT, SWD_BUFFER_EN_PIN, GPIO_PIN_RESET);
     HAL_GPIO_Init(SWD_BUFFER_EN_PORT, &GPIO_InitStructure);
 
@@ -126,6 +131,7 @@ void gpio_init(void)
     GPIO_InitStructure.Pin = POWER_EN_PIN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(POWER_EN_PIN_PORT, &GPIO_InitStructure);
 
     //Initialize external relay (turned on)
@@ -133,6 +139,7 @@ void gpio_init(void)
     GPIO_InitStructure.Pin = UDC_EXT_RELAY_PIN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(UDC_EXT_RELAY_PORT, &GPIO_InitStructure);
 
     // Let the voltage rails stabilize.  This is especailly important

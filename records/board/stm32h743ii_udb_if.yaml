@@ -1,10 +1,13 @@
 common:
     macros:
-        - UDB
-        - CDC_B_ENDPOINT
-        - UDB_DEBUG
-        - SUPPORT_CMD_HISTORY
+        # Add DAPLink macros below
         - MAIN_TASK_STACK=2048
+        - CDC_B_ENDPOINT
+        # Add UDB config macros below
+        - UDB
+        - SUPPORT_CMD_HISTORY
+        # Add build feature macros below
+        - BUILD_FEATURE_UDB_ASSERT
     includes:
         - source/hic_hal/stm32/stm32h743ii/extended_features/include
         - source/hic_hal/stm32/stm32h743ii/extended_features/lib/nlutilities/include

@@ -21,16 +21,12 @@
 
 #include "stm32h7xx.h"
 #include "cortex_m.h"
+#include "util.h"
 
 TIM_HandleTypeDef timer;
 uint32_t time_count;
 
 static uint32_t tim2_clk_div(uint32_t apb1clkdiv);
-
-static void Error_Handler(void)
-{
-    while (true) {}
-}
 
 /**
   * @brief  The system Clock is configured as follow :
@@ -82,7 +78,7 @@ void sdk_init()
     RCC_OscInitStruct.PLL.PLLFRACN = 0;
     if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
     {
-        Error_Handler();
+        util_assert(false);
     }
     /** Initializes the CPU, AHB and APB buses clocks
     */
@@ -99,7 +95,7 @@ void sdk_init()
 
     if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
     {
-        Error_Handler();
+        util_assert(false);
     }
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART3|RCC_PERIPHCLK_USART2
                                                 |RCC_PERIPHCLK_UART4|RCC_PERIPHCLK_USART6
@@ -126,7 +122,7 @@ void sdk_init()
     PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
     {
-        Error_Handler();
+        util_assert(false);
     }
 
     /** Enable USB Voltage detector
@@ -249,7 +245,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* hpcd)
         PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_HSI48;
         if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
         {
-        Error_Handler();
+        util_assert(false);
         }
     /** Enable USB Voltage detector
     */
@@ -277,7 +273,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* hpcd)
         PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_HSI48;
         if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
         {
-        Error_Handler();
+        util_assert(false);
         }
     /** Enable USB Voltage detector
     */

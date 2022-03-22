@@ -22,10 +22,10 @@
 #include "flash_hal.h"        // FlashOS Structures
 #include "target_config.h"    // target_device
 #include "stm32h7xx.h"
-#include "util.h"
 #include "string.h"
 #include "target_board.h"
 #include "daplink_addr.h"
+#include "util.h"
 
 /*********************************************************************
 *
@@ -66,9 +66,8 @@ uint32_t EraseChip(void)
         // Called from the bootloader. Interface flashing only concerns 1 flash region.
         // The start in the board info excludes the bootloader. The HAL erase takes a
         // sector index, so need to calculate which sector the start address refers to.
-        util_assert((g_board_info.target_cfg->flash_regions[0].end - g_board_info.target_cfg->flash_regions[0].start) %
-                    FLASH_SECTOR_SIZE == 0);
-        util_assert((g_board_info.target_cfg->flash_regions[0].start - FLASH_BASE) % FLASH_SECTOR_SIZE == 0);
+        util_assert(((g_board_info.target_cfg->flash_regions[0].end - g_board_info.target_cfg->flash_regions[0].start) % FLASH_SECTOR_SIZE == 0) &&
+                    ((g_board_info.target_cfg->flash_regions[0].start - FLASH_BASE) % FLASH_SECTOR_SIZE == 0));
 
         memset(&erase_init, 0, sizeof(erase_init));
 
@@ -118,7 +117,8 @@ uint32_t EraseSector(uint32_t adr)
 
 uint32_t ProgramPage(uint32_t adr, uint32_t sz, uint32_t *buf)
 {
-    util_assert(sz % 32 == 0); // this chip does 256bit writes
+    // b/220118503 DAPlink calls this with 16 bytes, fix is under way
+    // util_assert(sz % 32 == 0); // this chip does 256bit writes
 
     uint32_t i;
     uint32_t ret = 0;

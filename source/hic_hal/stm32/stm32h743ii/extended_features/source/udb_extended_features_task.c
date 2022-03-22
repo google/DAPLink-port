@@ -1,8 +1,8 @@
 #include "udb_extended_features_task.h"
-#include "util.h"
 #include "adc.h"
 #include "udb_adapter_detector.h"
 #include "rtx_os.h"
+#include "util.h"
 
 #define UDB_EXTENDED_FEATURES_TASK_STACK          (800)
 #define UDB_EXTENDED_FEATURES_TASK_PRIORITY       (osPriorityNormal)

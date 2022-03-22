@@ -14,10 +14,7 @@
 #include "stm32h7xx.h"
 #include "cmsis_gcc.h"
 #include "usb_def.h"
-
-#if defined(DAPLINK_IF) && defined(UDB)
-#include "udb_assert.h"
-#endif
+#include "util.h"
 
 #define __NO_USB_LIB_C
 #include "usb_config.c"
@@ -711,17 +708,9 @@ uint32_t USBD_ReadEP(U32 EPNum, U8 *pData, uint32_t bufsz)
         // Read data from fifo. If there's not enough buffer space, still have to read the data
         // otherwise we never get a OUT/Setup transfer completed data packet and GRXSTSP pops
         // the wrong data and we might have lingering data in the RX FIFO. This shouldn't
-        // happen, but if does, the drivers need more checks before reading the EP. Just assert
-        // and reset in the interface before something else goes wrong.
-#if defined(DAPLINK_IF) && defined(UDB)
-        udb_assert(false);
-#endif
-        printf("ERR:buffer too small, dropping pkt\n");
-        for (val = 0; val < (uint32_t)((sz + 3) / 4); val++)
-        {
-            __UNALIGNED_UINT32_WRITE(pData, USBx_DFIFO(0U));
-        }
-        sz = 0;
+        // happen, but if does, the drivers need more checks before reading the EP. Just abort
+        // before something else goes wrong.
+        util_assert(false);
     }
     else
     {
@@ -955,11 +944,9 @@ void USBD_Handler(void)
             // log it in case there are other similar bugs
             default:
             {
-#if defined(DAPLINK_IF) && defined(UDB)
-                udb_assert(false);
-#endif
                 OTG->GRXSTSP;
-                printf("ERR: garbage USB packet info\n");
+                // Error: we are reading garbage packet status, so something went really wrong
+                util_assert(false);
                 break;
             }
         }

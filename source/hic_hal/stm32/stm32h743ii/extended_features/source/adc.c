@@ -13,7 +13,7 @@ static ADC_ChannelConfTypeDef s_chan_conf;
 
 static osMutexId_t s_adc_mutex_id;
 static uint32_t s_adc_mutex_cb[WORDS(sizeof(osRtxMutex_t))];
-static const osMutexAttr_t k_adc_mutex_attr = 
+static const osMutexAttr_t k_adc_mutex_attr =
 {
     .name = "adc_mutex",
     .attr_bits = osMutexRobust,
@@ -21,19 +21,12 @@ static const osMutexAttr_t k_adc_mutex_attr =
     .cb_size = sizeof(s_adc_mutex_cb)
 };
 
-static void error_handler(void)
-{
-    while (1)
-    {
-    }
-}
-
 void adc_init(void)
 {
     s_adc_handle.Instance = ADC_BASE;
     if (HAL_ADC_DeInit(&s_adc_handle) != HAL_OK)
     {
-        error_handler();
+        util_assert(false);
     }
     s_adc_handle.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV2;
     s_adc_handle.Init.Resolution = ADC_RESOLUTION_16B;
@@ -52,13 +45,13 @@ void adc_init(void)
 
     if (HAL_ADC_Init(&s_adc_handle) != HAL_OK)
     {
-        error_handler();
+        util_assert(false);
     }
 
     s_adc_mutex_id = osMutexNew(&k_adc_mutex_attr);
     if (s_adc_mutex_id == NULL)
     {
-        error_handler();
+        util_assert(false);
     }
 }
 
@@ -74,7 +67,7 @@ uint32_t adc_read_channel(uint32_t channelGroup, uint32_t channelNumber, uint32_
     status = osMutexAcquire(s_adc_mutex_id, osWaitForever);
     if (status != osOK)
     {
-        error_handler();
+        util_assert(false);
     }
 
     s_chan_conf.Channel = channelNumber;
@@ -86,37 +79,37 @@ uint32_t adc_read_channel(uint32_t channelGroup, uint32_t channelNumber, uint32_
 
     if (HAL_ADC_ConfigChannel(&s_adc_handle, &s_chan_conf) != HAL_OK)
     {
-        error_handler();
+        util_assert(false);
     }
 
     if (HAL_ADCEx_Calibration_Start(&s_adc_handle, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED) != HAL_OK)
     {
-        error_handler();
+        util_assert(false);
     }
 
     if (HAL_ADC_Start(&s_adc_handle) != HAL_OK)
     {
-        error_handler();
+        util_assert(false);
     }
 
     if (HAL_ADC_PollForConversion(&s_adc_handle, ADC_CONVERSION_TIMEOUT_MS) != HAL_OK)
     {
-        error_handler();
-    } 
+        util_assert(false);
+    }
     else
     {
         adc_value = HAL_ADC_GetValue(&s_adc_handle);
     }
 
-    if (HAL_ADC_Stop(&s_adc_handle) != HAL_OK) 
+    if (HAL_ADC_Stop(&s_adc_handle) != HAL_OK)
     {
-        error_handler();
+        util_assert(false);
     }
 
     status = osMutexRelease(s_adc_mutex_id);
     if (status != osOK)
     {
-        error_handler();
+        util_assert(false);
     }
 
     return adc_value;

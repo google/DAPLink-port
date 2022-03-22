@@ -20,7 +20,7 @@ static uint32_t tim1_clk_div(uint32_t apb2clkdiv)
         case RCC_APB2_DIV8:
             return 4;
         default: // RCC_CFGR_PPRE2_DIV1
-            util_assert(0);
+            util_assert(false);
             return 1;
     }
 }
@@ -39,7 +39,7 @@ static uint32_t ahb_clk_div(uint32_t ahbclkdiv)
         case RCC_HCLK_DIV16:
             return 16;
         default:
-            util_assert(0);
+            util_assert(false);
             return 1;
     }
 }
@@ -50,26 +50,22 @@ static void pwm_stop(void)
 
     if (HAL_TIM_PWM_Stop(&timer, TIM_CHANNEL_1) != HAL_OK)
     {
-        util_assert(0);
-        return;
+        util_assert(false);
     }
 
     if (HAL_TIM_Base_Stop(&timer) != HAL_OK)
     {
-        util_assert(0);
-        return;
+        util_assert(false);
     }
 
     HAL_GPIO_DeInit(GPIOE, GPIO_PIN_9);
 
     if (HAL_TIM_Base_DeInit(&timer) != HAL_OK) {
-        util_assert(0);
-        return;
+        util_assert(false);
     }
 
     if (HAL_TIM_PWM_DeInit(&timer) != HAL_OK) {
-        util_assert(0);
-        return;
+        util_assert(false);
     }
 
     __HAL_RCC_TIM1_CLK_DISABLE();
@@ -131,40 +127,34 @@ static void pwm_start(uint16_t freq, uint16_t duty_cycle)
 
     if (HAL_TIM_Base_Init(&timer) != HAL_OK)
     {
-        util_assert(0);
-        return;
+        util_assert(false);
     }
 
     if (HAL_TIM_PWM_Init(&timer) != HAL_OK)
     {
-        util_assert(0);
-        return;
+        util_assert(false);
     }
 
     if (HAL_TIMEx_MasterConfigSynchronization(&timer, &sMasterConfig) != HAL_OK)
     {
-        util_assert(0);
-        return;
+        util_assert(false);
     }
 
     HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
     if (HAL_TIM_PWM_ConfigChannel(&timer, &pwm_config, TIM_CHANNEL_1) != HAL_OK)
     {
-        util_assert(0);
-        return;
+        util_assert(false);
     }
 
     if (HAL_TIM_Base_Start(&timer) != HAL_OK)
     {
-        util_assert(0);
-        return;
+        util_assert(false);
     }
 
     if (HAL_TIM_PWM_Start(&timer, TIM_CHANNEL_1) != HAL_OK)
     {
-        util_assert(0);
-        return;
+        util_assert(false);
     }
 }
 

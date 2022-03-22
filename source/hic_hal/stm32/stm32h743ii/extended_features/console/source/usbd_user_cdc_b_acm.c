@@ -1,7 +1,6 @@
 #if defined(CDC_B_ENDPOINT)
 
 #include "rl_usb.h"
-#include "util.h"
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>

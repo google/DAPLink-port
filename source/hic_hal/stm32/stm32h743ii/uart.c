@@ -23,11 +23,11 @@
 #include "stm32h7xx.h"
 #include "uart.h"
 #include "gpio.h"
-#include "util.h"
 #include "circ_buf.h"
 #include "IO_Config.h"
 #include "settings.h"
 #include "stm32h7xx_hal_uart_ex.h"
+#include "util.h"
 
 #define CDC_UART                    USART3
 #define CDC_UART_ENABLE()           __HAL_RCC_USART3_CLK_ENABLE()
@@ -69,13 +69,6 @@ static UART_Configuration s_configuration =
 };
 
 static UART_HandleTypeDef s_uart_handle;
-
-static void error_handler(void)
-{
-    while (1)
-    {
-    }
-}
 
 static void clear_buffers(void)
 {
@@ -178,10 +171,7 @@ int32_t uart_set_configuration(UART_Configuration *config)
     s_uart_handle.Instance = CDC_UART;
     status = HAL_UART_DeInit(&s_uart_handle);
 
-    if (status == HAL_ERROR)
-    {
-        error_handler();
-    }
+    util_assert(status != HAL_ERROR);
 
     // parity
     s_configuration.Parity = config->Parity;
@@ -200,7 +190,7 @@ int32_t uart_set_configuration(UART_Configuration *config)
     else
     {
         // not support other parity
-        util_assert(0);
+        util_assert(false);
     }
 
     // stop bits
@@ -249,22 +239,13 @@ int32_t uart_set_configuration(UART_Configuration *config)
     s_uart_handle.Init.Mode = UART_MODE_TX_RX;
 
     status = HAL_UART_Init(&s_uart_handle);
-    if (status == HAL_ERROR)
-    {
-        error_handler();
-    }
+    util_assert(status != HAL_ERROR);
 
     status = HAL_UARTEx_EnableFifoMode(&s_uart_handle);
-    if (status == HAL_ERROR)
-    {
-        error_handler();
-    }
+    util_assert(status != HAL_ERROR);
 
     status = HAL_UARTEx_SetRxFifoThreshold(&s_uart_handle, CDC_UART_RXFIFO_THRESHOLD);
-    if (status == HAL_ERROR)
-    {
-        error_handler();
-    }
+    util_assert(status != HAL_ERROR);
 
     clear_buffers();
 

@@ -13,6 +13,7 @@
  */
 
 #include "i2c.h"
+#include "util.h"
 
 #if defined(MX_I2C1)
 extern ARM_DRIVER_I2C            Driver_I2C1;
@@ -69,22 +70,19 @@ static void I2C1_DAP_PinInit(void)
     hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
     if (HAL_I2C_Init(&hi2c1) != HAL_OK)
     {
-            // Error
-        while(1){};
+        util_assert(false);
     }
     /** Configure Analogue filter
     */
     if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
     {
-        // Error
-        while(1){};
+        util_assert(false);
     }
     /** Configure Digital filter
     */
     if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
     {
-        // Error
-        while(1){};
+        util_assert(false);
     }
 }
 
@@ -115,22 +113,19 @@ static void I2C2_DAP_PinInit(void)
     hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
     if (HAL_I2C_Init(&hi2c2) != HAL_OK)
     {
-            // Error
-        while(1){};
+        util_assert(false);
     }
     /** Configure Analogue filter
     */
     if (HAL_I2CEx_ConfigAnalogFilter(&hi2c2, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
     {
-        // Error
-        while(1){};
+        util_assert(false);
     }
     /** Configure Digital filter
     */
     if (HAL_I2CEx_ConfigDigitalFilter(&hi2c2, 0) != HAL_OK)
     {
-        // Error
-        while(1){};
+        util_assert(false);
     }
 }
 

@@ -1,4 +1,5 @@
-#include "udb_assert.h"
+#ifdef BUILD_FEATURE_UDB_ASSERT
+
 #include "settings.h"
 #include "stm32h743xx.h"
 #include "cmsis_os2.h"
@@ -10,9 +11,9 @@
 #include "stm32h7xx_hal.h"
 #include <string.h>
 #include <stdio.h>
+#include "util.h"
 
 #define UDB_BT_BUFFER_SIZE  (32)
-#define ARRAY_SIZE(a)       (sizeof(a)/sizeof(a[0]))
 
 // Flash memory bank 1 of stm32h743x
 #define UDB_RAM_BASE_ADDRESS    FLASH_BANK1_BASE
@@ -38,7 +39,7 @@ static uint32_t get_SP()
     return result;
 }
 
-void udb_backtrace(const char *file, uint16_t line)
+static void udb_backtrace(const char *file, uint16_t line)
 {
     uint32_t pc = get_PC();
     uint32_t sp = get_SP();
@@ -75,12 +76,12 @@ bool isAddressValidForStack(uint32_t addr)
     return (addr >= base && addr <= top);
 }
 
-void udb_assert(bool cond)
+void _util_assert(bool expression, const char *filename, uint16_t line)
 {
-    if (!cond)
+    if (!expression)
     {
         __disable_irq();
-        udb_backtrace(__FILE__, __LINE__);
+        udb_backtrace(filename, line);
 
         HAL_Delay(300U);
         if (DEBUGGER_ATTACHED)
@@ -93,3 +94,5 @@ void udb_assert(bool cond)
         }
     }
 }
+
+#endif // BUILD_FEATURE_UDB_ASSERT
