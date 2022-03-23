@@ -6,6 +6,7 @@
 #include "IO_Config.h"
 #include "daplink_addr.h"
 #include "compiler.h"
+#include "udb_assert.h"
 
 #define PIN_UDB_HW_VERSION_PORT GPIOG
 #define PIN_UDB_HW_VERSION      GPIO_PIN_15
@@ -42,17 +43,6 @@ enum {
     HW_VERSION_PIN_4,
     HW_VERSION_PIN_COUNT,
 };
-
-typedef enum
-{
-    HW_VERSION_UNKNOWN,
-    HW_VERSION_P1,
-    HW_VERSION_P2,
-    HW_VERSION_P3,
-    HW_VERSION_P4,
-    HW_VERSION_P5,
-    HW_VERSION_COUNT,
-} hw_version_t;
 
 typedef struct
 {
@@ -248,4 +238,12 @@ int udb_get_interface_version(uint8_t *buffer, unsigned size)
 int udb_get_bootloader_version(uint8_t *buffer, unsigned size)
 {
     return snprintf((char*)buffer, size, "%s", s_bootloader_version_str);
+}
+
+hw_version_t udb_get_hw_version(void)
+{
+    // don't get hw version before udb_read_hw_version()
+    udb_assert(s_hw_version != HW_VERSION_UNKNOWN);
+
+    return s_hw_version;
 }
