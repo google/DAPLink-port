@@ -358,8 +358,7 @@ static void sync_init(void)
 
 static void sync_assert_usb_thread(void)
 {
-    // Reenable once b/223096371 is done.
-    // util_assert(osThreadGetId() == sync_thread);
+    util_assert(osThreadGetId() == sync_thread);
 }
 
 static void sync_lock(void)
