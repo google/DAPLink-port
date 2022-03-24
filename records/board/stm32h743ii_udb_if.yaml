@@ -6,6 +6,7 @@ common:
         # Add UDB config macros below
         - UDB
         - SUPPORT_CMD_HISTORY
+        - NLUIF_PRINT_RESULT
         # Add build feature macros below
         - BUILD_FEATURE_UDB_ASSERT
     includes:
