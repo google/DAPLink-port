@@ -23,37 +23,44 @@ typedef struct
 
 static uint32_t DAP_ProcessVendorCommandEx40_MeasurePower(const uint8_t *request, uint8_t *response)
 {
+    udb_power_measurement_target_t last_target;
+
+    if (udb_get_hw_version() < HW_VERSION_P3)
+    {
+        last_target = UDB_POWER_MEASUREMENT_TARGET_ADAPTER_USB;
+    }
+    else
+    {
+        last_target = UDB_POWER_MEASUREMENT_TARGET_DUT1;
+    }
+
     // 2 bytes for voltage and 4 bytes for current
-    util_assert((6 * UDB_POWER_MEASUREMENT_TARGET_COUNT) <= DAP_PACKET_SIZE);
+    util_assert(6 * (last_target + 1) <= DAP_PACKET_SIZE);
 
     uint32_t num = 0;
-    int ret = udb_power_measurement_measure();
 
-    if (ret != UDB_SUCCESS)
+    if (udb_power_measurement_measure() != UDB_SUCCESS)
     {
         goto power_measurement_error;
     }
 
     uint8_t data_buf[DAP_PACKET_SIZE];
     uint8_t data_buf_idx = 0;
-    for (uint8_t target_type = 0; target_type < UDB_POWER_MEASUREMENT_TARGET_COUNT; ++target_type)
-    {
-        uint16_t voltage_mV;
-        uint32_t current_uA;
 
-        ret = udb_power_measurement_read_voltage_mV(target_type, &voltage_mV);
-        if (ret != UDB_SUCCESS)
-        {
-            goto power_measurement_error;
-        }
+    for (udb_power_measurement_target_t target_type = 0; target_type <= last_target ; ++target_type)
+    {
+        uint16_t voltage_mV = 0;
+        uint32_t current_uA = 0;
+
+        // Proceed even when udb_power_measurement_ returns UDB_ERROR to read
+        // all available channels.
+
+        udb_power_measurement_read_voltage_mV(target_type, &voltage_mV);
+
         data_buf[data_buf_idx++] = (voltage_mV & 0xFF);
         data_buf[data_buf_idx++] = ((voltage_mV >> 8) & 0xFF);
 
-        ret = udb_power_measurement_read_current_uA(target_type, &current_uA);
-        if (ret != UDB_SUCCESS)
-        {
-            goto power_measurement_error;
-        }
+        udb_power_measurement_read_current_uA(target_type, &current_uA);
 
         data_buf[data_buf_idx++] = (current_uA & 0xFF);
         data_buf[data_buf_idx++] = ((current_uA >> 8) & 0xFF);

@@ -41,6 +41,8 @@
 
 static uint64_t s_30ms_hook_counter = 0;
 
+extern void udb_config_init(void);
+
 static void udb_welcome_message(void)
 {
     char ver_buf[UDB_VERSION_MAX_LENGTH];
@@ -73,6 +75,8 @@ static void prerun_board_config(void)
     util_assert(status == UDB_SUCCESS);
 
     udb_read_hw_version();
+    udb_config_init();
+
     udb_extended_features_task_create();
 
     status = udb_power_measurement_init();

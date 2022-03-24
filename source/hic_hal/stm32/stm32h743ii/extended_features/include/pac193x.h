@@ -47,6 +47,7 @@ typedef enum
     PAC193X_CTRL_LAT_REG        = 0x24,
     PAC193X_CHANNEL_DIS_LAT_REG = 0x25,
     PAC193X_NEG_PWR_LAT_REG     = 0x26,
+    PAC193X_INVALID_REG         = 0x30,
     PAC193X_PRODUCT_ID_REG      = 0xfd,
     PAC193X_MANUFACTURER_ID_REG = 0xfe,
     PAC193X_REVISION_ID_REG     = 0xff,
@@ -161,10 +162,17 @@ typedef enum
     PAC193X_COMMAND_SIZE        = 3,
 } pac193x_command_type_t;
 
-#define PAC193X_REFRESH_STABLIZATION_TIME_MS    (1)
+// Need 1 ms for REFRESH to take effect, choose 3 to have some margin
+#define PAC193X_REFRESH_STABLIZATION_TIME_MS    (3)
+// Although data sheet mentions 14.25 ms for the time to first communication,
+// choose 100 based on experiments
+#define PAC193X_INIT_STABLIZATION_TIME_MS       (100)
 
 #define PAC193X_FULL_SCALE_VOLTAGE_MV           (32000)
 #define PAC193X_FULL_SCALE_RANGE_MV             (100)
+
+#define PAC193X_UNIPOLAR_DENOMINATOR            (1<<16)
+#define PAC193X_BIPOLAR_DENOMINATOR             (1<<15)
 
 int pac193x_init(const pac193x_cfg_t* cfg);
 int pac193x_send_command(pac193x_command_type_t command_type);

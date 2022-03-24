@@ -47,21 +47,17 @@ class ShellCommandTest(ContextTest):
 
     def test_measure_power(self) -> None:
         output = self.udb_serial.command("measure_power")
-        # TODO (b/220215522): Check if measurement are within expected limits when the
-        # implementation is finalized
-        bug_220215522_is_done = False
-        if bug_220215522_is_done:
-            result = re.search(output, "DEFINE YOUR PATTERN")
-            if result != None:
-                # needs this assert otherwise typing complains cause result is of type
-                # Optional[Match]
-                assert result is not None
-                self.assertLess(int(result.group(1)), 5500, "Voltage is too large")
-                self.assertGreater(int(result.group(1)), 4500, "Voltage is too small")
-                self.assertLess(int(result.group(2)), 150000, "Current is to large")
-                self.assertGreater(int(result.group(2)), 50000, "Current is too small")
-            else:
-                self.assertTrue(False, "Can't find expected output")
+        result = re.search("Target: Mainboard USB\r\n\tvoltage: ([0-9]*) mV\r\n\tcurrent: ([0-9]*) uA\r\n", output)
+        if result != None:
+            # needs this assert otherwise typing complains cause result is of type
+            # Optional[Match]
+            assert result is not None
+            self.assertLess(int(result.group(1)), 5150, "Voltage is too large")
+            self.assertGreater(int(result.group(1)), 5000, "Voltage is too small")
+            self.assertLess(int(result.group(2)), 145000, "Current is to large")
+            self.assertGreater(int(result.group(2)), 125000, "Current is too small")
+        else:
+            self.assertTrue(False, "Can't find expected output")
 
 class ShellCommandWithResetTest(TestCase):
     def test_reset(self) -> None:

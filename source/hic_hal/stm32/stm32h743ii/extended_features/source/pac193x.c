@@ -77,9 +77,16 @@ int pac193x_read_reg(pac193x_reg_t reg_addr, uint32_t reg_size, void* out)
 {
     int ret;
 
-    i2c_request(&k_pac193x_slave);
-    ret = i2c_read(&k_pac193x_slave, reg_addr, out, reg_size);
-    i2c_release(&k_pac193x_slave);
+    if (reg_addr != PAC193X_INVALID_REG)
+    {
+        i2c_request(&k_pac193x_slave);
+        ret = i2c_read(&k_pac193x_slave, reg_addr, out, reg_size);
+        i2c_release(&k_pac193x_slave);
+    }
+    else
+    {
+        ret = -UDB_ERROR;
+    }
 
     return ret;
 }

@@ -7,6 +7,8 @@
 #include "daplink_addr.h"
 #include "compiler.h"
 #include "util.h"
+#include "pac193x.h"
+#include "udb_errno.h"
 
 #define PIN_UDB_HW_VERSION_PORT GPIOG
 #define PIN_UDB_HW_VERSION      GPIO_PIN_15
@@ -33,7 +35,8 @@
 #define BOOTLOADER_CFG_MAGIC_KEY                (0x5a5a5a5a)
 #define BOOTLOADER_MAX_VERSION_LENGTH           UDB_VERSION_MAX_LENGTH
 
-#define HW_VERSION_GPIO_STABILIZATION_TIME_MS    (10)
+#define HW_VERSION_GPIO_STABILIZATION_TIME_MS           (10)
+#define HW_VERSION_VOLTAGE_THRESHOLD_FOR_P2_AND_P3_mV   (4000)
 
 enum {
     HW_VERSION_PIN_0,
@@ -117,8 +120,67 @@ static bool is_hw_version_p1(void)
     return bitstatus != GPIO_PIN_RESET;
 }
 
+// Use pac193x driver directly instead of power measurement driver to
+// break circular dependency.
+static hw_version_t decide_hw_version_p2_or_p3(void)
+{
+    pac193x_cfg_t cfg;
+    uint8_t vbus_reg[PAC193X_VBUSN_REG_SIZE];
+    uint32_t vbus;
+    uint16_t voltage_mV;
+    hw_version_t ver;
+
+    int status;
+    int retries = 0;
+
+    cfg.ctrl_cfg.val      = PAC193X_CTRL_POR_VALUE;
+    cfg.chan_dis_cfg.val  = PAC1934_CHANNEL_DIS_POR_VALUE;
+    cfg.neg_pwr_cfg.val   = PAC193X_NEG_PWR_POR_VALUE;
+    cfg.slow_cfg.val      = PAC193X_SLOW_POR_VALUE;
+
+    // We only need channel 3. Disable all other channels.
+    cfg.chan_dis_cfg.ch1_dis = 1;
+    cfg.chan_dis_cfg.ch2_dis = 1;
+    cfg.chan_dis_cfg.ch4_dis = 1;
+
+    status = pac193x_init(&cfg);
+    util_assert(status == UDB_SUCCESS);
+
+    HAL_Delay(PAC193X_INIT_STABLIZATION_TIME_MS);
+
+    // Despite pac193x_init() already send PAC193X_COMMAND_REFRESH once. That
+    // REFRESH command only enables channel3 and doesn't start to measure
+    // channel3. Need another REFRESH command to have data available in channel 3.
+    status = pac193x_send_command(PAC193X_COMMAND_REFRESH);
+    util_assert(status == UDB_SUCCESS);
+
+    HAL_Delay(PAC193X_REFRESH_STABLIZATION_TIME_MS);
+
+    status = pac193x_read_reg(PAC193X_VBUS3_REG, PAC193X_VBUSN_REG_SIZE, vbus_reg);
+    util_assert(status == UDB_SUCCESS);
+
+    vbus = 0;
+    for (uint8_t i = 0; i < PAC193X_VBUSN_REG_SIZE; ++i)
+    {
+        vbus = (vbus << 8) + vbus_reg[i];
+    }
+
+    voltage_mV = (uint16_t)(PAC193X_FULL_SCALE_VOLTAGE_MV * vbus / PAC193X_UNIPOLAR_DENOMINATOR);
+
+    if (voltage_mV >= HW_VERSION_VOLTAGE_THRESHOLD_FOR_P2_AND_P3_mV)
+    {
+        ver = HW_VERSION_P3;
+    }
+    else
+    {
+        ver = HW_VERSION_P2;
+    }
+
+    return ver;
+}
+
 /*
- * If the values of s_hw_version_pins follow pull-ups and pull-downs, HW_VERSION is P2.
+ * If the values of s_hw_version_pins follow pull-ups and pull-downs, HW_VERSION is P2 or P3
  * Otherwise HW_VERSION is HW_VERSION_P3 + s_hw_version_pins.
  */
 static hw_version_t read_hw_version_after_p1(void)
@@ -178,15 +240,15 @@ static hw_version_t read_hw_version_after_p1(void)
     }
     else
     {
-        ver = HW_VERSION_P2;
+        ver = decide_hw_version_p2_or_p3();
     }
 
     return ver;
 }
 
 /*
- * P1 and P2 didn't have a dedicated hardware to decide the version.
- * We relied on board-specific hardware in these two early boards to
+ * P1, P2, and P3 didn't have a dedicated hardware to decide the version.
+ * We relied on board-specific hardware in these early boards to
  * detect the version in software.
  *
  * The difference between P1 and others is that GPIO PG15 in P1
@@ -197,12 +259,16 @@ static hw_version_t read_hw_version_after_p1(void)
  *   30k and 100k in parallel produce 23.08k pull-up. 23.08k PU and 10k PD in series
  *   would produce 10/(10 + 23.08) = 0.30Vdd, which is good enough for low.
  *
- * P3 and the boards after have a set of resistors connected to a set of pins
- * to detect version. But P2 does not have that and the voltage of those pins
+ * P4 and the boards after have a set of resistors connected to a set of pins
+ * to detect version. But P2 and P3 does not have that and the voltage of those pins
  * would change when we switch between pull-up and pull-down modes. So if the
- * GPIO reads in pull-up and pull-down modes are not equal, it is P2.
+ * GPIO reads in pull-up and pull-down modes are not equal, it is P2 or P3.
  *
- * Finally, to decide versions for P3 and later, the dedicated resistors attached to
+ * To differentiate P2 and P3, we relied on the power measurement IC pac193x. P2
+ * wired pac193x channel 3 to nothing while P3 wired channel 3 to mainboard usb.
+ * If we measure the voltage on P3, P3 would get 5V and P2 would get 0V.
+ *
+ * Finally, to decide versions for P4 and later, the dedicated resistors attached to
  * the pins listed in s_hw_version_pins would change each time we update the
  * hardware to reflect the hardware version.
  */
