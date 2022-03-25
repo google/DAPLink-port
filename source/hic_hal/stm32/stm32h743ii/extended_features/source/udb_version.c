@@ -6,7 +6,7 @@
 #include "IO_Config.h"
 #include "daplink_addr.h"
 #include "compiler.h"
-#include "udb_assert.h"
+#include "util.h"
 
 #define PIN_UDB_HW_VERSION_PORT GPIOG
 #define PIN_UDB_HW_VERSION      GPIO_PIN_15
@@ -243,7 +243,7 @@ int udb_get_bootloader_version(uint8_t *buffer, unsigned size)
 hw_version_t udb_get_hw_version(void)
 {
     // don't get hw version before udb_read_hw_version()
-    udb_assert(s_hw_version != HW_VERSION_UNKNOWN);
+    util_assert(s_hw_version != HW_VERSION_UNKNOWN);
 
     return s_hw_version;
 }
