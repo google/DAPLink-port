@@ -11,7 +11,7 @@ def config =
     repository : repository ,
     repositoryBranch : "master" ,
     repositoryHistory : true ,
-    platform : "linux" ,
+    platform : "freertos" ,
     imagesPath : "/images/UDB-DAPLink/Builds" ,
     buildType : "Daily" ,
     tagBuild : true ,
@@ -21,7 +21,6 @@ def config =
         [
             buildProduct : "udb-daplink" ,
             buildConfig : "development" ,
-            os: "debian" ,
             compileScriptAlternate : "pushd ${repository} ; ./ci/scripts/build.sh" ,
             deliverToImages : true ,
             deliverScriptAlternate : "pushd ${repository} ; ./ci/scripts/deliver_builds.sh" ,
