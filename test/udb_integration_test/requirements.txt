@@ -1,0 +1,2 @@
+pyOCD==0.28.*
+pyexpect
