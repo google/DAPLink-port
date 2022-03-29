@@ -48,7 +48,7 @@ static void udb_backtrace(const char *file, uint16_t line)
 
     config_ram_clear_assert();
     config_ram_set_assert(file, line);
-    printf("File: %s, Line: %u\n", file, line);
+    printf("Oops! UDB hit an assert at:\nFile: %s, Line: %u\n", file, line);
 
     for (int i = 0; i < UDB_BT_BUFFER_SIZE && s_udb_bt_buffer[i]; ++i)
     {

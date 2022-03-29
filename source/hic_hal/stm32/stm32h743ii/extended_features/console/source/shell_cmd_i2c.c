@@ -17,7 +17,7 @@ void cmd_i2c(int argc, char *argv[])
 {
     if (strcmp(argv[1], "probe") == 0)
     {
-        printf("probing..\n");
+        printf("probing...\n");
         uint8_t bus_id = strtoul(argv[2], NULL, 0);
         if (bus_id == 2)
         {
