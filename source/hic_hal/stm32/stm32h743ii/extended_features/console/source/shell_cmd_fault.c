@@ -9,6 +9,10 @@ void cmd_fault(int argc, char *argv[])
     {
         util_assert(false);
     }
+    else if (strcmp(argv[1], "test_watchdog") == 0)
+    {
+        while (1) {}
+    }
     else
     {
         printf("ERROR: unknown cmd\n");

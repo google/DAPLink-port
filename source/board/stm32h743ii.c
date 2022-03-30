@@ -33,6 +33,10 @@
 #include "nluif_udb-daplink.h"
 #include "util.h"
 #include "udb_fault_info.h"
+#include "udb_watchdog.h"
+#include "udb_fault_info.h"
+
+#define UDB_WATCHDOG_TIMEOUT_S  (10U)
 
 #define UDB_30MS_MULTIPLIER_TO_30SEC    (1000)
 #define UDB_30MS_MULTIPLIER_TO_10MIN    (1000 * 20)
@@ -81,10 +85,19 @@ static void prerun_board_config(void)
     util_assert(status == UDB_SUCCESS);
 
     udb_welcome_message();
+
+    udb_check_unexpected_watchdog_reset();
 }
 
 void board_30ms_hook()
 {
+    if (s_30ms_hook_counter == 0)
+    {
+        udb_watchdog_init(UDB_WATCHDOG_TIMEOUT_S);
+    }
+
+    udb_watchdog_refresh();
+
     s_30ms_hook_counter++;
     if ((s_30ms_hook_counter % 50) == 0)
     {

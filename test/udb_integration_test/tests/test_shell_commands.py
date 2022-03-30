@@ -3,6 +3,7 @@ from udb_test_helper import UDBTestResources, ContextTest
 from unittest import TestCase, skipUnless
 from udb_serial_device import UDBSerialTestDevice, OopsError
 from typing import Generator
+import time
 import re
 
 class ShellCommandTest(ContextTest):
@@ -65,6 +66,20 @@ class ShellCommandWithResetTest(TestCase):
             try:
                 output = udb_serial.command("reset")
                 self.assertTrue(False, f"Expected UDB to reset, but it didn't. Serial " \
+                                       f"output: {output}")
+            except OSError:
+                pass
+        with UDBSerialTestDevice() as udb_serial:
+            self.assertLess(udb_serial.get_time_to_open(),
+                            UDBTestResources.get_expected_boot_timedelta(),
+                            msg="Regression in boot time")
+
+    def test_watchdog(self) -> None:
+        with UDBSerialTestDevice() as udb_serial:
+            try:
+                output = udb_serial.command("fault test_watchdog")
+                time.sleep(10)
+                self.assertTrue(False, f"Expected UDB to reset by watchdog, but it didn't. Serial " \
                                        f"output: {output}")
             except OSError:
                 pass
