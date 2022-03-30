@@ -3,6 +3,7 @@ common:
         # Add DAPLink macros below
         - MAIN_TASK_STACK=2048
         - CDC_B_ENDPOINT
+        - DAPLINK_BOOTLOADER_UPDATE
         # Add UDB config macros below
         - UDB
         - SUPPORT_CMD_HISTORY
@@ -10,6 +11,7 @@ common:
         # Add build feature macros below
         - BUILD_FEATURE_UDB_ASSERT
     includes:
+        - projectfiles/make_gcc_arm/stm32h743ii_udb_bl/build/bootloader_image.c
         - source/hic_hal/stm32/stm32h743ii/extended_features/include
         - source/hic_hal/stm32/stm32h743ii/extended_features/lib/nlutilities/include
         - source/hic_hal/stm32/stm32h743ii/extended_features/console/include

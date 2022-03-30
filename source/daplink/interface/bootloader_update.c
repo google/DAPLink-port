@@ -59,6 +59,19 @@ static bool interface_image_valid()
     }
 
     computed_crc = info_get_crc_interface();
+    /* NEST ADDITION START
+     * The elf files don't get CRC written into them by the post_build script, so this check
+     * would always fail in local development when we use the elf. For the sake of bootloader
+     * update to work, return valid even if the CRC field is the default filled value.
+     * TODO(b/227446866): Remove this temporary code once bootloader update is not needed in UDB */
+    if ((computed_crc != stored_crc) && (stored_crc == 0x55555555))
+    {
+        return true;
+    }
+    /* NEST ADDITION END */
+
+    /* Note: If the current interface image was loaded from the .elf, this check will fail because
+     * the CRC is never written to the .elf output. */
     return computed_crc == stored_crc;
 }
 
