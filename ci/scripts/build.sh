@@ -24,7 +24,7 @@ python3 ./tools/progen_compile.py -t make_gcc_arm stm32h743ii_udb_bl --clean --p
 # will include the bootloader binary into itself so that it can update the bootloader
 # on boot. Replace the freshly built bootloader image with a known working BL version to
 # make sure we stay in control of the bootloader version and only update it when necessary.
-BOOTLOADER_IMAGE_TO_BUNDLE_INTO_INTERFACE="0.12d24"
+BOOTLOADER_IMAGE_TO_BUNDLE_INTO_INTERFACE="0.12d25"
 gsutil cp "gs://images-store/UDB-DAPLink/Builds/${BOOTLOADER_IMAGE_TO_BUNDLE_INTO_INTERFACE}/bootloader/bootloader_image.c" .
 cp bootloader_image.c projectfiles/make_gcc_arm/stm32h743ii_udb_bl/build/
 
