@@ -67,8 +67,6 @@ static volatile bootloader_version_t config_rom_bl __attribute__((section("cfgro
 };
 #endif
 
-static char s_bootloader_version_str[BOOTLOADER_MAX_VERSION_LENGTH] = "unknown, note: bootloader ver are introduced after ver 0.11";
-
 static const char s_build_version_str[] = "udb_" UDB_BUILD_VERSION "_" GIT_DESCRIPTION "_hw:";
 static hw_version_t s_hw_version = HW_VERSION_UNKNOWN;
 
@@ -186,16 +184,6 @@ static hw_version_t read_hw_version_after_p1(void)
     return ver;
 }
 
-void udb_read_bootloader_version(void)
-{
-    bootloader_version_t* bl_version = (bootloader_version_t*)UDB_BOOTLOADER_VERSION_SECTION_ADDR;
-    if (bl_version->magic_key == BOOTLOADER_CFG_MAGIC_KEY)
-    {
-        memcpy(s_bootloader_version_str, bl_version->version, BOOTLOADER_MAX_VERSION_LENGTH);
-        s_bootloader_version_str[BOOTLOADER_MAX_VERSION_LENGTH-1] = '\0';
-    }
-}
-
 /*
  * P1 and P2 didn't have a dedicated hardware to decide the version.
  * We relied on board-specific hardware in these two early boards to
@@ -237,7 +225,13 @@ int udb_get_interface_version(uint8_t *buffer, unsigned size)
 
 int udb_get_bootloader_version(uint8_t *buffer, unsigned size)
 {
-    return snprintf((char*)buffer, size, "%s", s_bootloader_version_str);
+    char bootloader_version_str[BOOTLOADER_MAX_VERSION_LENGTH] = "unknown, note: bootloader ver are introduced after ver 0.11";
+    bootloader_version_t* bl_version = (bootloader_version_t*)UDB_BOOTLOADER_VERSION_SECTION_ADDR;
+    if (bl_version->magic_key == BOOTLOADER_CFG_MAGIC_KEY)
+    {
+        memcpy(bootloader_version_str, bl_version->version, BOOTLOADER_MAX_VERSION_LENGTH);
+    }
+    return snprintf((char*)buffer, size, "%s", bootloader_version_str);
 }
 
 hw_version_t udb_get_hw_version(void)

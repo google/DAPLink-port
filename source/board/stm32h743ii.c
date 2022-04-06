@@ -63,7 +63,6 @@ static void udb_welcome_message(void)
 static void prerun_board_config(void)
 {
     I2C_DAP_Initialize();
-    udb_read_bootloader_version();
     udb_read_hw_version();
     udb_extended_features_task_create();
     udb_power_measurement_init();
