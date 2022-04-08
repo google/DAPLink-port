@@ -48,7 +48,6 @@ void sdk_init()
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
     RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
-    SystemCoreClockUpdate();
     HAL_Init();
 
     /** Supply configuration update enable
@@ -128,6 +127,8 @@ void sdk_init()
     /** Enable USB Voltage detector
     */
     HAL_PWREx_EnableUSBVoltageDetector();
+
+    SystemCoreClockUpdate();
 }
 
 HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
