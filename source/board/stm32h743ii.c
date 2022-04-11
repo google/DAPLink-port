@@ -49,13 +49,11 @@ static void udb_welcome_message(void)
     printf("\t(_______)(______/ |/ \\___/    \n\n");
 
     udb_get_interface_version((uint8_t*)ver_buf, UDB_VERSION_MAX_LENGTH);
-    printf("interface version: %s\n", ver_buf);
+    printf("Interface version: %s\n", ver_buf);
 
-    udb_get_bootloader_version((uint8_t*)ver_buf, UDB_VERSION_MAX_LENGTH);
-    printf("bootloader version: %s\n", ver_buf);
+    printf("To know more about udb, visit go/udb.\n");
+    printf("Please report issues at go/udb-bug.\n");
     printf("You can start typing commands.\n");
-    printf("To know more about udb, visit go/udb\n");
-    printf("Please report issue at go/udb-bug\n");
 
     uif_prompt();
 }
