@@ -10,6 +10,8 @@ python3 -m pip install -r "${REPO_ROOT}/requirements.txt"
 
 pushd "$REPO_ROOT"
 
+python3 ./tools/add_macro_to_record.py ./records/board/stm32h743ii_udb_bl.yaml "UDB_VERSION_BASE=${bamboo_VersionBase}"
+python3 ./tools/add_macro_to_record.py ./records/board/stm32h743ii_udb_bl.yaml "UDB_BUILD_NUMBER=${bamboo_buildNumber}"
 python3 ./tools/add_macro_to_record.py ./records/board/stm32h743ii_udb_if.yaml "UDB_VERSION_BASE=${bamboo_VersionBase}"
 python3 ./tools/add_macro_to_record.py ./records/board/stm32h743ii_udb_if.yaml "UDB_BUILD_NUMBER=${bamboo_buildNumber}"
 
