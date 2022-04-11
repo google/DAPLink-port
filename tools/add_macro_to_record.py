@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # This script can be used in build systems to add macros dynamically
 
+from jsonschema import FormatError
 import yaml
 import argparse
 
@@ -16,10 +17,13 @@ if __name__ == "__main__":
     with open(file_name, "r") as stream:
         record = yaml.safe_load(stream)
 
-    try:
-        record["common"]["macros"].append(new_macro)
-    except Exception as e:
-        raise Exception("The record yaml file has the wrong format, are you sure the file path is correct?")
+    if ("common" in record):
+        if (("macros" in record["common"]) and (record["common"]["macros"]is not None)):
+            record["common"]["macros"].append(new_macro)
+        else:
+            record["common"]["macros"] = [new_macro]
+    else:
+        raise FormatError("The record yaml file has the wrong format, are you sure the file path is correct?")
 
 
     with open(file_name, "w") as stream:
