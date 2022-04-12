@@ -171,40 +171,62 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 #define UDC1_BUTTON_DIR_PIN             GPIO_PIN_14
 #define UDC1_BUTTON_DIR_PIN_Bit         14
 
-/* The I2C driver in I2C_STM32H7xx.c is generated through
- * STCubeMX which requires the below config. */
 
+/*
+ * These MX_ flags are required to use ARM I2C driver. The I2C number is
+ * a little messy now. The i2c labels on schematic are inconsistent with
+ * the stm32h7xx datasheet:
+ *    schematic I2C0 -> datasheet I2C1
+ *    schematic I2C1 -> datasheet I2C3
+ *    schematic I2C2 -> datasheet I2C2
+ */
 // I2C1
-// #define MX_I2C1                                 1
-
-/* Pin PB6 */
-#define MX_I2C1_SCL_GPIO_Speed                  GPIO_SPEED_FREQ_LOW
-#define MX_I2C1_SCL_GPIO_FM6                    __NULL
-#define MX_I2C1_SCL_Pin                         PB6
-#define MX_I2C1_SCL_GPIOx                       GPIOB
-#define MX_I2C1_SCL_GPIO_PuPd                   GPIO_NOPULL
-#define MX_I2C1_SCL_GPIO_Pin                    GPIO_PIN_6
-#define MX_I2C1_SCL_GPIO_AF                     GPIO_AF4_I2C1
-#define MX_I2C1_SCL_GPIO_Mode                   GPIO_MODE_AF_OD
-
-/* Pin PB7 */
-#define MX_I2C1_SDA_GPIO_Speed                  GPIO_SPEED_FREQ_LOW
-#define MX_I2C1_SDA_Pin                         PB7
-#define MX_I2C1_SDA_GPIOx                       GPIOB
-#define MX_I2C1_SDA_GPIO_PuPd                   GPIO_NOPULL
-#define MX_I2C1_SDA_GPIO_Pin                    GPIO_PIN_7
-#define MX_I2C1_SDA_GPIO_AF                     GPIO_AF4_I2C1
-#define MX_I2C1_SDA_GPIO_FM7                    __NULL
-#define MX_I2C1_SDA_GPIO_Mode                   GPIO_MODE_AF_OD
-
-// I2C2
-#define MX_I2C2                         1
+#define MX_I2C1                         1
 #define MX_HSI_VALUE                    64000000
+
+/* Pin PB8 */
+#define MX_I2C1_SCL_GPIO_Speed          GPIO_SPEED_FREQ_LOW
+#define MX_I2C1_SCL_GPIO_FM6            __NULL
+#define MX_I2C1_SCL_GPIOx               GPIOB
+#define MX_I2C1_SCL_GPIO_PuPd           GPIO_NOPULL
+#define MX_I2C1_SCL_GPIO_Pin            GPIO_PIN_8
+#define MX_I2C1_SCL_GPIO_AF             GPIO_AF4_I2C1
+#define MX_I2C1_SCL_GPIO_Mode           GPIO_MODE_AF_OD
+
+/* Pin PB9 */
+#define MX_I2C1_SDA_GPIO_Speed          GPIO_SPEED_FREQ_LOW
+#define MX_I2C1_SDA_GPIOx               GPIOB
+#define MX_I2C1_SDA_GPIO_PuPd           GPIO_NOPULL
+#define MX_I2C1_SDA_GPIO_Pin            GPIO_PIN_9
+#define MX_I2C1_SDA_GPIO_AF             GPIO_AF4_I2C1
+#define MX_I2C1_SDA_GPIO_FM7            __NULL
+#define MX_I2C1_SDA_GPIO_Mode           GPIO_MODE_AF_OD
+
+#define MX_I2C3                         1
+
+/* Pin PA8 */
+#define MX_I2C3_SCL_GPIO_Speed          GPIO_SPEED_FREQ_LOW
+#define MX_I2C3_SCL_GPIO_FM6            __NULL
+#define MX_I2C3_SCL_GPIOx               GPIOA
+#define MX_I2C3_SCL_GPIO_PuPd           GPIO_NOPULL
+#define MX_I2C3_SCL_GPIO_Pin            GPIO_PIN_8
+#define MX_I2C3_SCL_GPIO_AF             GPIO_AF4_I2C3
+#define MX_I2C3_SCL_GPIO_Mode           GPIO_MODE_AF_OD
+
+/* Pin PH8 */
+#define MX_I2C3_SDA_GPIO_Speed          GPIO_SPEED_FREQ_LOW
+#define MX_I2C3_SDA_GPIOx               GPIOH
+#define MX_I2C3_SDA_GPIO_PuPd           GPIO_NOPULL
+#define MX_I2C3_SDA_GPIO_Pin            GPIO_PIN_8
+#define MX_I2C3_SDA_GPIO_AF             GPIO_AF4_I2C3
+#define MX_I2C3_SDA_GPIO_FM7            __NULL
+#define MX_I2C3_SDA_GPIO_Mode           GPIO_MODE_AF_OD
+
+#define MX_I2C2                         1
 
 /* Pin PF1 */
 #define MX_I2C2_SCL_GPIO_Speed          GPIO_SPEED_FREQ_LOW
 #define MX_I2C2_SCL_GPIO_FM6            __NULL
-#define MX_I2C2_SCL_Pin                 PF1
 #define MX_I2C2_SCL_GPIOx               GPIOF
 #define MX_I2C2_SCL_GPIO_PuPd           GPIO_NOPULL
 #define MX_I2C2_SCL_GPIO_Pin            GPIO_PIN_1
@@ -213,7 +235,6 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 
 /* Pin PF0 */
 #define MX_I2C2_SDA_GPIO_Speed          GPIO_SPEED_FREQ_LOW
-#define MX_I2C2_SDA_Pin                 PF0
 #define MX_I2C2_SDA_GPIOx               GPIOF
 #define MX_I2C2_SDA_GPIO_PuPd           GPIO_NOPULL
 #define MX_I2C2_SDA_GPIO_Pin            GPIO_PIN_0
@@ -267,5 +288,4 @@ GPIO_PinState gpio_read_dut_io_pin(dut_pin_group_id_t dut_pin_group_id);
 
 void gpio_write_dut_pin(dut_pin_group_id_t dut_pin_group_id, GPIO_PinState pin_state);
 
-
-#endif
+#endif // __IO_CONFIG__

@@ -15,6 +15,12 @@ static const uint8_t k_pac193x_command_reg_addr[] =
 
 COMPILER_ASSERT(sizeof(k_pac193x_command_reg_addr) / sizeof(uint8_t) == PAC193X_COMMAND_SIZE);
 
+static const i2c_slave_t k_pac193x_slave =
+{
+    .bus_id = I2C_BUS_2,
+    .slave_addr = PAC193X_ADDR,
+};
+
 typedef enum
 {
     PAC193X_CFG_TYPE_CTRL,
@@ -26,15 +32,9 @@ typedef enum
 int pac193x_send_command(pac193x_command_type_t command_type)
 {
     int ret;
-
-    if (I2C_DAP_MasterTransfer(PAC193X_ADDR, &k_pac193x_command_reg_addr[command_type], NULL, 0) == true)
-    {
-        ret = UDB_SUCCESS;
-    }
-    else
-    {
-        ret = -UDB_ERROR;
-    }
+    i2c_request(&k_pac193x_slave);
+    ret = i2c_write(&k_pac193x_slave, k_pac193x_command_reg_addr[command_type], NULL, 0);
+    i2c_release(&k_pac193x_slave);
 
     return ret;
 }
@@ -42,40 +42,32 @@ int pac193x_send_command(pac193x_command_type_t command_type)
 int pac193x_init(const pac193x_cfg_t *cfg)
 {
     int ret = UDB_SUCCESS;
-    bool i2c_status;
-    uint8_t addr;
 
-    addr = PAC193X_CTRL_REG;
-    i2c_status = I2C_DAP_MasterTransfer(PAC193X_ADDR, &addr, (uint8_t*)&cfg->ctrl_cfg, PAC193X_CFG_REG_SIZE);
+    i2c_request(&k_pac193x_slave);
 
-    if (i2c_status == true)
+    ret = i2c_write(&k_pac193x_slave, PAC193X_CTRL_REG, (uint8_t*)&cfg->ctrl_cfg, PAC193X_CFG_REG_SIZE);
+
+    if (ret == UDB_SUCCESS)
     {
-        addr = PAC193X_CHANNEL_DIS_REG;
-        i2c_status = I2C_DAP_MasterTransfer(PAC193X_ADDR, &addr, (uint8_t*)&cfg->chan_dis_cfg, PAC193X_CFG_REG_SIZE);
+        ret  = i2c_write(&k_pac193x_slave, PAC193X_CHANNEL_DIS_REG, (uint8_t*)&cfg->chan_dis_cfg, PAC193X_CFG_REG_SIZE);
     }
 
-    if (i2c_status == true)
+    if (ret  == UDB_SUCCESS)
     {
-        addr = PAC193X_NEG_PWR_REG;
-        i2c_status = I2C_DAP_MasterTransfer(PAC193X_ADDR, &addr, (uint8_t*)&cfg->neg_pwr_cfg, PAC193X_CFG_REG_SIZE);
+        ret = i2c_write(&k_pac193x_slave, PAC193X_NEG_PWR_REG, (uint8_t*)&cfg->neg_pwr_cfg, PAC193X_CFG_REG_SIZE);
     }
 
-    if (i2c_status == true)
+    if (ret == UDB_SUCCESS)
     {
-        addr = PAC193X_SLOW_REG;
-        i2c_status = I2C_DAP_MasterTransfer(PAC193X_ADDR, &addr, (uint8_t*)&cfg->slow_cfg, PAC193X_CFG_REG_SIZE);
+        ret = i2c_write(&k_pac193x_slave, PAC193X_SLOW_REG, (uint8_t*)&cfg->slow_cfg, PAC193X_CFG_REG_SIZE);
     }
 
+    i2c_release(&k_pac193x_slave);
 
-    if (i2c_status == true)
+    if (ret == UDB_SUCCESS)
     {
         // Need to refresh to change the configuration
         ret = pac193x_send_command(PAC193X_COMMAND_REFRESH);
-    }
-
-    if (i2c_status == false)
-    {
-        ret = -UDB_ERROR;
     }
 
     return ret;
@@ -85,14 +77,9 @@ int pac193x_read_reg(pac193x_reg_t reg_addr, uint32_t reg_size, void* out)
 {
     int ret;
 
-    if (I2C_DAP_MasterRead(PAC193X_ADDR, &reg_addr, out, reg_size) == true)
-    {
-        ret = UDB_SUCCESS;
-    }
-    else
-    {
-        ret = -UDB_ERROR;
-    }
+    i2c_request(&k_pac193x_slave);
+    ret = i2c_read(&k_pac193x_slave, reg_addr, out, reg_size);
+    i2c_release(&k_pac193x_slave);
 
     return ret;
 }

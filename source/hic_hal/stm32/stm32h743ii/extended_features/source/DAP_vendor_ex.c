@@ -110,18 +110,29 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
         //    1 to 61 data bytes
         //
         uint8_t target_addr = *request++;
-        const uint8_t* internal_addr = request++;
+        uint8_t internal_addr = *request++;
         uint8_t len = *request;
         uint8_t data_buf[64] = { 0 };
-        uint32_t returnVal = 0;
+        int res;
+        uint32_t returnVal;
+
+        i2c_slave_t slave =
+        {
+            .bus_id = I2C_BUS_2,
+            .slave_addr = target_addr,
+        };
 
 
-        returnVal = I2C_DAP_MasterRead(target_addr, internal_addr, data_buf, len);
-        if (returnVal== 0x01) {
+        i2c_request(&slave);
+        res = i2c_read(&slave, internal_addr, data_buf, len);
+        i2c_release(&slave);
+        if (res == UDB_SUCCESS) {
             *response++ = DAP_OK;
+            returnVal = 0;
         } else {
             // transfer incomplete or error
             *response++ = DAP_ERROR;
+            returnVal = -res;
         }
         *response++ = (returnVal & 0xFF); //9 bits in an event.  Get first byte
         *response++ = ((returnVal >> 8) & 0xFF); //Get 2nd byte
@@ -155,24 +166,36 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
         //      0x01 is "done", 0x10 is "cleared", other bits indicate errors.
         //
         uint8_t target_addr = *request++;
-        const uint8_t* internal_addr = request++;
+        uint8_t internal_addr = *request++;
         uint8_t len = *request++;
         uint8_t data_buf[60] = {0};
+        int res;
         uint32_t returnVal = 0;
+
+        i2c_slave_t slave =
+        {
+            .bus_id = I2C_BUS_2,
+            .slave_addr = target_addr,
+        };
 
         for (int i = 0; i < len; i++) {
             data_buf[i] = *request++;
         }
 
-        // DONE: can add additional responses from I2C_DAP_MasterRead to provide better status
-        returnVal = I2C_DAP_MasterTransfer(target_addr, internal_addr, data_buf, len);
-        if (returnVal== 0x01) {
+        i2c_request(&slave);
+        res = i2c_write(&slave, internal_addr, data_buf, len);
+        i2c_release(&slave);
+
+        if (returnVal == UDB_SUCCESS) {
             // transfer done
             *response++ = DAP_OK;
+            returnVal = 0;
         } else {
             // transfer incomplete
             *response++ = DAP_ERROR;
+            returnVal = -res;
         }
+
         *response++ = (returnVal & 0xFF); //9 bits in an event.  Get first byte
         *response++ = ((returnVal >> 8) & 0xFF); //Get 2nd byte
 

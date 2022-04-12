@@ -1,64 +1,52 @@
-/* 
- * i2c.h
- *
- * Evan Hassman
- * ehassman@google.com
- *
- * Eric Lee
- * eleenest@google.com
- * August 14, 2020
- *
- */
+#ifndef I2C_H
+#define I2C_H
 
-#ifndef I2C_H_
-#define I2C_H_
-
-#include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <string.h>
-#include "stm32h743xx.h"
-#include "Driver_I2C.h"
+#include "udb_errno.h"
 #include "I2C_STM32H7xx.h"
 
-/*
- * I2C_DAP_SignalEvent
- *
- * event: status of I2C
- *
- * Process retutned I2C event, callback function, to adjust DAP I2C flags
- */
-void I2C_DAP_SignalEvent(uint32_t event);
+typedef enum {
+    I2C_BUS_0,
+    I2C_BUS_1,
+    I2C_BUS_2,
+    I2C_BUS_COUNT,
+} i2c_bus_t;
+
+typedef struct
+{
+    i2c_bus_t bus_id;
+    uint16_t slave_addr;
+} i2c_slave_t;
+
+// Setup up I2C bus and enables interrupts
+int i2c_init(void);
+
+void i2c_request(const i2c_slave_t *i2c_slave);
+void i2c_release(const i2c_slave_t *i2c_slave);
 
 /*
- * I2C_DAP_Initialize
+ * i2c_write
  *
- * Setup up I2C bus, GPIO ports and pins, and enables interrupts
- */
-void I2C_DAP_Initialize(void);
-
-/*
- * I2C_DAP_MasterTransfer
- *
- * device_addr: Target (slave) device to be communicated with
+ * i2c_slave: Target (slave) device to be communicated with
  * reg_addr: Target device register to start writing to
- * data: bytes to be written to target device
+ * in_buf: bytes to be written to target device
  * len: length of data, or number of bytes to be sequentially written
  *
  * Write sequential bytes, starting at given register address, on target I2C device
  */
-bool I2C_DAP_MasterTransfer(uint16_t device_addr, const uint8_t* reg_addr, const uint8_t* data, uint32_t len);
+int i2c_write(const i2c_slave_t *i2c_slave, uint8_t reg_addr, const uint8_t* in_buf, uint32_t len);
 
 /*
- * I2C_DAP_MasterRead
+ * i2c_read
  *
- * device_addr: Target (slave) device to be communicated with
+ * i2c_slave: Target (slave) device to be communicated with
  * reg_addr: Target device register to start reading from
- * buf: buffer to store data read from target device
+ * out_buf: buffer to store data read from target device
  * len: number of bytes to be read
  *
  * Read sequential bytes, starting at given register address, on target I2C device
  */
-bool I2C_DAP_MasterRead(uint16_t device_addr, const uint8_t* reg_addr, uint8_t* buf, uint32_t num);
+int i2c_read(const i2c_slave_t *i2c_slave, uint8_t reg_addr, uint8_t* out_buf, uint32_t len);
 
-#endif /* I2C_H_ */
+#endif /* I2C_H */
