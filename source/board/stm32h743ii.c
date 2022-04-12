@@ -82,12 +82,19 @@ void board_30ms_hook()
 }
 #endif // UDB
 
+// return non-zero value to make all image incompatible
+uint8_t board_detect_incompatible_image(const uint8_t *data, uint32_t size)
+{
+    return 1;
+}
+
 const board_info_t g_board_info =
 {
     .info_version = kBoardInfoVersion,
     .board_id = "0000",
     .family_id = kStub_HWReset_FamilyID,
-    .daplink_drive_name = "DAPLINK",
+    .daplink_drive_name = "DAPLINK_APP",
     .prerun_board_config = prerun_board_config,
-    // .target_cfg = &target_device,   This board doesn't have a target
+    // need target_device to enable the mass storage
+    .target_cfg = &target_device,
 };

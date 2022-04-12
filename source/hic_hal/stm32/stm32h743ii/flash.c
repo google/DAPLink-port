@@ -117,8 +117,7 @@ uint32_t EraseSector(uint32_t adr)
 
 uint32_t ProgramPage(uint32_t adr, uint32_t sz, uint32_t *buf)
 {
-    // b/220118503 DAPlink calls this with 16 bytes, fix is under way
-    // util_assert(sz % 32 == 0); // this chip does 256bit writes
+    util_assert(sz % 32 == 0); // this chip does 256bit writes
 
     uint32_t i;
     uint32_t ret = 0;

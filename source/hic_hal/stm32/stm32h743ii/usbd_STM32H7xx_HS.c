@@ -49,6 +49,18 @@ COMPILER_ASSERT((USBD_CDC_ACM_HS_ENABLE == 1) && (USBD_CDC_ACM_EP_BULKIN == 4) &
 COMPILER_ASSERT(USBD_CDC_B_ACM_EP_INTIN == 5);
 COMPILER_ASSERT((USBD_CDC_B_ACM_HS_ENABLE == 1) && (USBD_CDC_B_ACM_EP_BULKIN == 6) && (USBD_CDC_B_ACM_HS_WMAXPACKETSIZE <= TX6_FIFO_SIZE));
 
+#if defined(DAPLINK_IF) && defined(UDB)
+// Use larger descriptor size. After enabling the 2nd CDC and MSC, the config
+// descriptor size will exceed the original defined size 200.
+#define UDB_USBD_CONFIG_DESCRIPTOR_SIZE   (300)
+U8 USBD_ConfigDescriptor[UDB_USBD_CONFIG_DESCRIPTOR_SIZE] = { 0 };
+#if (USBD_HS_ENABLE == 0)
+U8 USBD_ConfigDescriptor_HS[] = { 0 };
+#else
+U8 USBD_ConfigDescriptor_HS[UDB_USBD_CONFIG_DESCRIPTOR_SIZE] = { 0 };
+#endif
+#endif
+
 #if (USBD_HID_ENABLE == 1)
 static uint32_t HID_IntInPacketData[(USBD_HID_MAX_PACKET + 3) / 4];
 #endif
