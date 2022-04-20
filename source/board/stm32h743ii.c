@@ -126,6 +126,7 @@ const board_info_t g_board_info =
     .family_id = kStub_HWReset_FamilyID,
     .daplink_drive_name = "DAPLINK_APP",
     .prerun_board_config = prerun_board_config,
-    // need target_device to enable the mass storage
-    .target_cfg = &target_device,
+    // TODO(b/229319355): MSC sometimes fails for unknown reason.
+    // Disable mass storage as a workaround temporarily.
+    //.target_cfg = &target_device,
 };

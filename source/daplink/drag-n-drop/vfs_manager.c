@@ -358,7 +358,10 @@ static void sync_init(void)
 
 static void sync_assert_usb_thread(void)
 {
-    util_assert(osThreadGetId() == sync_thread);
+    // TODO(b/229319355): We disable the MSC temporarilty for the issue.
+    // This  assert is triggered even if the MSC is disabled. Disable it so
+    // that it would not mess up the fault_info functionality.
+    // util_assert(osThreadGetId() == sync_thread);
 }
 
 static void sync_lock(void)
