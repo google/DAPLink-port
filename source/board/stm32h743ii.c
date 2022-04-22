@@ -34,8 +34,6 @@
 #include "util.h"
 #include "udb_fault_info.h"
 
-// For debug build, we print fault info every 30ms * 1000 = 30 seconds
-// For release build, we only do this every 30ms * 1000 * 20 = 10 minutes
 #define UDB_30MS_MULTIPLIER_TO_30SEC    (1000)
 #define UDB_30MS_MULTIPLIER_TO_10MIN    (1000 * 20)
 
@@ -99,11 +97,12 @@ void board_30ms_hook()
 #define UDB_CHECK_FAULT_INFO_TARGET_COUNT     UDB_30MS_MULTIPLIER_TO_10MIN
 #endif
 
-    if ((s_30ms_hook_counter % UDB_CHECK_FAULT_INFO_TARGET_COUNT) == 0)
+    if (((s_30ms_hook_counter % UDB_CHECK_FAULT_INFO_TARGET_COUNT) == 0) && udb_is_fault_info_uncleared())
     {
         printf("[UDB] - Reset happened due to a fatal error. Crash report:\n");
         udb_print_fault_info();
-        printf("Report the bug at go/udb-bug and then clear this message and reset with the \"fault_info clear\" command in the debug serial console.\n");
+        printf("Report the bug at go/udb-bug and then clear this message and reset with"
+               "the \"fault_info clear\" command in the debug serial console.\n");
     }
 
     if (udb_log_cdc_ready())
