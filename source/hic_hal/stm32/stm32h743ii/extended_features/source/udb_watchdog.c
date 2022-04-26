@@ -122,6 +122,7 @@ void WWDG_IRQHandler(void)
         sp = (*(uint32_t*)((uint32_t)osRtxInfo.thread.run.curr + 56)) + 0x40;
         udb_write_backtrace_info(__FILE__, __LINE__, pc, sp);
 
+        WRITE_REG(UDB_WDG->CR, WWDG_MAX_COUNTER_VALUE);
         HAL_Delay(UDB_WRITE_BACKTRACE_INFO_DELAY_MS);
         udb_reset();
     }
