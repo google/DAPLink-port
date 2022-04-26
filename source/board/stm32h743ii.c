@@ -41,6 +41,12 @@
 #define UDB_30MS_MULTIPLIER_TO_30SEC    (1000)
 #define UDB_30MS_MULTIPLIER_TO_10MIN    (1000 * 20)
 
+#ifdef UDB_DEBUG
+#define UDB_CHECK_FAULT_INFO_TARGET_COUNT     UDB_30MS_MULTIPLIER_TO_30SEC
+#else
+#define UDB_CHECK_FAULT_INFO_TARGET_COUNT     UDB_30MS_MULTIPLIER_TO_10MIN
+#endif
+
 static uint64_t s_30ms_hook_counter = 0;
 
 extern void udb_config_init(void);
@@ -106,12 +112,6 @@ void board_30ms_hook()
     {
         HAL_GPIO_TogglePin( CONNECTED_LED_PORT, CONNECTED_LED_PIN);
     }
-
-#ifdef UDB_DEBUG
-#define UDB_CHECK_FAULT_INFO_TARGET_COUNT     UDB_30MS_MULTIPLIER_TO_30SEC
-#else
-#define UDB_CHECK_FAULT_INFO_TARGET_COUNT     UDB_30MS_MULTIPLIER_TO_10MIN
-#endif
 
     if (((s_30ms_hook_counter % UDB_CHECK_FAULT_INFO_TARGET_COUNT) == 0) && udb_is_fault_info_uncleared())
     {
