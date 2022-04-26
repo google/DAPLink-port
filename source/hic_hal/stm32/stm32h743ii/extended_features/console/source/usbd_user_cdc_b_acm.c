@@ -74,8 +74,8 @@ int _write(int file, char *ptr, int len_to_write)
     }
 
     if (total_free < error_len) {
-        // No space
-        return 0;
+        // drop everything so that printf() don't keep polling
+        return len_to_write;
     }
 
     write_free = total_free - error_len;
@@ -98,8 +98,6 @@ int _write(int file, char *ptr, int len_to_write)
         write_free--;
     }
 
-    // force USB to process the data
-    USBD_Handler();
     return len_to_write;
 }
 #endif // CDC_B_ENDPOINT
