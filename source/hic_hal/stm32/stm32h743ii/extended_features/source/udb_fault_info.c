@@ -48,19 +48,21 @@ void udb_print_fault_info(void)
         config_ram_get_assert(assert_file_name, ASSERT_BUF_SIZE, &assert_line, NULL);
         uint8_t num_hexdumps = config_ram_get_hexdumps(&hexdumps);
 
+        printf("[UDB] - Reset happened due to a fatal error. Crash report:\n");
         printf("File: %s, Line: %u\n", assert_file_name, assert_line);
         for (uint8_t i = 0; i < num_hexdumps; ++i)
         {
             printf("%x\n", hexdumps[i]);
         }
+        printf("Report the bug at go/udb-bug and then clear this message and reset with"
+               "the \"fault_info clear\" command in the debug serial console.\n");
     }
 }
 
+// If the MSC is enabled, ASSERT.TXT can only be cleared after reset.
 void udb_clear_fault_info(void)
 {
     config_ram_clear_assert();
-    // need to reset to clear the fault info message
-    udb_reset();
 }
 
 void udb_check_unexpected_watchdog_reset(void)

@@ -102,7 +102,6 @@ void board_30ms_hook()
 
     udb_watchdog_refresh();
 
-    s_30ms_hook_counter++;
     if ((s_30ms_hook_counter % 50) == 0)
     {
         HAL_GPIO_TogglePin( CONNECTED_LED_PORT, CONNECTED_LED_PIN);
@@ -116,16 +115,15 @@ void board_30ms_hook()
 
     if (((s_30ms_hook_counter % UDB_CHECK_FAULT_INFO_TARGET_COUNT) == 0) && udb_is_fault_info_uncleared())
     {
-        printf("[UDB] - Reset happened due to a fatal error. Crash report:\n");
         udb_print_fault_info();
-        printf("Report the bug at go/udb-bug and then clear this message and reset with"
-               "the \"fault_info clear\" command in the debug serial console.\n");
     }
 
     if (udb_log_cdc_ready())
     {
         udb_log_flush();
     }
+
+    s_30ms_hook_counter++;
 }
 #endif // UDB
 
