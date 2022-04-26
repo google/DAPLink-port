@@ -53,10 +53,10 @@ class ShellCommandTest(ContextTest):
             # needs this assert otherwise typing complains cause result is of type
             # Optional[Match]
             assert result is not None
-            self.assertLess(int(result.group(1)), 5150, "Voltage is too large")
-            self.assertGreater(int(result.group(1)), 5000, "Voltage is too small")
-            self.assertLess(int(result.group(2)), 145000, "Current is to large")
-            self.assertGreater(int(result.group(2)), 125000, "Current is too small")
+            self.assertLess(int(result.group(1)), 5150, "Voltage is unexpectedly large")
+            self.assertGreater(int(result.group(1)), 4850, "Voltage is unexpectedly small")
+            self.assertLess(int(result.group(2)), 150000, "Current is unexpectedly large")
+            self.assertGreater(int(result.group(2)), 113000, "Current is unexpectedly small")
         else:
             self.assertTrue(False, "Can't find expected output")
 
@@ -74,6 +74,9 @@ class ShellCommandWithResetTest(TestCase):
                             UDBTestResources.get_expected_boot_timedelta(),
                             msg="Regression in boot time")
 
+    @skipUnless(UDBTestResources.should_run_all_tests(),
+                "this test runs only with the --run-all flag and you have to diconnect your " \
+                "debugger from UDB otherwise the assert will halt UDB")
     def test_watchdog(self) -> None:
         with UDBSerialTestDevice() as udb_serial:
             try:
@@ -99,7 +102,7 @@ class ShellCommandWithResetTest(TestCase):
                                        "there is no debugger connected to UDB, because then the " \
                                        "assert will cause UDB to halt! Serial output: " \
                                        f"{output}")
-            except OopsError:
+            except (OopsError, OSError):
                 pass
         with UDBSerialTestDevice() as udb_serial:
             self.assertLess(udb_serial.get_time_to_open(),

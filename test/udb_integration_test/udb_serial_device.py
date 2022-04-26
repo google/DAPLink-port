@@ -75,7 +75,7 @@ class UDBSerialTestDevice:
             try:
                 self.ser = Serial(UDBTestResources.get_serial_port_path(), baudrate)
                 break
-            except (SerialException, FileNotFoundError, UDBSerialTestDeviceError) as e:
+            except (SerialException, FileNotFoundError, UDBSerialTestDeviceError, OSError) as e:
                 if datetime.now() - start > UDBTestResources.get_expected_boot_timedelta() * 2:
                     raise UDBSerialTestDeviceError("Timeout and error while trying to open " \
                                                    "serial port:", e)
