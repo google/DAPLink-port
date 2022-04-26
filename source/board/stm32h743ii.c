@@ -61,6 +61,8 @@ static void udb_welcome_message(void)
 
     udb_get_interface_version((uint8_t*)ver_buf, UDB_VERSION_MAX_LENGTH);
     printf("Interface version: %s\n", ver_buf);
+    udb_get_bootloader_version((uint8_t*)ver_buf, UDB_VERSION_MAX_LENGTH);
+    printf("Bootloader version: %s\n", ver_buf);
 
     printf("To know more about udb, visit go/udb.\n");
     printf("Please report issues at go/udb-bug.\n");
@@ -84,8 +86,6 @@ static void prerun_board_config(void)
     status = udb_power_measurement_init();
     util_assert(status == UDB_SUCCESS);
 
-    udb_welcome_message();
-
     udb_check_unexpected_watchdog_reset();
 }
 
@@ -93,7 +93,11 @@ void board_30ms_hook()
 {
     if (s_30ms_hook_counter == 0)
     {
+        // Code that needs to run once after the bootloader update and all other
+        // initialization finished
+
         udb_watchdog_init(UDB_WATCHDOG_TIMEOUT_S);
+        udb_welcome_message();
     }
 
     udb_watchdog_refresh();
