@@ -103,10 +103,19 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 #define PIN_MSC_LED                     GPIO_PIN_4
 #define PIN_MSC_LED_Bit                 4
 
+#define USBHUB_RESET_L_PORT             GPIOH
+#define USBHUB_RESET_L_PIN              GPIO_PIN_13
+#define USBHUB_RESET_L_PIN_Bit          13
+
 //UDB specific signals
 #define USBHUB_SELFPWR_PORT             GPIOH
 #define USBHUB_SELFPWR_PIN              GPIO_PIN_14
 #define USBHUB_SELFPWR_PIN_Bit          14
+
+// USB external PHY reset
+#define USBPHY_RESET_L_PORT             GPIOH
+#define USBPHY_RESET_L_PIN              GPIO_PIN_15
+#define USBPHY_RESET_L_PIN_Bit          15
 
 //DUT USB port power switch
 //VBUS_DUT_EN_L
