@@ -49,6 +49,8 @@ COMPILER_ASSERT((USBD_CDC_ACM_HS_ENABLE == 1) && (USBD_CDC_ACM_EP_BULKIN == 4) &
 COMPILER_ASSERT(USBD_CDC_B_ACM_EP_INTIN == 5);
 COMPILER_ASSERT((USBD_CDC_B_ACM_HS_ENABLE == 1) && (USBD_CDC_B_ACM_EP_BULKIN == 6) && (USBD_CDC_B_ACM_HS_WMAXPACKETSIZE <= TX6_FIFO_SIZE));
 
+#define TXFIFO_WAIT_TIMEOUT_MS    (5)
+
 #if defined(DAPLINK_IF) && defined(UDB)
 // Use larger descriptor size. After enabling the 2nd CDC and MSC, the config
 // descriptor size will exceed the original defined size 200.
@@ -706,6 +708,7 @@ void USBD_ClearEPBuf(U32 EPNum)
 uint32_t USBD_ReadEP(U32 EPNum, U8 *pData, uint32_t bufsz)
 {
     U32 val, sz;
+    U32 pktsts;
 
     if ((USBx_OUTEP(EPNum)->DOEPCTL & USB_OTG_DOEPCTL_USBAEP) == 0)
     {
@@ -734,8 +737,17 @@ uint32_t USBD_ReadEP(U32 EPNum, U8 *pData, uint32_t bufsz)
     }
 
     // wait for OUT/Setup transfer completed data packet from USB core
+    // Since USBD_Handler is heavy, we don't want to just pop single register in it
+    // But it is possible that some packet gets into the FIFO before the core pushes
+    // transfer completed packet. Verify it is really a transfer completed
+    // packet and then pop it out.
     while ((OTG->GINTSTS & USB_OTG_GINTSTS_RXFLVL) == 0) {}
-    OTG->GRXSTSP;                               // pop register
+    pktsts = ((OTG->GRXSTSR & USB_OTG_GRXSTSP_PKTSTS) >> USB_OTG_GRXSTSP_PKTSTS_Pos);
+    if ((pktsts == STS_XFER_COMP) || (pktsts == STS_SETUP_COMP))
+    {
+        OTG->GRXSTSP;
+    }
+
     OTG->GINTMSK |= USB_OTG_GINTMSK_RXFLVLM;    // unmask RxFIFO non-empty interrupt
 
     return (sz);
@@ -757,6 +769,7 @@ uint32_t USBD_ReadEP(U32 EPNum, U8 *pData, uint32_t bufsz)
 uint32_t USBD_WriteEP(U32 EPNum, U8 *pData, U32 cnt)
 {
     U32 *ptr, val;
+    U32 txfifo_wait_start_time_ms;
 
     EPNum &= ~USB_ENDPOINT_DIRECTION_MASK;
 
@@ -797,11 +810,17 @@ uint32_t USBD_WriteEP(U32 EPNum, U8 *pData, U32 cnt)
     }
     else
     {
-        if (cnt)
+        // get space in Ep TxFIFO
+        // Reset the IN endpoint if we can't get enough space. Usually this
+        // means something goes wrong on this endpoint and usb host stops
+        // sending IN token.
+        txfifo_wait_start_time_ms = HAL_GetTick();
+        while (cnt > 0 && (USBx_INEP(EPNum)->DTXFSTS * 4) < cnt)
         {
-            while ((USBx_INEP(EPNum)->DTXFSTS * 4) < cnt)
+            if (HAL_GetTick() - txfifo_wait_start_time_ms >= TXFIFO_WAIT_TIMEOUT_MS)
             {
-                // get space in Ep TxFIFO
+                USBD_ResetEP(EPNum | USB_ENDPOINT_DIRECTION_MASK);
+                return 0;
             }
         }
 
