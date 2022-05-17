@@ -2,7 +2,7 @@ import groovy.json.JsonOutput
 
 library 'jenkins-shared-library@master'
 
-def version = "0.12"
+def version = "0.13"
 def repository = "tps/udb-daplink"
 
 def config =
