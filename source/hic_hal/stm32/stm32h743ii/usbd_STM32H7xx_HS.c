@@ -15,6 +15,7 @@
 #include "cmsis_gcc.h"
 #include "usb_def.h"
 #include "util.h"
+#include "IO_Config.h"
 
 #define __NO_USB_LIB_C
 #include "usb_config.c"
@@ -127,6 +128,23 @@ static void USBD_IntrEna(void)
     NVIC_EnableIRQ(OTG_HS_IRQn); /* Enable OTG_HS interrupt */
 }
 
+static void reset_usbhub_cy7c65642_28ltxc(void)
+{
+    HAL_GPIO_WritePin(USBHUB_RESET_L_PORT, USBHUB_RESET_L_PIN, GPIO_PIN_RESET);
+    HAL_Delay(1);
+    HAL_GPIO_WritePin(USBHUB_RESET_L_PORT, USBHUB_RESET_L_PIN, GPIO_PIN_SET);
+    HAL_Delay(1);
+}
+
+static void reset_external_phy_usb3320c_ezk(void)
+{
+    HAL_GPIO_WritePin(USBPHY_RESET_L_PORT, USBPHY_RESET_L_PIN, GPIO_PIN_RESET);
+    HAL_Delay(1);
+    HAL_GPIO_WritePin(USBPHY_RESET_L_PORT, USBPHY_RESET_L_PIN, GPIO_PIN_SET);
+    // T_start in USB3320c-ezk datasheet
+    HAL_Delay(4);
+}
+
 /*
  *  USB Device Initialize Function
  *   Called by the User to initialize USB
@@ -191,10 +209,24 @@ void USBD_Init(void)
     gpio_init_struct.Alternate = GPIO_AF10_OTG1_HS;
     HAL_GPIO_Init(GPIOI, &gpio_init_struct);
 
+    gpio_init_struct.Pin = USBPHY_RESET_L_PIN;
+    gpio_init_struct.Mode = GPIO_MODE_OUTPUT_PP;
+    gpio_init_struct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    HAL_GPIO_Init(USBPHY_RESET_L_PORT, &gpio_init_struct);
+
+    gpio_init_struct.Pin = USBHUB_RESET_L_PIN;
+    gpio_init_struct.Mode = GPIO_MODE_OUTPUT_PP;
+    gpio_init_struct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    HAL_GPIO_Init(USBHUB_RESET_L_PORT, &gpio_init_struct);
+
     __HAL_RCC_USB1_OTG_HS_ULPI_CLK_ENABLE();
     __HAL_RCC_USB1_OTG_HS_CLK_ENABLE();
 
     HAL_Delay(20);
+
+    reset_external_phy_usb3320c_ezk();
+    reset_usbhub_cy7c65642_28ltxc();
+
     timeout_cntr = 1000;
     while (!(OTG->GRSTCTL & USB_OTG_GRSTCTL_AHBIDL))
     {
