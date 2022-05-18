@@ -26,7 +26,6 @@
 #include <stdbool.h>
 
 #include "cmsis_compiler.h"
-#include "virtual_fs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,12 +36,7 @@ extern "C" {
 #define I2C_SLAVE_HID               (0x71U)
 #define I2C_SLAVE_FLASH             (0x72U)
 
-// Busy flag not yet implemented in nRF52
-#if defined(INTERFACE_NRF52820)
-#define I2C_PROTOCOL_VERSION        (0x01)
-#else 
 #define I2C_PROTOCOL_VERSION        (0x02)
-#endif
 
 /*! i2c command Id type enumeration */
 typedef enum cmdId_tag {
@@ -127,15 +121,6 @@ typedef __PACKED_STRUCT i2cCommand_tag {
     } cmdData;
 } i2cCommand_t;
 
-typedef __PACKED_STRUCT flashConfig_tag {
-    uint32_t        key;            // Magic key to indicate a valid record
-    vfs_filename_t  fileName;
-    uint32_t        fileSize;
-    bool            fileVisible;
-    uint32_t        fileEncWindowStart;
-    uint32_t        fileEncWindowEnd;
-} flashConfig_t;
-
 /*! Flash interface command type */
 typedef enum flashCmdId_tag {
     gFlashCfgFileName_c     = 0x01,
@@ -183,8 +168,6 @@ typedef __PACKED_STRUCT i2cFlashCmd_tag {
 } i2cFlashCmd_t;
 
 void i2c_cmds_init(void);
-flashConfig_t* i2c_cmds_get_storage_config(void);
-void i2c_cmds_reset_storate_config(void);
 
 #ifdef __cplusplus
 }

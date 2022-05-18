@@ -20,7 +20,7 @@ from __future__ import absolute_import
 
 # Name of all projects ready for public release
 # and info on the file to be distributed
-PROJECT_RELEASE_INFO = {
+PROJECT_RELEASE_INFO = [
     # Project Name                                  Legacy      Offset      Extension
     ("k20dx_frdmk22f_if",                           True,       0x8000,     "bin"       ),
     ("k20dx_frdmk64f_if",                           True,       0x5000,     "bin"       ),
@@ -40,6 +40,7 @@ PROJECT_RELEASE_INFO = {
     ("lpc4322_lpc55s69xpresso_if",                  False,      0x10000,    "bin"       ),
     ("lpc11u35_ssci1114_if",                        False,      0x0000,     "bin"       ),
     ("sam3u2c_mkit_dk_dongle_nrf5x_if",             True,       0x5000,     "bin"       ),
+    ("sam3u2c_nrf5x_dk_ext_if",                     True,       0x5000,     "bin"       ),
     ("k20dx_frdmk20dx_if",                          True,       0x8000,     "bin"       ),
     ("k20dx_frdmkw24d_if",                          True,       0x8000,     "bin"       ),
     ("k20dx_frdmkw41z_if",                          True,       0x8000,     "bin"       ),
@@ -59,7 +60,8 @@ PROJECT_RELEASE_INFO = {
     ("k20dx_hvpke18f_if",                           True,       0x8000,     "bin"       ),
     ("k20dx_mimxrt1020_evk_qspi_if",                True,       0x8000,     "bin"       ),
     ("k20dx_mimxrt1050_evk_hyper_if",               True,       0x8000,     "bin"       ),
-    ("k20dx_mimxrt1050_evk_qspi_if",                True,       0x8000,     "bin"       ),
+    ("lpc4322_mimxrt1060_evk_qspi_if",              False,      0x10000,    "bin"       ),
+    ("lpc4322_mimxrt1170_evk_qspi_if",              False,      0x10000,    "bin"       ),
     ('k20dx_ep_agora_if',                           True,      	0x0000,     "bin"       ),
     ('k20dx_ep_kairos_if',                          True,       0x0000,     "bin"       ),
     ("k26f_frdmk32w042_if",                         False,      0x8000,     "bin"       ),
@@ -100,13 +102,20 @@ PROJECT_RELEASE_INFO = {
     ('lpc11u35_if',                                 False,      0x0000,     "bin"       ),
     ('lpc4322_if',                                  False,      0x0000,     "bin"       ),
     ('lpc55s69_if',                                 False,      0x10000,    "bin"       ),
+    ('lpc55s69_mculink_if',                         False,      0x10000,    "bin"       ),
     ('max32620_if',                                 False,      0x0000,     "bin"       ),
     ('max32625_if',                                 False,      0x0000,     "bin"       ),
     ('nrf52820_if',                                 False,      0x0000,     "bin"       ),
     ('sam3u2c_if',                                  False,      0x0000,     "bin"       ),
     ('stm32f103xb_if',                              False,      0x0000,     "bin"       ),
     ('lpc11u35_pitaya_link_if',                     False,      0x0000,     "bin"       ),
-}
+]
+
+TEST_RELEASE_INFO = [
+    ('lpc55s69_nrf52840dk_test_if',                 False,      0x10000,    "bin"       ),
+    ('stm32f103xb_stm32f207zg_if',                  False,      0x0000,     "bin"       ),
+]
+
 
 # Add new HICs here
 VENDOR_ID = {
@@ -142,14 +151,15 @@ SUPPORTED_CONFIGURATIONS = [
     (   0x0220,     VENDOR_TO_FAMILY('NXP', 2),         'k20dx_frdmkl46z_if',                       'k20dx_bl',         'FRDM-KL46Z'                            ),
     (   0x0224,     VENDOR_TO_FAMILY('NXP', 1),         'k20dx_frdmk28f_if',                        'k20dx_bl',         None                                    ), # TODO - set target to 'FRDM-K28F' when mbed-os supports this
     (   0x0225,     VENDOR_TO_FAMILY('NXP', 1),         'k26f_frdmk32w042_if',                      'k26f_bl',          None                                    ), # TODO - set target to 'FRDM-K32W042' when mbed-os supports this
-    (   0x0226,     VENDOR_TO_FAMILY('NXP', 3),         'k20dx_mimxrt1020_evk_qspi_if',             'k20dx_bl',         None                                    ), # TODO - set target to 'MIMX6RT1050' when mbed-os supports this
-    (   0x0227,     VENDOR_TO_FAMILY('NXP', 3),         'k20dx_mimxrt1050_evk_hyper_if',            'k20dx_bl',         None                                    ), # TODO - set target to 'MIMX6RT1050' when mbed-os supports this
-    (   0x0227,     VENDOR_TO_FAMILY('NXP', 3),         'k20dx_mimxrt1050_evk_qspi_if',             'k20dx_bl',         None                                    ), # TODO - set target to 'MIMX6RT1050' when mbed-os supports this
+    (   0x0226,     VENDOR_TO_FAMILY('NXP', 3),         'k20dx_mimxrt1020_evk_qspi_if',             'k20dx_bl',         'MIMXRT1020'                            ),
+    (   0x0227,     VENDOR_TO_FAMILY('NXP', 3),         'k20dx_mimxrt1050_evk_hyper_if',            'k20dx_bl',         'MIMXRT1050'                            ),
     (   0x0228,     VENDOR_TO_FAMILY('NXP', 4),         'k20dx_rapid_iot_if',                       'k20dx_bl',         None                                    ), # TODO - set target to 'Rapid-IoT' when mbed-os supports this
+    (   0x0229,     VENDOR_TO_FAMILY('NXP', 3),         'lpc4322_mimxrt1060_evk_qspi_if',           'lpc4322_bl',       'MIMXRT1060'                            ),
     (   0x0230,     VENDOR_TO_FAMILY('NXP', 1),         'k20dx_frdmk20dx_if',                       'k20dx_bl',         'FRDM-K20D50M'                          ),
     (   0x0231,     VENDOR_TO_FAMILY('NXP', 1),         'k20dx_frdmk22f_if',                        'k20dx_bl',         'FRDM-K22F'                             ),
     (   0x0236,     VENDOR_TO_FAMILY('NXP', 0),         'lpc4322_lpc55s69xpresso_if',               'lpc4322_bl',       'LPCXpresso55S69'                       ),
     (   0x0240,     VENDOR_TO_FAMILY('NXP', 1),         'k20dx_frdmk64f_if',                        'k20dx_bl',         'FRDM-K64F'                             ),
+    (   0x0244,     VENDOR_TO_FAMILY('NXP', 3),         'lpc4322_mimxrt1170_evk_qspi_if',           'lpc4322_bl',       'MIMXRT1170'                            ),
     (   0x0250,     VENDOR_TO_FAMILY('NXP', 1),         'k20dx_frdmkw24d_if',                       'k20dx_bl',         'FRDM-KW24D512'                         ),
     (   0x0260,     VENDOR_TO_FAMILY('NXP', 2),         'k20dx_frdmkl26z_if',                       'k20dx_bl',         None                                    ),
     (   0x0261,     VENDOR_TO_FAMILY('NXP', 2),         'k20dx_frdmkl27z_if',                       'k20dx_bl',         'FRDM-KL27Z'                            ),
@@ -176,7 +186,7 @@ SUPPORTED_CONFIGURATIONS = [
     (   0x1018,     VENDOR_TO_FAMILY('Stub', 1),        'lpc11u35_ssci824_if',                      None,               'Switch-Science-mbed-LPC824'            ),
     (   0x1019,     VENDOR_TO_FAMILY('Nordic', 1),      'lpc11u35_sscity_if',                       None,               'Switch-Science-mbed-TY51822r3'         ),
     (   0x1021,     VENDOR_TO_FAMILY('Nordic', 1),      'lpc11u35_ssci_chibi_if',                   None,               None                                    ), # TODO - set target to 'SSCI-MBIT' when mbed-os supports this
-    (   0x1028,     VENDOR_TO_FAMILY('Nordic', 2),      'lpc11u35_pitaya_link_if',                  None,               None                                    ),    
+    (   0x1028,     VENDOR_TO_FAMILY('Nordic', 2),      'lpc11u35_pitaya_link_if',                  None,               None                                    ),
     (   0x1050,     VENDOR_TO_FAMILY('Stub', 1),        'lpc11u35_lpc812xpresso_if',                None,               'NXP-LPC800-MAX'                        ),
     (   0x1054,     VENDOR_TO_FAMILY('Stub', 1),        'lpc4322_lpc54114xpresso_if',               'lpc4322_bl',       'LPCXpresso54114'                       ),
     (   0x1056,     VENDOR_TO_FAMILY('Stub', 1),        'lpc4322_lpc54608xpresso_if',               'lpc4322_bl',       'LPCXpresso54608'                       ),
@@ -195,6 +205,7 @@ SUPPORTED_CONFIGURATIONS = [
     (   0x1309,     VENDOR_TO_FAMILY('Stub', 3),        'm48ssidae_numaker_m252kg_if',              'm48ssidae_bl',     None                                    ),
     (   0x1310,     VENDOR_TO_FAMILY('Stub', 3),        'm48ssidae_numaker_iot_m263a_if',           'm48ssidae_bl',     None                                    ),
     (   0x1312,     VENDOR_TO_FAMILY('Stub', 3),        'm48ssidae_numaker_m2354_if',               'm48ssidae_bl',     None                                    ),
+    (   0x1313,     VENDOR_TO_FAMILY('Stub', 3),        'm48ssidae_numaker_iot_m467_if',            'm48ssidae_bl',     None                                    ),
     (   0x2600,     VENDOR_TO_FAMILY('Nordic', 2),      'k20dx_ep_agora_if',                        None,               None                                    ),
     (   0x2601,     VENDOR_TO_FAMILY('NXP', 0),         'k20dx_ep_kairos_if',                       None,               None                                    ),
     (   0x4600,     VENDOR_TO_FAMILY('Realtek', 1),     'lpc11u35_rtl8195am_if',                    None,               'REALTEK-RTL8195AM'                     ),
@@ -231,6 +242,9 @@ SUPPORTED_CONFIGURATIONS = [
     (   0x0000,     VENDOR_TO_FAMILY('Stub', 1),        'nrf52820_if',                              None,               None                                    ),
     (   0x0000,     VENDOR_TO_FAMILY('Stub', 1),        'sam3u2c_if',                               None,               None                                    ),
     (   0x0000,     VENDOR_TO_FAMILY('Stub', 1),        'stm32f103xb_if',                           None,               None                                    ),
+
+    # Test projects
+    (   0x1102,     VENDOR_TO_FAMILY('Nordic', 2),      'lpc55s69_nrf52840dk_test_if',              'lpc55s69_bl',      'Nordic-nRF52840-DK'                    ),
 ]
 
 # Add new HICs here
@@ -297,6 +311,7 @@ BOARD_ID_SUPPORTING_PAGE_ERASE = set([
     0x1309,  # NuMaker-M252KG
     0x1310,  # NuMaker-IoT-M263A
     0x1312,  # NuMaker-M2354
+    0x1313,  # NuMaker-IoT-M467
     0x3103,  # dipdap_sdt51822b
     0x3104,  # dipdap_sdt52832b
     0x3105,  # dipdap_sdt64b
