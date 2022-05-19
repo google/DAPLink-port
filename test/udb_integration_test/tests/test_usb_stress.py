@@ -18,9 +18,6 @@ class USBStressTest(ContextTest):
             with UDBDapTestDevice() as self.udb_dap:
                 yield
 
-    @skipUnless(UDBTestResources.should_run_all_tests(),
-                "this test runs only with the --run-all flag because it triggers an unfixed " \
-                "bug on MacOS")
     def test_usb(self) -> None:
         start = datetime.now()
         count = 0

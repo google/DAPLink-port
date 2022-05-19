@@ -147,7 +147,8 @@ class UDBSerialTestDevice:
 
     def flush(self) -> None:
         self.ser.flush()
-        self.ser.reset_input_buffer()
+        if sys.platform.lower() != 'darwin':
+            self.ser.reset_input_buffer()
         self.ser.reset_output_buffer()
         try:
             while(True):
