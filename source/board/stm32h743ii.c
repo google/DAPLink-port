@@ -35,11 +35,15 @@
 #include "udb_fault_info.h"
 #include "udb_watchdog.h"
 #include "udb_fault_info.h"
+#include "udb_uptime.h"
 
 #define UDB_WATCHDOG_TIMEOUT_S  (10U)
 
 #define UDB_30MS_MULTIPLIER_TO_30SEC    (1000)
 #define UDB_30MS_MULTIPLIER_TO_10MIN    (1000 * 20)
+
+#define UDB_LED_30MS_MULTIPLER_NORMAL                   (50ULL)
+#define UDB_LED_30MS_MULTIPLER_UNCLEARED_FAULT_INFO     (5ULL)
 
 #ifdef UDB_DEBUG
 #define UDB_CHECK_FAULT_INFO_TARGET_COUNT     UDB_30MS_MULTIPLIER_TO_30SEC
@@ -48,6 +52,7 @@
 #endif
 
 static uint64_t s_30ms_hook_counter = 0;
+static uint64_t s_connected_led_blink_period = UDB_LED_30MS_MULTIPLER_NORMAL;
 
 extern void udb_config_init(void);
 
@@ -81,6 +86,8 @@ static void prerun_board_config(void)
 {
     int status;
 
+    udb_uptime_init();
+
     status = i2c_init();
     util_assert(status == UDB_SUCCESS);
 
@@ -97,6 +104,16 @@ static void prerun_board_config(void)
 
 void board_30ms_hook()
 {
+    udb_uptime_update();
+    if (udb_is_fault_info_uncleared())
+    {
+        s_connected_led_blink_period = UDB_LED_30MS_MULTIPLER_UNCLEARED_FAULT_INFO;
+    }
+    else
+    {
+        s_connected_led_blink_period = UDB_LED_30MS_MULTIPLER_NORMAL;
+    }
+
     if (s_30ms_hook_counter == 0)
     {
         // Code that needs to run once after the bootloader update and all other
@@ -108,7 +125,7 @@ void board_30ms_hook()
 
     udb_watchdog_refresh();
 
-    if ((s_30ms_hook_counter % 50) == 0)
+    if ((s_30ms_hook_counter % s_connected_led_blink_period) == 0)
     {
         HAL_GPIO_TogglePin( CONNECTED_LED_PORT, CONNECTED_LED_PIN);
     }
