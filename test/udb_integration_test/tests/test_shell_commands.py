@@ -76,6 +76,14 @@ class ShellCommandTest(ContextTest):
         # secs may wrap around in seconds
         self.assertEqual((prev_secs + test_seconds) % 3600, secs, "uptime is not accurate")
 
+    def test_ext_relay(self) -> None:
+        self.udb_serial.command("ext_relay on")
+        output = self.udb_serial.command("ext_relay status")
+        self.assertRegex(output, "external relay is on")
+        self.udb_serial.command("ext_relay off")
+        output = self.udb_serial.command("ext_relay status")
+        self.assertRegex(output, "external relay is off")
+
 class ShellCommandWithResetTest(TestCase):
     def test_reset(self) -> None:
         with UDBSerialTestDevice() as udb_serial:
