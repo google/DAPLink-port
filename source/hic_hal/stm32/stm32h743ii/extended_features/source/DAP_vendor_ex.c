@@ -417,6 +417,21 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response) {
         num += udb_get_bootloader_version(response, DAP_PACKET_SIZE - 2);
         break;
     }
+    case ID_DAP_VendorEx42_CHANGE_SWD_DUT:
+    {
+        uint8_t swd_dut = *request++;
+        if (swd_dut < SWD_DUT_COUNT)
+        {
+            *response++ = DAP_OK;
+            change_swd_dut(swd_dut);
+        }
+        else
+        {
+            *response++ = DAP_ERROR;
+        }
+        num += (1U << 16) | 1U;
+        break;
+    }
     default:
       break;
   }

@@ -13,6 +13,7 @@ typedef enum
     ID_DAP_VendorEx39_READ_UDC_ADAPTER_TYPE_ADC,
     ID_DAP_VendorEx40_MEASURE_POWER,
     ID_DAP_VendorEx41_BOOTLOADER_VERSION_DETAILS,
+    ID_DAP_VendorEx42_CHANGE_SWD_DUT,
 
     // Add new commands before the last command
     ID_DAP_VendorEx126_LAST = ID_DAP_VendorExLast,

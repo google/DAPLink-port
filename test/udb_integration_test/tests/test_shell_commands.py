@@ -84,6 +84,14 @@ class ShellCommandTest(ContextTest):
         output = self.udb_serial.command("ext_relay status")
         self.assertRegex(output, "external relay is off")
 
+    def test_swd_dut(self) -> None:
+        self.udb_serial.command("swd_dut 0")
+        output = self.udb_serial.command("swd_dut")
+        self.assertRegex(output, "DUT 0")
+        self.udb_serial.command("swd_dut 1")
+        output = self.udb_serial.command("swd_dut")
+        self.assertRegex(output, "DUT 1")
+
 class ShellCommandWithResetTest(TestCase):
     def test_reset(self) -> None:
         with UDBSerialTestDevice() as udb_serial:

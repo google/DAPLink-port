@@ -201,24 +201,42 @@ __STATIC_INLINE void PORT_SWD_SETUP(void)
     };
 
     // Set SWCLK HIGH
-    gpio_init.Pin = SWCLK_TCK_PIN;
-    HAL_GPIO_Init(SWCLK_TCK_PIN_PORT, &gpio_init);
-    HAL_GPIO_WritePin(SWCLK_TCK_PIN_PORT, SWCLK_TCK_PIN, GPIO_PIN_SET);
+    gpio_init.Pin = g_swd_dut_configs[g_cur_swd_dut].swclk.pin;
+    HAL_GPIO_Init(g_swd_dut_configs[g_cur_swd_dut].swclk.port, &gpio_init);
+    HAL_GPIO_WritePin(g_swd_dut_configs[g_cur_swd_dut].swclk.port,
+                      g_swd_dut_configs[g_cur_swd_dut].swclk.pin, GPIO_PIN_SET);
 
     // Set SWDIO HIGH
-    gpio_init.Pin = SWDIO_PIN;
-    HAL_GPIO_Init(SWDIO_PIN_PORT, &gpio_init);
-    HAL_GPIO_WritePin(SWDIO_PIN_PORT, SWDIO_PIN, GPIO_PIN_SET);
+    gpio_init.Pin = g_swd_dut_configs[g_cur_swd_dut].swdio.pin;
+    HAL_GPIO_Init(g_swd_dut_configs[g_cur_swd_dut].swdio.port, &gpio_init);
+    HAL_GPIO_WritePin(g_swd_dut_configs[g_cur_swd_dut].swdio.port,
+                      g_swd_dut_configs[g_cur_swd_dut].swdio.pin, GPIO_PIN_SET);
 
     // Set RESET HIGH
-    gpio_init.Pin = nRESET_PIN;
+    gpio_init.Pin = g_swd_dut_configs[g_cur_swd_dut].nreset.pin;
     gpio_init.Mode = GPIO_MODE_INPUT;
     gpio_init.Pull = GPIO_PULLDOWN;
-    HAL_GPIO_Init(nRESET_PIN_PORT, &gpio_init);
-    HAL_GPIO_WritePin(nRESET_DIR_PIN_PORT, nRESET_DIR_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_Init(g_swd_dut_configs[g_cur_swd_dut].nreset.port, &gpio_init);
 
-    // Enable bidir buffer chip (OE_L_CTRL0)
-    HAL_GPIO_WritePin(SWD_BUFFER_EN_PORT, SWD_BUFFER_EN_PIN, GPIO_PIN_SET);
+    if (g_cur_swd_dut == SWD_DUT0)
+    {
+        // DUT0 nRRESET is active low
+        HAL_GPIO_WritePin(g_swd_dut_configs[g_cur_swd_dut].nreset.port,
+                          g_swd_dut_configs[g_cur_swd_dut].nreset.pin,
+                          GPIO_PIN_RESET);
+    }
+    else
+    {
+        // DUT0 nRRESET is active high
+        HAL_GPIO_WritePin(g_swd_dut_configs[g_cur_swd_dut].nreset.port,
+                          g_swd_dut_configs[g_cur_swd_dut].nreset.pin,
+                          GPIO_PIN_SET);
+    }
+
+    // Enable bidir buffer chip (OE_L_CTRL0 / OE_L_CTRL1)
+    HAL_GPIO_WritePin(g_swd_dut_configs[g_cur_swd_dut].swd_en_buf.port,
+                      g_swd_dut_configs[g_cur_swd_dut].swd_en_buf.pin,
+                      GPIO_PIN_SET);
 }
 
 /** Disable JTAG/SWD I/O Pins.
@@ -233,13 +251,15 @@ __STATIC_INLINE void PORT_OFF(void)
         .Pull = GPIO_NOPULL,
     };
 
-    gpio_init.Pin = SWCLK_TCK_PIN;
-    HAL_GPIO_Init(SWCLK_TCK_PIN_PORT, &gpio_init);
+    gpio_init.Pin = g_swd_dut_configs[g_cur_swd_dut].swclk.pin;
+    HAL_GPIO_Init(g_swd_dut_configs[g_cur_swd_dut].swclk.port, &gpio_init);
 
-    gpio_init.Pin = SWDIO_PIN;
-    HAL_GPIO_Init(SWDIO_PIN_PORT, &gpio_init);
+    gpio_init.Pin = g_swd_dut_configs[g_cur_swd_dut].swdio.pin;
+    HAL_GPIO_Init(g_swd_dut_configs[g_cur_swd_dut].swclk.port, &gpio_init);
 
-    HAL_GPIO_WritePin(SWD_BUFFER_EN_PORT, SWD_BUFFER_EN_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(g_swd_dut_configs[g_cur_swd_dut].swd_en_buf.port,
+                      g_swd_dut_configs[g_cur_swd_dut].swd_en_buf.pin,
+                      GPIO_PIN_RESET);
 }
 
 // SWCLK/TCK I/O pin -------------------------------------
@@ -249,7 +269,7 @@ __STATIC_INLINE void PORT_OFF(void)
 */
 __STATIC_FORCEINLINE uint32_t PIN_SWCLK_TCK_IN(void)
 {
-    return ((SWCLK_TCK_PIN_PORT->ODR & SWCLK_TCK_PIN) ? 1 : 0);
+    return ((g_swd_dut_configs[g_cur_swd_dut].swclk.port->ODR >> g_swd_dut_configs[g_cur_swd_dut].swclk.pin_bit) & 1);
 }
 
 /** SWCLK/TCK I/O pin: Set Output to High.
@@ -257,7 +277,7 @@ Set the SWCLK/TCK DAP hardware I/O pin to high level.
 */
 __STATIC_FORCEINLINE void PIN_SWCLK_TCK_SET(void)
 {
-    SWCLK_TCK_PIN_PORT->BSRR = SWCLK_TCK_PIN;
+    g_swd_dut_configs[g_cur_swd_dut].swclk.port->BSRR = g_swd_dut_configs[g_cur_swd_dut].swclk.pin;
 }
 
 /** SWCLK/TCK I/O pin: Set Output to Low.
@@ -265,7 +285,7 @@ Set the SWCLK/TCK DAP hardware I/O pin to low level.
 */
 __STATIC_FORCEINLINE void PIN_SWCLK_TCK_CLR(void)
 {
-    SWCLK_TCK_PIN_PORT->BSRR = (SWCLK_TCK_PIN << 16);
+    g_swd_dut_configs[g_cur_swd_dut].swclk.port->BSRR = (g_swd_dut_configs[g_cur_swd_dut].swclk.pin << 16);
 }
 
 // SWDIO/TMS Pin I/O --------------------------------------
@@ -275,7 +295,7 @@ __STATIC_FORCEINLINE void PIN_SWCLK_TCK_CLR(void)
 */
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_TMS_IN(void)
 {
-    return ((SWDIO_PIN_PORT->IDR & SWDIO_PIN) ? 1 : 0);
+    return ((g_swd_dut_configs[g_cur_swd_dut].swdio.port->IDR >> g_swd_dut_configs[g_cur_swd_dut].swdio.pin_bit) & 1);
 }
 
 /** SWDIO/TMS I/O pin: Set Output to High.
@@ -283,7 +303,7 @@ Set the SWDIO/TMS DAP hardware I/O pin to high level.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_TMS_SET(void)
 {
-    SWDIO_PIN_PORT->BSRR = SWDIO_PIN;
+    g_swd_dut_configs[g_cur_swd_dut].swdio.port->BSRR = g_swd_dut_configs[g_cur_swd_dut].swdio.pin;
 }
 
 /** SWDIO/TMS I/O pin: Set Output to Low.
@@ -291,7 +311,7 @@ Set the SWDIO/TMS DAP hardware I/O pin to low level.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_TMS_CLR(void)
 {
-    SWDIO_PIN_PORT->BSRR = (SWDIO_PIN << 16);
+    g_swd_dut_configs[g_cur_swd_dut].swdio.port->BSRR = (g_swd_dut_configs[g_cur_swd_dut].swdio.pin << 16);
 }
 
 /** SWDIO I/O pin: Get Input (used in SWD mode only).
@@ -299,7 +319,7 @@ __STATIC_FORCEINLINE void PIN_SWDIO_TMS_CLR(void)
 */
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_IN(void)
 {
-    return ((SWDIO_PIN_PORT->IDR & SWDIO_PIN) ? 1 : 0);
+    return ((g_swd_dut_configs[g_cur_swd_dut].swdio.port->IDR >> g_swd_dut_configs[g_cur_swd_dut].swdio.pin_bit) & 1);
 }
 
 /** SWDIO I/O pin: Set Output (used in SWD mode only).
@@ -307,14 +327,8 @@ __STATIC_FORCEINLINE uint32_t PIN_SWDIO_IN(void)
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT(uint32_t bit)
 {
-    if (bit & 1)
-    {
-        SWDIO_PIN_PORT->BSRR = SWDIO_PIN;
-    }
-    else
-    {
-        SWDIO_PIN_PORT->BSRR = (SWDIO_PIN << 16);
-    }
+    uint32_t shift = (((~bit) & 1) << 4);
+    g_swd_dut_configs[g_cur_swd_dut].swdio.port->BSRR = (g_swd_dut_configs[g_cur_swd_dut].swdio.pin << shift);
 }
 
 /** SWDIO I/O pin: Switch to Output mode (used in SWD mode only).
@@ -325,12 +339,12 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT_ENABLE(void)
 {
     GPIO_InitTypeDef gpio_init =
     {
-        .Pin = SWDIO_PIN,
+        .Pin = g_swd_dut_configs[g_cur_swd_dut].swdio.pin,
         .Mode = GPIO_MODE_OUTPUT_PP,
         .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
     };
-    HAL_GPIO_Init(SWDIO_PIN_PORT, &gpio_init);
-    SWDIO_PIN_PORT->BSRR = (SWDIO_PIN << 16);
+    HAL_GPIO_Init(g_swd_dut_configs[g_cur_swd_dut].swdio.port, &gpio_init);
+    g_swd_dut_configs[g_cur_swd_dut].swdio.port->BSRR = (g_swd_dut_configs[g_cur_swd_dut].swdio.pin << 16);
 }
 
 /** SWDIO I/O pin: Switch to Input mode (used in SWD mode only).
@@ -341,12 +355,12 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
 {
     GPIO_InitTypeDef gpio_init =
     {
-        .Pin = SWDIO_PIN,
+        .Pin = g_swd_dut_configs[g_cur_swd_dut].swdio.pin,
         .Mode = GPIO_MODE_INPUT,
         .Pull = GPIO_PULLUP,
     };
-    HAL_GPIO_Init(SWDIO_PIN_PORT, &gpio_init);
-    SWDIO_PIN_PORT->BSRR = SWDIO_PIN;
+    HAL_GPIO_Init(g_swd_dut_configs[g_cur_swd_dut].swdio.port, &gpio_init);
+    g_swd_dut_configs[g_cur_swd_dut].swdio.port->BSRR = g_swd_dut_configs[g_cur_swd_dut].swdio.pin;
 }
 
 
@@ -407,7 +421,7 @@ __STATIC_FORCEINLINE void PIN_nTRST_OUT(uint32_t bit)
 */
 __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN(void)
 {
-    return ((nRESET_PIN_PORT->IDR >> nRESET_PIN_Bit) & 1);
+    return ((g_swd_dut_configs[g_cur_swd_dut].nreset.port->IDR >> g_swd_dut_configs[g_cur_swd_dut].nreset.pin) & 1);
 }
 
 /** nRESET I/O pin: Set Output.
@@ -417,13 +431,27 @@ __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN(void)
 */
 __STATIC_FORCEINLINE void     PIN_nRESET_OUT(uint32_t bit)
 {
-    if (bit & 1)
+    if (g_cur_swd_dut == SWD_DUT0)
     {
-        nRESET_DIR_PIN_PORT->BSRR = (nRESET_DIR_PIN << 16); // DIR pin low -> nRST goes high
+        if (bit & 1)
+        {
+            g_swd_dut_configs[g_cur_swd_dut].nreset_dir.port->BSRR = (g_swd_dut_configs[g_cur_swd_dut].nreset_dir.pin << 16); // DIR pin low -> nRST goes high
+        }
+        else
+        {
+            g_swd_dut_configs[g_cur_swd_dut].nreset_dir.port->BSRR = g_swd_dut_configs[g_cur_swd_dut].nreset_dir.pin; // DIR pin high -> nRST goes low
+        }
     }
     else
     {
-        nRESET_DIR_PIN_PORT->BSRR = nRESET_DIR_PIN; // DIR pin high -> nRST goes low
+        if (bit & 1)
+        {
+            g_swd_dut_configs[g_cur_swd_dut].nreset_dir.port->BSRR = g_swd_dut_configs[g_cur_swd_dut].nreset_dir.pin;
+        }
+        else
+        {
+            g_swd_dut_configs[g_cur_swd_dut].nreset_dir.port->BSRR = (g_swd_dut_configs[g_cur_swd_dut].nreset_dir.pin << 16);
+        }
     }
 }
 
@@ -545,5 +573,14 @@ __STATIC_INLINE uint32_t RESET_TARGET(void)
 
 ///@}
 
+__STATIC_INLINE void change_swd_dut(swd_dut_t swd_dut)
+{
+    if (swd_dut != g_cur_swd_dut)
+    {
+        PORT_OFF();
+        g_cur_swd_dut = swd_dut;
+        PORT_SWD_SETUP();
+    }
+}
 
 #endif /* __DAP_CONFIG_H__ */
