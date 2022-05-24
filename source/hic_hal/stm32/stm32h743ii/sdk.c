@@ -142,7 +142,7 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
     HAL_RCC_GetClockConfig(&clk_init, &unused);
 
     /* Compute the prescaler value to have TIMx counter clock equal to 4000 Hz */
-    source_clock = SystemCoreClock / tim2_clk_div(clk_init.APB1CLKDivider);
+    source_clock = HAL_RCC_GetHCLKFreq() / tim2_clk_div(clk_init.APB1CLKDivider);
     prescaler = (uint32_t)(source_clock / 4000) - 1;
 
     /* Set TIMx instance */
