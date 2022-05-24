@@ -185,12 +185,15 @@ void gpio_init(void)
 
     // Turn on power to the board. When the target is unpowered
     // it holds the reset line low.
-    HAL_GPIO_WritePin(POWER_EN_PIN_PORT, POWER_EN_PIN, GPIO_PIN_RESET);
-    GPIO_InitStructure.Pin = POWER_EN_PIN;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
-    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStructure.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(POWER_EN_PIN_PORT, &GPIO_InitStructure);
+    if (daplink_is_interface())
+    {
+        HAL_GPIO_WritePin(POWER_EN_PIN_PORT, POWER_EN_PIN, GPIO_PIN_RESET);
+        GPIO_InitStructure.Pin = POWER_EN_PIN;
+        GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
+        GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+        GPIO_InitStructure.Pull = GPIO_NOPULL;
+        HAL_GPIO_Init(POWER_EN_PIN_PORT, &GPIO_InitStructure);
+    }
 
     //Initialize external relay (turned on)
     HAL_GPIO_WritePin(UDC_EXT_RELAY_PORT, UDC_EXT_RELAY_PIN, GPIO_PIN_SET);

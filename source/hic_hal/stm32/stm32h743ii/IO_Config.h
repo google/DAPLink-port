@@ -33,8 +33,6 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 #define CONNECTED_LED_PIN               GPIO_PIN_0
 #define CONNECTED_LED_PIN_Bit           0
 
-// ToDo(elee):
-//When bootloader, disable the target port(not used)
 #define POWER_EN_PIN_PORT               UDC_DUT_USB_EN_L_PORT
 #define POWER_EN_PIN                    UDC_DUT_USB_EN_L_PIN
 #define POWER_EN_Bit                    UDC_DUT_USB_EN_L_PIN_Bit
@@ -62,25 +60,11 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 #define SWDIO_PIN                       GPIO_PIN_2
 #define SWDIO_PIN_Bit                   2
 
-//#define SWDIO_OUT_PIN_PORT           GPIOD
-//#define SWDIO_OUT_PIN                GPIO_PIN_2
-//#define SWDIO_OUT_PIN_Bit            2
-
-//#define SWDIO_IN_PIN_PORT            GPIOD
-//#define SWDIO_IN_PIN                 GPIO_PIN_2
-//#define SWDIO_IN_PIN_Bit             2
-
 // SWD bidir buffer enable, OE_L_CTRL0
 #define SWD_BUFFER_EN_PORT              GPIOC
 #define SWD_BUFFER_EN_PIN               GPIO_PIN_8
 #define SWD_BUFFER_EN_PIN_Bit           8
 
-// ToDo(elee):  Enable TDO / SWO?
-// JTAG0_MCU_UDC_TDO_SWO = PB7 (is a USART)
-
-// ToDo(elee):  Enable TDI?  See source/hic_hal/nxp/lpc11u35/DAP_config.h:
-// Need separate _IN_ and _OUT_ defines?
-// JTAG0_MCU_UDC_TDI
 #define TDI_IN_PIN_PORT                 GPIOD
 #define TDI_IN_PIN                      GPIO_PIN_10
 #define TDI_IN_PIN_Bit                  10
