@@ -60,6 +60,22 @@ class ShellCommandTest(ContextTest):
         else:
             self.assertTrue(False, "Can't find expected output")
 
+    def test_uptime(self) -> None:
+        test_seconds = 10
+
+        output = self.udb_serial.command("uptime")
+        result = re.search("([0-9]*) mins ([0-9]*) secs\r\n", output)
+        prev_secs = int(result.group(1)) * 60 + int(result.group(2))
+
+        time.sleep(test_seconds)
+
+        output = self.udb_serial.command("uptime")
+        result = re.search("([0-9]*) mins ([0-9]*) secs\r\n", output)
+        secs = int(result.group(1)) * 60 + int(result.group(2))
+
+        # secs may wrap around in seconds
+        self.assertEqual((prev_secs + test_seconds) % 3600, secs, "uptime is not accurate")
+
 class ShellCommandWithResetTest(TestCase):
     def test_reset(self) -> None:
         with UDBSerialTestDevice() as udb_serial:
