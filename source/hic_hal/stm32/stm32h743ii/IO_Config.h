@@ -281,6 +281,8 @@ typedef struct
     GPIO_TypeDef* dir_port;
     uint16_t dir_pin;
     uint16_t dir_pin_bit;
+
+    bool active_high;
 } dut_pin_group_t;
 
 typedef struct
@@ -318,5 +320,7 @@ GPIO_PinState gpio_read_dut_dir_pin(dut_pin_group_id_t dut_pin_group_id);
 GPIO_PinState gpio_read_dut_io_pin(dut_pin_group_id_t dut_pin_group_id);
 
 void gpio_write_dut_pin(dut_pin_group_id_t dut_pin_group_id, GPIO_PinState pin_state);
+
+bool gpio_dut_pin_group_is_active_high(dut_pin_group_id_t dut_pin_group_id);
 
 #endif // __IO_CONFIG__

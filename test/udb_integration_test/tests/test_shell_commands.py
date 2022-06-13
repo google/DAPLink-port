@@ -92,6 +92,12 @@ class ShellCommandTest(ContextTest):
         output = self.udb_serial.command("swd_dut")
         self.assertRegex(output, "DUT 1")
 
+    def test_btn(self) -> None:
+        for btn in ['RST0_L', 'BOOT0_L', 'BTN0_L', 'RST1', 'BOOT1', 'BTN1']:
+            self.udb_serial.command("btn {btn_name} press".format(btn_name=btn))
+            self.udb_serial.command("btn {btn_name} release".format(btn_name=btn))
+            self.udb_serial.command("btn {btn_name} tap".format(btn_name=btn))
+
 class ShellCommandWithResetTest(TestCase):
     def test_reset(self) -> None:
         with UDBSerialTestDevice() as udb_serial:

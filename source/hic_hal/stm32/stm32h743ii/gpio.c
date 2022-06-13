@@ -37,6 +37,7 @@ static const dut_pin_group_t s_dut_pin_group[DUT_PIN_GROUP_ID_COUNT] =
         .dir_port = UDC0_RST_L_DIR_PORT,
         .dir_pin = UDC0_RST_L_DIR_PIN,
         .dir_pin_bit = UDC0_RST_L_DIR_PIN_Bit,
+        .active_high = false,
     },
     [DUT_PIN_GROUP_ID_UDC0_BOOT_L] =
     {
@@ -46,6 +47,7 @@ static const dut_pin_group_t s_dut_pin_group[DUT_PIN_GROUP_ID_COUNT] =
         .dir_port = UDC0_BOOT_L_DIR_PORT,
         .dir_pin = UDC0_BOOT_L_DIR_PIN,
         .dir_pin_bit = UDC0_BOOT_L_DIR_PIN_Bit,
+        .active_high = false,
     },
     [DUT_PIN_GROUP_ID_UDC0_BUTTON_L] =
     {
@@ -55,6 +57,7 @@ static const dut_pin_group_t s_dut_pin_group[DUT_PIN_GROUP_ID_COUNT] =
         .dir_port = UDC0_BUTTON_L_DIR_PORT,
         .dir_pin = UDC0_BUTTON_L_DIR_PIN,
         .dir_pin_bit = UDC0_BUTTON_L_DIR_PIN_Bit,
+        .active_high = false,
     },
     [DUT_PIN_GROUP_ID_UDC1_RST] =
     {
@@ -64,6 +67,7 @@ static const dut_pin_group_t s_dut_pin_group[DUT_PIN_GROUP_ID_COUNT] =
         .dir_port = UDC1_RST_DIR_PORT,
         .dir_pin = UDC1_RST_DIR_PIN,
         .dir_pin_bit = UDC1_RST_DIR_PIN_Bit,
+        .active_high = true,
     },
     [DUT_PIN_GROUP_ID_UDC1_BOOT] =
     {
@@ -73,6 +77,7 @@ static const dut_pin_group_t s_dut_pin_group[DUT_PIN_GROUP_ID_COUNT] =
         .dir_port = UDC1_BOOT_DIR_PORT,
         .dir_pin = UDC1_BOOT_DIR_PIN,
         .dir_pin_bit = UDC1_BOOT_DIR_PIN_Bit,
+        .active_high = true,
     },
     [DUT_PIN_GROUP_ID_UDC1_BUTTON] =
     {
@@ -82,6 +87,7 @@ static const dut_pin_group_t s_dut_pin_group[DUT_PIN_GROUP_ID_COUNT] =
         .dir_port = UDC1_BUTTON_DIR_PORT,
         .dir_pin = UDC1_BUTTON_DIR_PIN,
         .dir_pin_bit = UDC1_BUTTON_DIR_PIN_Bit,
+        .active_high = true,
     },
 };
 
@@ -404,4 +410,9 @@ void gpio_write_dut_pin(dut_pin_group_id_t dut_pin_group_id, GPIO_PinState pin_s
 
     pupd_reg |= (pin_state << (s_dut_pin_group[dut_pin_group_id].io_pin_bit * 2U));
     s_dut_pin_group[dut_pin_group_id].io_port->PUPDR = pupd_reg;
+}
+
+bool gpio_dut_pin_group_is_active_high(dut_pin_group_id_t dut_pin_group_id)
+{
+    return s_dut_pin_group[dut_pin_group_id].active_high;
 }
