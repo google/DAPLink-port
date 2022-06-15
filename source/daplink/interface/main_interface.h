@@ -51,9 +51,6 @@ void main_powerdown_event(void);
 void main_board_event(void);
 void main_disable_debug_event(void);
 void main_cdc_send_event(void);
-#if defined(CDC_B_ENDPOINT)
-void main_cdc_b_send_event(void);
-#endif
 void main_msc_disconnect_event(void);
 void main_msc_delay_disconnect_event(void);
 void main_force_msc_disconnect_event(void);

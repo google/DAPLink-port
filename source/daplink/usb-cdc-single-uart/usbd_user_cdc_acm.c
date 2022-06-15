@@ -36,10 +36,11 @@ UART_Configuration UART_Config;
  *  The function inititalizes the hardware resources of the port used as
  *  the Virtual COM Port.
  *
+ *  @param [in] cdc_num CDC EP to modify. Ignored, since this implementation has only one CDC EP.
  *  @return 0 Function failed.
  *  @return 1 Function succeeded.
  */
-int32_t USBD_CDC_ACM_PortInitialize(void)
+int32_t USBD_CDC_ACM_PortInitialize(usbd_cdc_num_t cdc_num)
 {
     uart_initialize();
     main_cdc_send_event();
@@ -51,10 +52,11 @@ int32_t USBD_CDC_ACM_PortInitialize(void)
  *  The function uninititalizes/releases the hardware resources of the port used
  *  as the Virtual COM Port.
  *
+ *  @param [in] cdc_num CDC EP to modify. Ignored, since this implementation has only one CDC EP.
  *  @return 0 Function failed.
  *  @return 1 Function succeeded.
  */
-int32_t USBD_CDC_ACM_PortUninitialize(void)
+int32_t USBD_CDC_ACM_PortUninitialize(usbd_cdc_num_t cdc_num)
 {
     uart_uninitialize();
     return 1;
@@ -65,10 +67,11 @@ int32_t USBD_CDC_ACM_PortUninitialize(void)
  *  The function resets the internal states of the port used
  *  as the Virtual COM Port.
  *
+ *  @param [in] cdc_num CDC EP to modify. Ignored, since this implementation has only one CDC EP.
  *  @return 0 Function failed.
  *  @return 1 Function succeeded.
  */
-int32_t USBD_CDC_ACM_PortReset(void)
+int32_t USBD_CDC_ACM_PortReset(usbd_cdc_num_t cdc_num)
 {
     uart_reset();
     return 1;
@@ -79,11 +82,12 @@ int32_t USBD_CDC_ACM_PortReset(void)
  *  The function changes communication settings of the port used as the
  *  Virtual COM Port.
  *
+ *  @param [in] cdc_num CDC EP to modify. Ignored, since this implementation has only one CDC EP.
  *  @param [in] line_coding Pointer to the loaded CDC_LINE_CODING structure.
  *  @return 0 Function failed.
  *  @return 1 Function succeeded.
  */
-int32_t USBD_CDC_ACM_PortSetLineCoding(CDC_LINE_CODING *line_coding)
+int32_t USBD_CDC_ACM_PortSetLineCoding(usbd_cdc_num_t cdc_num, CDC_LINE_CODING *line_coding)
 {
     UART_Config.Baudrate    = line_coding->dwDTERate;
     UART_Config.DataBits    = (UART_DataBits) line_coding->bDataBits;
@@ -98,11 +102,12 @@ int32_t USBD_CDC_ACM_PortSetLineCoding(CDC_LINE_CODING *line_coding)
  * The function retrieves communication settings of the port used as the
  *  Virtual COM Port.
  *
+ *  @param [in] cdc_num CDC EP to read. Ignored, since this implementation has only one CDC EP.
  *  @param [in] line_coding Pointer to the CDC_LINE_CODING structure.
  *  @return 0 Function failed.
  *  @return 1 Function succeeded.
  */
-int32_t USBD_CDC_ACM_PortGetLineCoding(CDC_LINE_CODING *line_coding)
+int32_t USBD_CDC_ACM_PortGetLineCoding(usbd_cdc_num_t cdc_num, CDC_LINE_CODING *line_coding)
 {
     line_coding->dwDTERate   = UART_Config.Baudrate;
     line_coding->bDataBits   = UART_Config.DataBits;
@@ -112,12 +117,8 @@ int32_t USBD_CDC_ACM_PortGetLineCoding(CDC_LINE_CODING *line_coding)
 }
 
 static U32 start_break_time = 0;
-int32_t USBD_CDC_ACM_SendBreak(uint16_t dur)
+int32_t USBD_CDC_ACM_SendBreak(usbd_cdc_num_t cdc_num, uint16_t dur)
 {
-// Disable reset of target when a cdc break is received for our case.
-// This is used in MBED test automation, but causes hiccups for our use
-// (i.e. closing the uart on a mac) https://github.com/ARMmbed/DAPLink/issues/738
-#ifndef INTERFACE_STM32H743
     uint32_t end_break_time;
 #ifdef DRAG_N_DROP_SUPPORT
     if (!flash_intf_target->flash_busy())
@@ -138,7 +139,6 @@ int32_t USBD_CDC_ACM_SendBreak(uint16_t dur)
             }
         }
     }
-#endif //INTERFACE_STM32H743
     return (1);
 }
 
@@ -147,23 +147,24 @@ int32_t USBD_CDC_ACM_SendBreak(uint16_t dur)
  *  The function sets control line state on the port used as the
  *  Virtual COM Port.
  *
+ *  @param [in] cdc_num CDC EP to modify. Ignored, since this implementation has only one CDC EP.
  *  @param [in] ctrl_bmp Control line settings
  *      bitmap (0. bit - DTR state, 1. bit - RTS state).
  *  @return 0 Function failed.
  *  @return 1 Function succeeded.
  */
-int32_t USBD_CDC_ACM_PortSetControlLineState(uint16_t ctrl_bmp)
+int32_t USBD_CDC_ACM_PortSetControlLineState(usbd_cdc_num_t cdc_num, uint16_t ctrl_bmp)
 {
     uart_set_control_line_state(ctrl_bmp);
     return (1);
 }
 
-void cdc_process_event()
+void cdc_process_event(void)
 {
     int32_t len_data = 0;
     uint8_t data[64];
 
-    len_data = USBD_CDC_ACM_DataFree();
+    len_data = USBD_CDC_ACM_DataFree(USB_CDC_ACM_NUM_1_USB2UART);
 
     if (len_data > sizeof(data)) {
         len_data = sizeof(data);
@@ -174,7 +175,7 @@ void cdc_process_event()
     }
 
     if (len_data) {
-        if (USBD_CDC_ACM_DataSend(data , len_data)) {
+        if (USBD_CDC_ACM_DataSend(USB_CDC_ACM_NUM_1_USB2UART, data , len_data)) {
             main_blink_cdc_led(MAIN_LED_FLASH);
         }
     }
@@ -186,7 +187,7 @@ void cdc_process_event()
     }
 
     if (len_data) {
-        len_data = USBD_CDC_ACM_DataRead(data, len_data);
+        len_data = USBD_CDC_ACM_DataRead(USB_CDC_ACM_NUM_1_USB2UART, data, len_data);
     }
 
     if (len_data) {

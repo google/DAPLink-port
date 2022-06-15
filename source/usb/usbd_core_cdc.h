@@ -28,8 +28,4 @@
 extern BOOL USBD_EndPoint0_Setup_CDC_ReqToIF(void);
 extern BOOL USBD_EndPoint0_Out_CDC_ReqToIF(void);
 
-extern BOOL USBD_EndPoint0_Setup_CDC_B_ReqToIF(void);
-extern BOOL USBD_EndPoint0_Out_CDC_B_ReqToIF(void);
-
-
 #endif  /* __USBD_CORE_CDC_H__ */

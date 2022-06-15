@@ -8,7 +8,7 @@ bool udb_log_cdc_ready();
 void udb_log_set_cdc_ready(bool ready);
 void udb_log_push(char *ptr, uint16_t size);
 /*
- *  Flush the logs to CDC_B endpoint
+ *  Flush the logs to CDC_3 endpoint
  */
 void udb_log_flush(void);
 
