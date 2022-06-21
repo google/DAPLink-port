@@ -35,8 +35,8 @@
 #include <stdio.h>
 #include "nluif_udb-daplink.h"
 #include "udb_log.h"
+#include "udb_uart_b.h"
 
-static UART_Configuration UART_Config;
 static const char error_msg[] = "\r\n<OVERFLOW>\r\n";
 
 int32_t USBD_CDC_ACM_PortInitialize(usbd_cdc_num_t cdc_num)
@@ -44,6 +44,11 @@ int32_t USBD_CDC_ACM_PortInitialize(usbd_cdc_num_t cdc_num)
     if (cdc_num == USB_CDC_ACM_NUM_1_USB2UART)
     {
         uart_initialize();
+        main_cdc_send_event();
+    }
+    else if (cdc_num == USB_CDC_ACM_NUM_2_USER)
+    {
+        udb_uart_b_initialize();
         main_cdc_send_event();
     }
     else if (cdc_num == USB_CDC_ACM_NUM_3_USER)
@@ -62,6 +67,10 @@ int32_t USBD_CDC_ACM_PortUninitialize(usbd_cdc_num_t cdc_num)
     {
         uart_uninitialize();
     }
+    else if (cdc_num == USB_CDC_ACM_NUM_2_USER)
+    {
+        udb_uart_b_uninitialize();
+    }
     return 1;
 }
 
@@ -71,36 +80,55 @@ int32_t USBD_CDC_ACM_PortReset(usbd_cdc_num_t cdc_num)
     {
         uart_reset();
     }
+    else if (cdc_num == USB_CDC_ACM_NUM_2_USER)
+    {
+        udb_uart_b_reset();
+    }
     return 1;
 }
 
 int32_t USBD_CDC_ACM_PortSetLineCoding(usbd_cdc_num_t cdc_num, CDC_LINE_CODING *line_coding)
 {
+    int ret = 1;
+    UART_Configuration UART_Config;
+    UART_Config.Baudrate    = line_coding->dwDTERate;
+    UART_Config.DataBits    = (UART_DataBits) line_coding->bDataBits;
+    UART_Config.Parity      = (UART_Parity)   line_coding->bParityType;
+    UART_Config.StopBits    = (UART_StopBits) line_coding->bCharFormat;
+    UART_Config.FlowControl = UART_FLOW_CONTROL_NONE;
+
     if (cdc_num == USB_CDC_ACM_NUM_1_USB2UART)
     {
-        UART_Config.Baudrate    = line_coding->dwDTERate;
-        UART_Config.DataBits    = (UART_DataBits) line_coding->bDataBits;
-        UART_Config.Parity      = (UART_Parity)   line_coding->bParityType;
-        UART_Config.StopBits    = (UART_StopBits) line_coding->bCharFormat;
-        UART_Config.FlowControl = UART_FLOW_CONTROL_NONE;
-        return uart_set_configuration(&UART_Config);
+        ret = uart_set_configuration(&UART_Config);
     }
-    return (1);
+    else if (cdc_num == USB_CDC_ACM_NUM_2_USER)
+    {
+        ret = udb_uart_b_set_configuration(&UART_Config);
+    }
+    return ret;
 }
 
 int32_t USBD_CDC_ACM_PortGetLineCoding(usbd_cdc_num_t cdc_num, CDC_LINE_CODING *line_coding)
 {
+    UART_Configuration UART_Config = {0};
+
     if (cdc_num == USB_CDC_ACM_NUM_1_USB2UART)
     {
-        line_coding->dwDTERate   = UART_Config.Baudrate;
-        line_coding->bDataBits   = UART_Config.DataBits;
-        line_coding->bParityType = UART_Config.Parity;
-        line_coding->bCharFormat = UART_Config.StopBits;
+        uart_get_configuration(&UART_Config);
     }
+    else if (cdc_num == USB_CDC_ACM_NUM_2_USER)
+    {
+        udb_uart_b_get_configuration(&UART_Config);
+    }
+
+    line_coding->dwDTERate   = UART_Config.Baudrate;
+    line_coding->bDataBits   = UART_Config.DataBits;
+    line_coding->bParityType = UART_Config.Parity;
+    line_coding->bCharFormat = UART_Config.StopBits;
+
     return (1);
 }
 
-static U32 start_break_time = 0;
 int32_t USBD_CDC_ACM_SendBreak(usbd_cdc_num_t cdc_num, uint16_t dur)
 {
     // Disable reset of target when a cdc break is received on CDC EP 1 for UDB.
@@ -114,6 +142,10 @@ int32_t USBD_CDC_ACM_PortSetControlLineState(usbd_cdc_num_t cdc_num, uint16_t ct
     if (cdc_num == USB_CDC_ACM_NUM_1_USB2UART)
     {
         uart_set_control_line_state(ctrl_bmp);
+    }
+    else if (cdc_num == USB_CDC_ACM_NUM_2_USER)
+    {
+        udb_uart_b_set_control_line_state(ctrl_bmp);
     }
     else if (cdc_num == USB_CDC_ACM_NUM_3_USER)
     {
@@ -166,6 +198,39 @@ void cdc_process_event(void)
 
     if (len_data) {
         if (uart_write_data(data, len_data)) {
+            main_blink_cdc_led(MAIN_LED_FLASH);
+        }
+    }
+
+    /* CDC 2 */
+    len_data = USBD_CDC_ACM_DataFree(USB_CDC_ACM_NUM_2_USER);
+
+    if (len_data > sizeof(data)) {
+        len_data = sizeof(data);
+    }
+
+    if (len_data) {
+        len_data = udb_uart_b_read_data(data, len_data);
+    }
+
+    if (len_data) {
+        if (USBD_CDC_ACM_DataSend(USB_CDC_ACM_NUM_2_USER, data , len_data)) {
+            main_blink_cdc_led(MAIN_LED_FLASH);
+        }
+    }
+
+    len_data = udb_uart_b_write_free();
+
+    if (len_data > sizeof(data)) {
+        len_data = sizeof(data);
+    }
+
+    if (len_data) {
+        len_data = USBD_CDC_ACM_DataRead(USB_CDC_ACM_NUM_2_USER, data, len_data);
+    }
+
+    if (len_data) {
+        if (udb_uart_b_write_data(data, len_data)) {
             main_blink_cdc_led(MAIN_LED_FLASH);
         }
     }
