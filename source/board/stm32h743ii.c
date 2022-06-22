@@ -157,7 +157,10 @@ const board_info_t g_board_info =
     .family_id = kStub_HWReset_FamilyID,
     .daplink_drive_name = "DAPLINK_APP",
     .prerun_board_config = prerun_board_config,
-    // TODO(b/229319355): MSC sometimes fails for unknown reason.
+    // TODO(https://github.com/ARMmbed/DAPLink/issues/963):
+    // MSC sometimes fails for unknown reason.
     // Disable mass storage as a workaround temporarily.
-    //.target_cfg = &target_device,
+#if 0
+    .target_cfg = &target_device,
+#endif
 };
