@@ -13,3 +13,4 @@
 | [nrf52820](nrf52820.md)       |  M4  |  64 MHz |  32 KB | 256 KB |  FS |
 | [sam3u2c](sam3u2c.md)         |  M3  |  96 MHz |  32 KB | 128 KB |  HS |
 | [stm32f103xb](stm32f103xb.md) |  M3  |  72 Mhz |  20 KB | 128 KB |  FS |
+| [stm32h743xx](stm32h743xx.md) |  M7  | 480 Mhz |   1 MB |   2 MB |  HS |
