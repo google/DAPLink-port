@@ -83,6 +83,11 @@ void udb_print_fault_info(void)
                    "the \"fault_info clear\" command in the debug serial console.\n");
             uif_prompt();
         }
+        else
+        {
+            printf("\n[UDB] Oops! Fatal error happened, but there's no saved crash report.\n");
+            uif_prompt();
+        }
     }
 }
 
