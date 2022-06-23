@@ -72,27 +72,88 @@ __isr_vector:
     .long   LPTMR0_IRQHandler                               /* LPTMR0 interrupt*/
     .long   Reserved45_IRQHandler                           /* Reserved interrupt*/
     .long   PORTA_IRQHandler                                /* PORTA Pin detect*/
-    .long   PORTC_PORTD_IRQHandler                          /* Single interrupt vector for PORTC; PORTD Pin detect*/
+    .long   PORTCD_IRQHandler                               /* Single interrupt vector for PORTC; PORTD Pin detect*/
 
     .size    __isr_vector, . - __isr_vector
 
 #if defined(DAPLINK_BL)
-    /* TODO: Bootloader Configuration Area (BCA) used by Kinetis ROM Bootloader */
-#endif
+    /* Bootloader Configuration Area (BCA) used by Kinetis ROM Bootloader */
+    .section .BootloaderConfig, "a"
+    .long 0x6766636B    /* 0x00 Magic number to verify bootloader configuration is valid. Must be set to 'kcfg'. */
+    .long 0xFFFFFFFF    /* 0x04 Reserved */
+    .long 0xFFFFFFFF    /* 0x08 Reserved */
+    .long 0xFFFFFFFF    /* 0x0C Reserved */
+    .byte 0x10          /* 0x10 Bitfield of peripherals to enable. bit 0 LPUART, bit 1 I2C, bit 2 SPI, bit 4 USB. 0x10 = USB only */
+    .byte 0xFF          /* 0x11 i2cSlaveAddress */
+    .byte 0xFF, 0xFF    /* 0x12 peripheralDetectionTimeout */
+    .byte 0xFF, 0xFF    /* 0x14 usbVid */
+    .byte 0xFF, 0xFF    /* 0x16 usbPid */
+    .long 0xFFFFFFFF    /* 0x18 usbStringsPointer */
+    .byte 0xFF          /* 0x1C clockFlags */
+    .byte 0xFF          /* 0x1D clockDivider */
+    .byte 0xFF          /* 0x1E bootFlags */
+    .byte 0xFF          /* 0x1F pad byte */
+    .long 0xFFFFFFFF    /* 0x20 Reserved */
+    .long 0xFFFFFFFF    /* 0x24 Reserved */
+    .long 0xFFFFFFFF    /* 0x28 Reserved */
+    .long 0xFFFFFFFF    /* 0x2C Reserved */
+    .long 0xFFFFFFFF    /* 0x30 Reserved */
+    .long 0xFFFFFFFF    /* 0x34 Reserved */
+    .long 0xFFFFFFFF    /* 0x38 Reserved */
+    .long 0xFFFFFFFF    /* 0x3C Reserved */
 
-/* Flash Configuration */
+    /* Flash Configuration */
     .section .FlashConfig, "a"
 #if defined(MICROBIT_LOCK_BOOTLOADER)
+    /* Backdoor Comparison Key: "MICROBIT" */
     .long 0x5243494D
     .long 0x5449424F
+    /* Program flash protection bytes (FPROT): Protect the first 32 kB of flash */
     .long 0xFFFFFFF0
-    .long 0xFFFF39FE
+    /* Flash security byte (FSEC)
+     * KEYEN  [6:7] -> 0b10 Backdoor key access enabled
+     * MEEN   [4:5] -> 0b11 Mass erase is enabled
+     * FSLACC [2:3] -> 0b11 NXP factory access granted
+     * SEC    [0:1] -> 0b10 MCU security status is unsecure
+     */
+    .byte 0xBE
+    /* Flash nonvolatile option byte (FOPT):
+     * BOOTSRC_SEL [7:6] -> 0b00 Boot from flash
+     * FAST_INIT     [5] -> 0b1 Fast Initialization
+     * RESET_PIN_CFG [3] -> 0b1 RESET_b pin is dedicated
+     * NMI_DIS       [2] -> 0b0 NMI interrupts are always blocked
+     * BOOTPIN_OPT   [1] -> 0b0 Force Boot from ROM if BOOTCFG0 asserted
+     * LPBOOT      [4:0] -> 0b11 Core and system clock divider (OUTDIV1) is 0x0 (divide by 1)
+     */
+    .byte 0x39
+    /* 2 reserved bytes */
+    .byte 0xFF, 0xFF
 #else
+    /* Backdoor Comparison Key: Unset */
     .long 0xFFFFFFFF
     .long 0xFFFFFFFF
+    /* Program flash protection bytes (FPROT): None */
     .long 0xFFFFFFFF
-    .long 0xFFFF3FFE
-#endif
+    /* Flash security byte (FSEC)
+     * KEYEN  [6:7] -> 0b11 Backdoor key access disabled
+     * MEEN   [4:5] -> 0b11 Mass erase is enabled
+     * FSLACC [2:3] -> 0b11 NXP factory access granted
+     * SEC    [0:1] -> 0b10 MCU security status is unsecure
+     */
+    .byte 0xFE
+    /* Flash nonvolatile option byte (FOPT):
+     * BOOTSRC_SEL [7:6] -> 0b00 Boot from flash
+     * FAST_INIT     [5] -> 0b1 Fast Initialization
+     * RESET_PIN_CFG [3] -> 0b1 RESET_b pin is dedicated
+     * NMI_DIS       [2] -> 0b0 NMI interrupts are always blocked
+     * BOOTPIN_OPT   [1] -> 0b1 Boot source configured by FOPT[7:6] (BOOTSRC_SEL) bits
+     * LPBOOT      [4:0] -> 0b11 Core and system clock divider (OUTDIV1) is 0x0 (divide by 1)
+     */
+    .byte 0x3B
+    /* 2 reserved bytes */
+    .byte 0xFF, 0xFF
+#endif  /* MICROBIT_LOCK_BOOTLOADER */
+#endif  /* DAPLINK_BL */
 
     .text
     .thumb
@@ -379,6 +440,6 @@ I2S0_IRQHandler:
     def_irq_handler    LPTMR0_IRQHandler
     def_irq_handler    Reserved45_IRQHandler
     def_irq_handler    PORTA_IRQHandler
-    def_irq_handler    PORTC_PORTD_IRQHandler
+    def_irq_handler    PORTCD_IRQHandler
 
     .end
