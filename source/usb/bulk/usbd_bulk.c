@@ -74,18 +74,6 @@ void USBD_BULK_EP_BULKOUT_Event(U32 event)
 
     if ((DataInReceLen >= USBD_Bulk_BulkBufSize) ||
         (bytes_rece    <  usbd_bulk_maxpacketsize[USBD_HighSpeed])) {
-
-        /* Packet losses can put this driver into a bad state. I.e. if a transfer complete ACK
-         * gets lost and USBD_BULK_EP_BULKIN_Event isn't called, USB_ResponseIdle won't be set
-         * to get ready for the next transfer. In that state DAPLink will respond to the current
-         * DAP command with the previous DAP command's response.
-         * In such cases, openOCD will try to disconnect and connect again. As a workaround, when
-         * the disconnect command is received, reset this driver and clear the TX buffer. */
-        if (USBD_Bulk_BulkOutBuf[0] == ID_DAP_Disconnect) {
-            usbd_bulk_init();
-            USBD_ClearEPBuf(USB_ENDPOINT_IN(usbd_bulk_ep_bulkin));
-        }
-
         if (DAP_queue_execute_buf(&DAP_Cmd_queue, USBD_Bulk_BulkOutBuf, DataInReceLen, &rbuf)) {
             //Trigger the BULKIn for the reply
             if (USB_ResponseIdle) {
