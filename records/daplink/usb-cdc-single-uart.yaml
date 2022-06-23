@@ -1,0 +1,8 @@
+common:
+    macros:
+        - USB_CDC_ACM_EP_COUNT=1
+    includes:
+        - source/daplink/usb-cdc-single-uart
+    sources:
+        single_usb2uart:
+            - source/daplink/usb-cdc-single-uart

@@ -32,30 +32,35 @@
 #define TX0_FIFO_SIZE   64      // EP0 MAX
 #define TX1_FIFO_SIZE   512
 #define TX2_FIFO_SIZE   512
-#define TX3_FIFO_SIZE   512     // Interrupt EP
+#define TX3_FIFO_SIZE   128     // Interrupt EP, reduced to meet the 4kB total size limit
 #define TX4_FIFO_SIZE   512
-#define TX5_FIFO_SIZE   448     // Interrupt EP, reduced to meet the 4kB total size limit
+#define TX5_FIFO_SIZE   128     // Interrupt EP, reduced to meet the 4kB total size limit
 #define TX6_FIFO_SIZE   512
+#define TX7_FIFO_SIZE   128     // Interrupt EP, reduced to meet the 4kB total size limit
+#define TX8_FIFO_SIZE   512
+
 // This chip has 4kB shared RAM for the FIFOs. Check if the FIFOs combined are within this limit.
 COMPILER_ASSERT((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE + TX3_FIFO_SIZE +
-                 TX4_FIFO_SIZE + TX5_FIFO_SIZE + TX6_FIFO_SIZE) <= 4096);
+                 TX4_FIFO_SIZE + TX5_FIFO_SIZE + TX6_FIFO_SIZE + TX7_FIFO_SIZE + TX8_FIFO_SIZE)
+                 <= 4096);
 
 // If a change to the FIFO sizes is required, first investigate the max packet size
 // and the driver for the respective endpoints.
 // If the EP definitions change, update the TX FIFO sizes and InPacketDataPtr respectively
 COMPILER_ASSERT((USBD_BULK_EP_BULKIN == 1) && (USBD_BULK_HS_WMAXPACKETSIZE <= TX1_FIFO_SIZE));
 COMPILER_ASSERT((USBD_MSC_HS_ENABLE == 1) && (USBD_MSC_EP_BULKIN == 2) && (USBD_MSC_HS_WMAXPACKETSIZE <= TX2_FIFO_SIZE));
-COMPILER_ASSERT(USBD_CDC_ACM_EP_INTIN == 3);
-COMPILER_ASSERT((USBD_CDC_ACM_HS_ENABLE == 1) && (USBD_CDC_ACM_EP_BULKIN == 4) && (USBD_CDC_ACM_HS_WMAXPACKETSIZE <= TX4_FIFO_SIZE));
-COMPILER_ASSERT(USBD_CDC_B_ACM_EP_INTIN == 5);
-COMPILER_ASSERT((USBD_CDC_B_ACM_HS_ENABLE == 1) && (USBD_CDC_B_ACM_EP_BULKIN == 6) && (USBD_CDC_B_ACM_HS_WMAXPACKETSIZE <= TX6_FIFO_SIZE));
-
+COMPILER_ASSERT(USBD_CDC_ACM_1_EP_INTIN == 3);
+COMPILER_ASSERT((USBD_CDC_ACM_1_HS_ENABLE == 1) && (USBD_CDC_ACM_1_EP_BULKIN == 4) && (USBD_CDC_ACM_1_HS_WMAXPACKETSIZE<= TX4_FIFO_SIZE));
+COMPILER_ASSERT(USBD_CDC_ACM_2_EP_INTIN == 5);
+COMPILER_ASSERT((USBD_CDC_ACM_2_HS_ENABLE == 1) && (USBD_CDC_ACM_2_EP_BULKIN == 6) && (USBD_CDC_ACM_2_HS_WMAXPACKETSIZE <= TX6_FIFO_SIZE));
+COMPILER_ASSERT(USBD_CDC_ACM_3_EP_INTIN == 7);
+COMPILER_ASSERT((USBD_CDC_ACM_3_HS_ENABLE == 1) && (USBD_CDC_ACM_3_EP_BULKIN == 8) && (USBD_CDC_ACM_3_HS_WMAXPACKETSIZE <= TX8_FIFO_SIZE));
 #define TXFIFO_WAIT_TIMEOUT_MS    (5)
 
 #if defined(DAPLINK_IF) && defined(UDB)
-// Use larger descriptor size. After enabling the 2nd CDC and MSC, the config
+// Use larger descriptor size. After enabling the multiple CDC EPs and the MSC EP, the config
 // descriptor size will exceed the original defined size 200.
-#define UDB_USBD_CONFIG_DESCRIPTOR_SIZE   (300)
+#define UDB_USBD_CONFIG_DESCRIPTOR_SIZE   (400)
 U8 USBD_ConfigDescriptor[UDB_USBD_CONFIG_DESCRIPTOR_SIZE] = { 0 };
 #if (USBD_HS_ENABLE == 0)
 U8 USBD_ConfigDescriptor_HS[] = { 0 };
@@ -69,11 +74,7 @@ static uint32_t HID_IntInPacketData[(USBD_HID_MAX_PACKET + 3) / 4];
 #endif
 
 #if (USBD_CDC_ACM_ENABLE == 1)
-static uint32_t CDC_ACM_IntInPacketData[(USBD_CDC_ACM_MAX_PACKET + 3) / 4];
-#endif
-
-#if (USBD_CDC_B_ACM_ENABLE == 1)
-static uint32_t CDC_B_ACM_IntInPacketData[(USBD_CDC_B_ACM_MAX_PACKET + 3) / 4];
+static uint32_t CDC_ACM_IntInPacketData[USB_CDC_ACM_EP_COUNT][(USBD_CDC_ACM_MAX_PACKET + 3) / 4];
 #endif
 
 static uint32_t *InPacketDataPtr[USBD_EP_NUM] =
@@ -91,8 +92,8 @@ static uint32_t *InPacketDataPtr[USBD_EP_NUM] =
     0,
 #endif
 /* endpoint 3 */
-#if ((USBD_CDC_ACM_ENABLE == 1) && (USBD_CDC_ACM_EP_INTIN == 3))
-    CDC_ACM_IntInPacketData,
+#if ((USBD_CDC_ACM_ENABLE == 1) && (USBD_CDC_ACM_1_EP_INTIN == 3))
+    CDC_ACM_IntInPacketData[0],
 #elif (USBD_EP_NUM > 3)
     0,
 #endif
@@ -101,13 +102,23 @@ static uint32_t *InPacketDataPtr[USBD_EP_NUM] =
     0,
 #endif
 /* endpoint 5 */
-#if ((USBD_CDC_B_ACM_ENABLE == 1) && (USBD_CDC_B_ACM_EP_INTIN == 5))
-    CDC_B_ACM_IntInPacketData,
+#if ((USBD_CDC_ACM_ENABLE == 1) && (USB_CDC_ACM_EP_COUNT > 1) && (USBD_CDC_ACM_2_EP_INTIN == 5))
+    CDC_ACM_IntInPacketData[1],
 #elif (USBD_EP_NUM > 5)
     0,
 #endif
 /* endpoint 6 */
 #if (USBD_EP_NUM > 6)
+    0,
+#endif
+/* endpoint 7 */
+#if ((USBD_CDC_ACM_ENABLE == 1) && (USB_CDC_ACM_EP_COUNT > 2) && (USBD_CDC_ACM_3_EP_INTIN == 7))
+    CDC_ACM_IntInPacketData[2],
+#elif (USBD_EP_NUM > 7)
+    0,
+#endif
+/* endpoint 8 */
+#if (USBD_EP_NUM > 8)
     0,
 #endif
 };
@@ -299,6 +310,8 @@ void USBD_Connect(BOOL con)
 
 void USBD_Reset(void)
 {
+    uint32_t fifo_offset;
+
     SyncWriteEP = 0;
     InPacketDataReady = 0;
 
@@ -331,21 +344,26 @@ void USBD_Reset(void)
 
     // Program the RX FIFO size
     OTG->GRXFSIZ = RX_FIFO_SIZE / 4;
+    fifo_offset = RX_FIFO_SIZE;
     // Program the TX FIFO size for endpoint 0
-    OTG->DIEPTXF0_HNPTXFSIZ = (RX_FIFO_SIZE / 4) | ((TX0_FIFO_SIZE / 4) << 16);
+    OTG->DIEPTXF0_HNPTXFSIZ = (fifo_offset / 4) | ((TX0_FIFO_SIZE / 4) << 16);
+    fifo_offset += TX0_FIFO_SIZE;
     // Program the TX FIFO size for all other endpoints
-    OTG->DIEPTXF[0] = ((RX_FIFO_SIZE + TX0_FIFO_SIZE) / 4) |
-                      ((TX1_FIFO_SIZE / 4) << 16);
-    OTG->DIEPTXF[1] = ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE) / 4) |
-                      ((TX2_FIFO_SIZE / 4) << 16);
-    OTG->DIEPTXF[2] = ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE) / 4) |
-                      ((TX3_FIFO_SIZE / 4) << 16);
-    OTG->DIEPTXF[3] = ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE + TX3_FIFO_SIZE) / 4) |
-                      ((TX4_FIFO_SIZE / 4) << 16);
-    OTG->DIEPTXF[4] = ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE + TX3_FIFO_SIZE + TX4_FIFO_SIZE)/4) |
-                      ((TX5_FIFO_SIZE/4) << 16);
-    OTG->DIEPTXF[5] = ((RX_FIFO_SIZE + TX0_FIFO_SIZE + TX1_FIFO_SIZE + TX2_FIFO_SIZE + TX3_FIFO_SIZE + TX4_FIFO_SIZE + TX5_FIFO_SIZE)/4) |
-                      ((TX6_FIFO_SIZE/4) << 16);
+    OTG->DIEPTXF[0] = (fifo_offset / 4) | ((TX1_FIFO_SIZE / 4) << 16);
+    fifo_offset += TX1_FIFO_SIZE;
+    OTG->DIEPTXF[1] = (fifo_offset / 4) | ((TX2_FIFO_SIZE / 4) << 16);
+    fifo_offset += TX2_FIFO_SIZE;
+    OTG->DIEPTXF[2] = (fifo_offset / 4) | ((TX3_FIFO_SIZE / 4) << 16);
+    fifo_offset += TX3_FIFO_SIZE;
+    OTG->DIEPTXF[3] = (fifo_offset / 4) | ((TX4_FIFO_SIZE / 4) << 16);
+    fifo_offset += TX4_FIFO_SIZE;
+    OTG->DIEPTXF[4] = (fifo_offset / 4) | ((TX5_FIFO_SIZE / 4) << 16);
+    fifo_offset += TX5_FIFO_SIZE;
+    OTG->DIEPTXF[5] = (fifo_offset / 4) | ((TX6_FIFO_SIZE / 4) << 16);
+    fifo_offset += TX6_FIFO_SIZE;
+    OTG->DIEPTXF[6] = (fifo_offset / 4) | ((TX7_FIFO_SIZE / 4) << 16);
+    fifo_offset += TX7_FIFO_SIZE;
+    OTG->DIEPTXF[7] = (fifo_offset / 4) | ((TX8_FIFO_SIZE / 4) << 16);
 
     USBx_OUTEP(0)->DOEPTSIZ = USB_OTG_DOEPTSIZ_STUPCNT_0 | // setup count = 1
                               (USBD_OUT_PACKET_CNT0 << USB_OTG_DOEPTSIZ_PKTCNT_Pos) |  // packet count

@@ -30,9 +30,9 @@
 // 'kvld' in hex - key valid
 #define CFG_KEY             0x6b766c64
 
-// Temporary change this size from 16 to 32.
-// TODO(b/220118503): Remove this when daplink upstream makes the macro configurable.
-#define SECTOR_BUFFER_SIZE  32
+#if !defined(SECTOR_BUFFER_SIZE)
+#define SECTOR_BUFFER_SIZE  16
+#endif
 
 // WARNING - THIS STRUCTURE RESIDES IN NON-VOLATILE STORAGE!
 // Be careful with changes:

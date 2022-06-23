@@ -2,9 +2,9 @@ common:
     macros:
         # Add DAPLink macros below
         - MAIN_TASK_STACK=2048
-        - CDC_B_ENDPOINT
         - DAPLINK_BOOTLOADER_UPDATE
         - ASSERT_BUF_SIZE=65
+        - USB_CDC_ACM_EP_COUNT=3
         # Add UDB config macros below
         - UDB
         - SUPPORT_CMD_HISTORY
@@ -27,3 +27,4 @@ common:
             - source/hic_hal/stm32/stm32h743ii/extended_features/lib/nlutilities/source
             - source/hic_hal/stm32/stm32h743ii/extended_features/console/source
             - source/hic_hal/stm32/stm32h743ii/extended_features/lib/nlbacktrace/source
+            - source/hic_hal/stm32/stm32h743ii/extended_features/usb

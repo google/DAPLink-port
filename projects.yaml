@@ -31,7 +31,6 @@ module:
         - records/usb/usb-winusb.yaml
         - records/daplink/cmsis-dap.yaml
         - records/daplink/drag-n-drop.yaml
-        - records/daplink/usb2uart.yaml
         - records/daplink/settings.yaml
         - records/daplink/settings_rom.yaml
         - records/daplink/interface.yaml
@@ -43,63 +42,77 @@ module:
         - records/hic_hal/k20dx.yaml
         - records/usb/usb-bulk.yaml
         - records/usb/usb-hid.yaml
+        - records/daplink/usb-cdc-single-uart.yaml
     hic_k26f: &module_hic_k26f
         - records/rtos/rtos-cm4.yaml
         - records/hic_hal/k26f.yaml
         - records/usb/usb-bulk.yaml
         - records/usb/usb-hid.yaml
+        - records/daplink/usb-cdc-single-uart.yaml
     hic_kl26z: &module_hic_kl26z
         - records/rtos/rtos-cm0.yaml
         - records/hic_hal/kl26z.yaml
         - records/usb/usb-bulk.yaml
         - records/usb/usb-hid.yaml
+        - records/daplink/usb-cdc-single-uart.yaml
     hic_kl27z: &module_hic_kl27z
         - records/rtos/rtos-cm0.yaml
         - records/hic_hal/kl27z.yaml
         - records/usb/usb-bulk.yaml
         - records/usb/usb-hid.yaml
+        - records/daplink/usb-cdc-single-uart.yaml
     hic_lpc11u35: &module_hic_lpc11u35
         - records/rtos/rtos-cm0.yaml
         - records/hic_hal/lpc11u35.yaml
         - records/usb/usb-hid.yaml
+        - records/daplink/usb-cdc-single-uart.yaml
     hic_lpc11u35_bulk: &module_hic_lpc11u35_bulk
         - records/rtos/rtos-cm0.yaml
         - records/hic_hal/lpc11u35.yaml
         - records/usb/usb-bulk.yaml
+        - records/daplink/usb-cdc-single-uart.yaml
     hic_lpc4322: &module_hic_lpc4322
         - records/rtos/rtos-cm3.yaml
         - records/hic_hal/lpc4322.yaml
         - records/usb/usb-bulk.yaml
         - records/usb/usb-hid.yaml
+        - records/daplink/usb-cdc-single-uart.yaml
     hic_lpc55s69: &module_hic_lpc55s69
         - records/rtos/rtos-cm33.yaml
         - records/hic_hal/lpc55s69.yaml
         - records/usb/usb-bulk.yaml
         - records/usb/usb-hid.yaml
+        - records/daplink/usb-cdc-single-uart.yaml
     hic_m48ssidae: &module_hic_m48ssidae
         - records/rtos/rtos-cm4.yaml
         - records/hic_hal/m48ssidae.yaml
         - records/usb/usb-hid.yaml
+        - records/daplink/usb-cdc-single-uart.yaml
     hic_max32620: &module_hic_max32620
         - records/rtos/rtos-cm4.yaml
         - records/hic_hal/max32620.yaml
         - records/usb/usb-hid.yaml
+        - records/daplink/usb-cdc-single-uart.yaml
     hic_max32625: &module_hic_max32625
         - records/rtos/rtos-cm4.yaml
         - records/hic_hal/max32625.yaml
         - records/usb/usb-hid.yaml
+        - records/daplink/usb-cdc-single-uart.yaml
     hic_nrf52820: &module_hic_nrf52820
         - records/rtos/rtos-cm4.yaml
         - records/hic_hal/nrf52820.yaml
         - records/usb/usb-bulk.yaml
         - records/usb/usb-hid.yaml
+        - records/daplink/usb-cdc-single-uart.yaml
     hic_sam3u2c: &module_hic_sam3u2c
         - records/rtos/rtos-cm3.yaml
         - records/hic_hal/sam3u2c.yaml
         - records/usb/usb-hid.yaml
+        - records/daplink/usb-cdc-single-uart.yaml
     hic_stm32f103xb: &module_hic_stm32f103xb
         - records/rtos/rtos-cm3.yaml
         - records/hic_hal/stm32f103xb.yaml
+        - records/daplink/usb-cdc-single-uart.yaml
     hic_stm32h743ii: &module_hic_stm32h743ii
         - records/rtos/rtos-cm4.yaml
         - records/hic_hal/stm32h743ii.yaml
@@ -216,11 +229,15 @@ projects:
         - *module_hic_stm32h743ii
         - records/family/all_family.yaml
         - records/usb/usb-bulk.yaml
+        - records/daplink/usb-cdc-single-uart.yaml
     stm32h743ii_udb_bl:
         - *stm32h743ii_bl
         - records/board/stm32h743ii_udb_bl.yaml
     stm32h743ii_udb_if:
-        - *stm32h743ii_if
+        - *module_if
+        - *module_hic_stm32h743ii
+        - records/family/all_family.yaml
+        - records/usb/usb-bulk.yaml
         - records/board/stm32h743ii_udb_if.yaml #extends DAPLink with additional features for the UDB project
 
     # Other projects
