@@ -12,6 +12,7 @@
 #include "shell_cmd_fault_info.h"
 #include "shell_cmd_uptime.h"
 #include "shell_cmd_ext_relay.h"
+#include "shell_cmd_swd_dut.h"
 
 const UIF_CMD UIF_CMDTAB[] = {
     UIF_CMD_HELP,
@@ -28,6 +29,7 @@ const UIF_CMD UIF_CMDTAB[] = {
     UIF_CMD_FAULT_INFO,
     UIF_CMD_UPTIME,
     UIF_CMD_EXT_RELAY,
+    UIF_CMD_SWD_DUT,
 };
 
 const int UIF_NUM_CMD = sizeof (UIF_CMDTAB) / sizeof (UIF_CMDTAB[0]);

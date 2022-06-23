@@ -60,6 +60,18 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_STM32H743II);
 #define SWDIO_PIN                       GPIO_PIN_2
 #define SWDIO_PIN_Bit                   2
 
+#define JTAG1_MCU_UDC_TCK_SWDCLK_PORT       GPIOI
+#define JTAG1_MCU_UDC_TCK_SWDCLK_PIN        GPIO_PIN_5
+#define JTAG1_MCU_UDC_TCK_SWDCLK_PIN_Bit    5
+
+#define JTAG1_MCU_UDC_TMS_SWDIO_PORT        GPIOI
+#define JTAG1_MCU_UDC_TMS_SWDIO_PIN         GPIO_PIN_6
+#define JTAG1_MCU_UDC_TMS_SWDIO_PIN_Bit     6
+
+#define OE_L_CTRL1_PORT                 GPIOE
+#define OE_L_CTRL1_PIN                  GPIO_PIN_9
+#define OE_L_CTRL1_PIN_Bit              9
+
 // SWD bidir buffer enable, OE_L_CTRL0
 #define SWD_BUFFER_EN_PORT              GPIOC
 #define SWD_BUFFER_EN_PIN               GPIO_PIN_8
@@ -270,6 +282,32 @@ typedef struct
     uint16_t dir_pin;
     uint16_t dir_pin_bit;
 } dut_pin_group_t;
+
+typedef struct
+{
+    GPIO_TypeDef *port;
+    uint16_t pin;
+    uint16_t pin_bit;
+} swd_dut_gpio_pin_t;
+
+typedef struct
+{
+    swd_dut_gpio_pin_t swclk;
+    swd_dut_gpio_pin_t swdio;
+    swd_dut_gpio_pin_t nreset;
+    swd_dut_gpio_pin_t nreset_dir;
+    swd_dut_gpio_pin_t swd_en_buf;
+} swd_dut_config_t;
+
+typedef enum
+{
+    SWD_DUT0,
+    SWD_DUT1,
+    SWD_DUT_COUNT,
+} swd_dut_t;
+
+extern swd_dut_config_t g_swd_dut_configs[SWD_DUT_COUNT];
+extern swd_dut_t g_cur_swd_dut;
 
 void gpio_config_dut_pin_group(dut_pin_group_id_t dut_pin_group_id, dut_pin_group_state_t dut_pin_group_state, uint16_t pull);
 

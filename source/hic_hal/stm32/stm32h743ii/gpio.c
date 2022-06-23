@@ -85,6 +85,78 @@ static const dut_pin_group_t s_dut_pin_group[DUT_PIN_GROUP_ID_COUNT] =
     },
 };
 
+swd_dut_t g_cur_swd_dut = SWD_DUT0;
+
+swd_dut_config_t g_swd_dut_configs[SWD_DUT_COUNT] =
+{
+    [SWD_DUT0] =
+    {
+        .swclk =
+        {
+            .port = SWCLK_TCK_PIN_PORT,
+            .pin = SWCLK_TCK_PIN,
+            .pin_bit = SWCLK_TCK_PIN_Bit,
+        },
+        .swdio =
+        {
+            .port = SWDIO_PIN_PORT,
+            .pin = SWDIO_PIN,
+            .pin_bit = SWDIO_PIN_Bit,
+        },
+        .nreset =
+        {
+            .port = nRESET_PIN_PORT,
+            .pin = nRESET_PIN,
+            .pin_bit = nRESET_PIN_Bit
+        },
+        .nreset_dir =
+        {
+            .port = nRESET_DIR_PIN_PORT,
+            .pin = nRESET_DIR_PIN,
+            .pin_bit = nRESET_DIR_PIN_Bit,
+        },
+        .swd_en_buf =
+        {
+            .port = SWD_BUFFER_EN_PORT,
+            .pin = SWD_BUFFER_EN_PIN,
+            .pin_bit = SWD_BUFFER_EN_PIN_Bit,
+        }
+    },
+    [SWD_DUT1] =
+    {
+        .swclk =
+        {
+            .port = JTAG1_MCU_UDC_TCK_SWDCLK_PORT,
+            .pin = JTAG1_MCU_UDC_TCK_SWDCLK_PIN,
+            .pin_bit = JTAG1_MCU_UDC_TCK_SWDCLK_PIN_Bit,
+        },
+        .swdio =
+        {
+            .port = JTAG1_MCU_UDC_TMS_SWDIO_PORT,
+            .pin = JTAG1_MCU_UDC_TMS_SWDIO_PIN,
+            .pin_bit = JTAG1_MCU_UDC_TMS_SWDIO_PIN_Bit,
+        },
+        .nreset =
+        {
+            .port = UDC1_RST_PORT,
+            .pin = UDC1_RST_PIN,
+            .pin_bit = UDC1_RST_PIN_Bit,
+        },
+        .nreset_dir =
+        {
+            .port = UDC1_RST_DIR_PORT,
+            .pin = UDC1_RST_DIR_PIN,
+            .pin_bit = UDC1_RST_DIR_PIN_Bit,
+        },
+        .swd_en_buf =
+        {
+            .port = OE_L_CTRL1_PORT,
+            .pin = OE_L_CTRL1_PIN,
+            .pin_bit = OE_L_CTRL1_PIN_Bit,
+        }
+    },
+};
+
 /*
  * Initialize GPIO signals to DUT
  *
@@ -174,6 +246,13 @@ void gpio_init(void)
     GPIO_InitStructure.Pull = GPIO_NOPULL;
     HAL_GPIO_WritePin(SWD_BUFFER_EN_PORT, SWD_BUFFER_EN_PIN, GPIO_PIN_RESET);
     HAL_GPIO_Init(SWD_BUFFER_EN_PORT, &GPIO_InitStructure);
+
+    GPIO_InitStructure.Pin = OE_L_CTRL1_PIN;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    HAL_GPIO_WritePin(OE_L_CTRL1_PORT, OE_L_CTRL1_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_Init(OE_L_CTRL1_PORT, &GPIO_InitStructure);
 
     // These are DUT pins connected level shifters.
     gpio_init_dut_pin_group(DUT_PIN_GROUP_ID_UDC0_RST_L);
