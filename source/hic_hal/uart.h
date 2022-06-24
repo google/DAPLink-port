@@ -87,18 +87,6 @@ extern void uart_set_control_line_state(uint16_t ctrl_bmp);
 extern void uart_software_flow_control(void);
 extern void uart_enable_flow_control(bool enabled);
 
-extern int32_t uartb_initialize(void);
-extern int32_t uartb_uninitialize(void);
-extern int32_t uartb_reset(void);
-extern int32_t uartb_set_configuration(UART_Configuration *config);
-extern int32_t uartb_get_configuration(UART_Configuration *config);
-extern int32_t uartb_write_free(void);
-extern int32_t uartb_write_data(uint8_t *data, uint16_t size);
-extern int32_t uartb_read_data(uint8_t *data, uint16_t size);
-extern void uartb_set_control_line_state(uint16_t ctrl_bmp);
-extern void uartb_software_flow_control(void);
-extern void uartb_enable_flow_control(bool enabled);
-
 #ifdef __cplusplus
 }
 #endif
