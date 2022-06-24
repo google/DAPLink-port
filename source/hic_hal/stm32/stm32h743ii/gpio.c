@@ -216,11 +216,21 @@ void gpio_init(void)
     GPIO_InitStructure.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(RUNNING_LED_PORT, &GPIO_InitStructure);
 
-    HAL_GPIO_WritePin(CONNECTED_LED_PORT, CONNECTED_LED_PIN, GPIO_PIN_SET);
-    GPIO_InitStructure.Pin = CONNECTED_LED_PIN;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
-    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    if (daplink_is_interface())
+    {
+        HAL_GPIO_WritePin(CONNECTED_LED_PORT, CONNECTED_LED_PIN, GPIO_PIN_SET);
+        GPIO_InitStructure.Pin = CONNECTED_LED_PIN;
+        GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
+        GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+        GPIO_InitStructure.Pull = GPIO_NOPULL;
+    }
+    else
+    {
+        GPIO_InitStructure.Pin = CONNECTED_LED_PIN;
+        GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
+        GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+        GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+    }
     HAL_GPIO_Init(CONNECTED_LED_PORT, &GPIO_InitStructure);
 
     HAL_GPIO_WritePin(PIN_CDC_LED_PORT, PIN_CDC_LED, GPIO_PIN_SET);
@@ -315,16 +325,13 @@ void gpio_set_msc_led(gpio_led_state_t state)
 }
 
 /*
- * The UDC0_RST_L line in hardware build P3 would bring UDB
- * into bootloader mode when the target is connected to DUT0
- * and the target is not powered or powered from the adapter USB.
- *
- * Disable the button and let users use reset_into_swu_mode debug
- * console command to go into bootloader mode.
+ * We share CONNECTED_LED with the additional button on UDB P3.
+ * Use the button as the new "reset_button" so that users on P3
+ * can get into bootloader mode without debug console.
  */
 bool reset_button_pressed(void)
 {
-    return false;
+    return (CONNECTED_LED_PORT->IDR & CONNECTED_LED_PIN) ? 1: 0;
 }
 
 uint8_t gpio_get_reset_btn_no_fwrd(void)
